@@ -273,10 +273,10 @@
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">
-      <div class="logo-icon">🏠</div>
+      <div class="logo-icon">🏢</div>
       <div>
         <div class="logo-text">СӨХ Систем</div>
-        <div class="logo-sub">v1.0 • 2025</div>
+        <div class="logo-sub">v1.0 • 2026</div>
       </div>
     </div>
   </div>
@@ -368,7 +368,7 @@
           <div class="card-header">
             <span class="card-title">Сарын орлого / зарлага</span>
             <select id="chart-year" onchange="renderChart()" style="width:auto;padding:4px 8px;font-size:12px;">
-              <option>2025</option><option>2024</option>
+              <option>2026</option><option>2025</option>
             </select>
           </div>
           <div class="card-body">
@@ -898,19 +898,19 @@ let residents = [
 ];
 
 let transactions = [
-  {id:1,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY123456',month:6,year:2025,date:'2025-06-02',status:'completed'},
-  {id:2,aptId:2,apt:102,desc:'Сарын хураамж',type:'income',amount:160000,method:'bank',ref:'TXN789012',month:6,year:2025,date:'2025-06-03',status:'completed'},
-  {id:3,aptId:3,apt:103,desc:'Сарын хураамж',type:'income',amount:227500,method:'cash',ref:'CASH001',month:6,year:2025,date:'2025-06-05',status:'completed'},
-  {id:4,apt:null,desc:'Лифт засвар',type:'expense',amount:450000,method:'bank',ref:'INV-2025-06',month:6,year:2025,date:'2025-06-10',status:'completed',category:'maintenance'},
-  {id:5,apt:null,desc:'Цэвэрлэгээний үйлчилгээ',type:'expense',amount:180000,method:'cash',ref:'',month:6,year:2025,date:'2025-06-15',status:'completed',category:'cleaning'},
-  {id:6,aptId:4,apt:201,desc:'Сарын хураамж',type:'income',amount:177500,method:'qpay',ref:'QPY234567',month:5,year:2025,date:'2025-05-01',status:'completed'},
-  {id:7,aptId:5,apt:202,desc:'Сарын хураамж',type:'income',amount:145000,method:'bank',ref:'TXN890123',month:5,year:2025,date:'2025-05-04',status:'completed'},
-  {id:8,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY345678',month:5,year:2025,date:'2025-05-02',status:'completed'},
+  {id:1,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY123456',month:6,year:2026,date:'2026-06-02',status:'completed'},
+  {id:2,aptId:2,apt:102,desc:'Сарын хураамж',type:'income',amount:160000,method:'bank',ref:'TXN789012',month:6,year:2026,date:'2026-06-03',status:'completed'},
+  {id:3,aptId:3,apt:103,desc:'Сарын хураамж',type:'income',amount:227500,method:'cash',ref:'CASH001',month:6,year:2026,date:'2026-06-05',status:'completed'},
+  {id:4,apt:null,desc:'Лифт засвар',type:'expense',amount:450000,method:'bank',ref:'INV-2026-06',month:6,year:2026,date:'2026-06-10',status:'completed',category:'maintenance'},
+  {id:5,apt:null,desc:'Цэвэрлэгээний үйлчилгээ',type:'expense',amount:180000,method:'cash',ref:'',month:6,year:2026,date:'2026-06-15',status:'completed',category:'cleaning'},
+  {id:6,aptId:4,apt:201,desc:'Сарын хураамж',type:'income',amount:177500,method:'qpay',ref:'QPY234567',month:5,year:2026,date:'2026-05-01',status:'completed'},
+  {id:7,aptId:5,apt:202,desc:'Сарын хураамж',type:'income',amount:145000,method:'bank',ref:'TXN890123',month:5,year:2026,date:'2026-05-04',status:'completed'},
+  {id:8,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY345678',month:5,year:2026,date:'2026-05-02',status:'completed'},
 ];
 
 let notifications = [
-  {id:1,type:'payment',title:'Төлбөрийн сануулга',content:'2025 оны 6-р сарын хураамжийг 2025-06-25 хүртэл төлнө үү.',recipient:'all',date:'2025-06-01',sent:42},
-  {id:2,type:'maintenance',title:'Лифт засвар ажил',content:'2025-06-10-ний 09:00-17:00 цагт лифт ашиглалтгүй байна.',recipient:'all',date:'2025-06-08',sent:42},
+  {id:1,type:'payment',title:'Төлбөрийн сануулга',content:'2026 оны 6-р сарын хураамжийг 2026-06-25 хүртэл төлнө үү.',recipient:'all',date:'2026-06-01',sent:42},
+  {id:2,type:'maintenance',title:'Лифт засвар ажил',content:'2026-06-10-ний 09:00-17:00 цагт лифт ашиглалтгүй байна.',recipient:'all',date:'2026-06-08',sent:42},
 ];
 
 let feeSettings = {perSqm: 2500, utility: 15000, extra: 0, penalty: 2};
@@ -1231,7 +1231,7 @@ function renderPaymentsTable(tab='pending') {
       <td><strong>${r.apt}</strong></td>
       <td>${r.owner}</td>
       <td class="font-mono">${fmt(fee)}</td>
-      <td style="color:var(--text-muted)">2025-06-25</td>
+      <td style="color:var(--text-muted)">2026-06-25</td>
       <td>—</td>
       <td><span class="tag ${tab==='completed'?'tag-success':tab==='overdue'?'tag-danger':'tag-warning'}">${tab==='completed'?'✓ Төлсөн':tab==='overdue'?'Хэтэрсэн':'Хүлээгдэж байна'}</span></td>
       <td><button class="btn btn-primary btn-sm" onclick="quickPayForApt(${r.id})">Бүртгэх</button></td>
@@ -1365,7 +1365,7 @@ function generateReport(type) {
   const now = new Date();
   const thisMonth = now.getMonth()+1;
   if(type==='income') {
-    title.textContent='📈 Орлогын тайлан — 2025 оны '+thisMonth+'-р сар';
+    title.textContent='📈 Орлогын тайлан — 2026 оны '+thisMonth+'-р сар';
     const monthTx = transactions.filter(t=>t.type==='income'&&t.month===thisMonth);
     const total = monthTx.reduce((s,t)=>s+t.amount,0);
     const expected = residents.reduce((s,r)=>s+calcFee(r.sqm),0);
@@ -1380,7 +1380,7 @@ function generateReport(type) {
       <table><thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Дүн</th><th>Арга</th><th>Огноо</th></tr></thead>
       <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?r.owner:'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
-    title.textContent='📉 Зарлагын тайлан — 2025';
+    title.textContent='📉 Зарлагын тайлан — 2026';
     const exps = transactions.filter(t=>t.type==='expense');
     const total = exps.reduce((s,t)=>s+t.amount,0);
     const catNames = {utility:'Ашиглалтын зардал',maintenance:'Засвар',cleaning:'Цэвэрлэгээ',security:'Хамгаалалт',other:'Бусад'};
@@ -1392,7 +1392,7 @@ function generateReport(type) {
       <table><thead><tr><th>Огноо</th><th>Ангилал</th><th>Тайлбар</th><th>Дүн</th></tr></thead>
       <tbody>${exps.map(t=>`<tr><td>${t.date}</td><td>${catNames[t.category]||'Бусад'}</td><td>${t.desc}</td><td class="text-danger font-mono">${fmt(t.amount)}</td></tr>`).join('')}</tbody></table>`;
   } else {
-    title.textContent='⚠️ Өр авлагын тайлан — 2025 оны '+thisMonth+'-р сар';
+    title.textContent='⚠️ Өр авлагын тайлан — 2026 оны '+thisMonth+'-р сар';
     const paidApts = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
     const overdue = residents.filter(r=>!paidApts.includes(r.apt));
     const total = overdue.reduce((s,r)=>s+calcFee(r.sqm),0);
