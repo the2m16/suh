@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СӨХ Удирдлагын Систем</title>
+<style>
+  :root {
+    --bg-base: #0A1628;
+    --bg-surface: #0F1E35;
+    --bg-card: #162440;
+    --bg-hover: #1E3255;
+    --border: #1E3A5F;
+    --border-light: #2A4A7A;
+    --accent: #3B82F6;
+    --accent-dark: #2563EB;
+    --accent-glow: rgba(59,130,246,0.15);
+    --success: #10B981;
+    --success-bg: rgba(16,185,129,0.1);
+    --warning: #F59E0B;
+    --warning-bg: rgba(245,158,11,0.1);
+    --danger: #EF4444;
+    --danger-bg: rgba(239,68,68,0.1);
+    --text: #E2E8F0;
+    --text-muted: #64748B;
+    --text-dim: #94A3B8;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg-base); color: var(--text); min-height: 100vh; display: flex; font-size: 14px; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--bg-surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+  }
+  .logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--border); }
+  .logo-mark { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .logo-text { font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .logo-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; }
+  nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+  .nav-section { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .1em;
+    text-transform: uppercase; padding: 12px 8px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
+    color: var(--text-dim); font-size: 13px; font-weight: 500; margin-bottom: 1px; }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+  .nav-item.active { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 10px;
+    font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .sidebar-bottom { padding: 12px 8px; border-top: 1px solid var(--border); }
+  .building-info { background: var(--bg-card); border-radius: var(--radius-sm); padding: 10px 12px;
+    font-size: 11px; color: var(--text-dim); }
+  .building-info strong { color: var(--text); font-size: 12px; display: block; margin-bottom: 2px; }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--bg-surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50; }
+  .page-title { font-size: 16px; font-weight: 700; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+    border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; transition: all .15s; font-family: var(--font); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-outline { background: transparent; color: var(--text-dim); border: 1px solid var(--border-light); }
+  .btn-outline:hover { background: var(--bg-hover); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--text-dim); }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .content { padding: 24px; flex: 1; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 26px; font-weight: 800; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+  .stat-change { font-size: 11px; color: var(--text-muted); }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--danger); }
+  .stat-card.accent { border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, var(--bg-card), rgba(59,130,246,0.05)); }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* CARD */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13px; font-weight: 700; }
+  .card-body { padding: 18px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
+    padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid rgba(30,58,95,0.4); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-hover); }
+  .table-wrap { overflow-x: auto; }
+
+  /* BADGES */
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-success { background: var(--success-bg); color: var(--success); }
+  .tag-warning { background: var(--warning-bg); color: var(--warning); }
+  .tag-danger { background: var(--danger-bg); color: var(--danger); }
+  .tag-blue { background: var(--accent-glow); color: var(--accent); }
+  .tag-gray { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  label { font-size: 12px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 5px; }
+  input, select, textarea { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text); font-family: var(--font);
+    font-size: 13px; outline: none; transition: border-color .15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  select option { background: var(--bg-card); }
+  textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius);
+    width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; background: none; border: none; color: var(--text-dim); }
+  .modal-body { padding: 20px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* APARTMENT GRID */
+  .apt-grid-container { overflow-x: auto; }
+  .apt-floor-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .floor-label { font-size: 11px; color: var(--text-muted); font-weight: 700; width: 32px; text-align: right; flex-shrink: 0; }
+  .apt-unit { width: 52px; height: 40px; border-radius: 5px; border: 1px solid; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer; transition: all .15s; font-size: 10px; font-weight: 700; }
+  .apt-unit:hover { transform: scale(1.08); z-index: 1; position: relative; }
+  .apt-unit.paid { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+  .apt-unit.overdue { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+  .apt-unit.partial { background: var(--warning-bg); border-color: var(--warning); color: var(--warning); }
+  .apt-unit.empty { background: rgba(100,116,139,0.08); border-color: var(--border); color: var(--text-muted); }
+  .apt-legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* PAYMENT METHODS */
+  .pay-method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .pay-method-card { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px;
+    cursor: pointer; text-align: center; transition: all .15s; }
+  .pay-method-card:hover { border-color: var(--accent); }
+  .pay-method-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .pay-method-icon { font-size: 24px; margin-bottom: 4px; }
+  .pay-method-name { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+
+  /* CHART BARS */
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 0 4px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height .3s; min-height: 4px; }
+  .chart-bar.income { background: linear-gradient(to top, var(--success), rgba(16,185,129,0.5)); }
+  .chart-bar.expense { background: linear-gradient(to top, var(--accent), rgba(59,130,246,0.5)); }
+  .chart-label { font-size: 10px; color: var(--text-muted); }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast-msg { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+    padding: 12px 16px; font-size: 13px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: slideIn .2s ease; max-width: 300px; }
+  .toast-msg.success { border-left: 3px solid var(--success); }
+  .toast-msg.error { border-left: 3px solid var(--danger); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* NOTIFICATION CARD */
+  .notif-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+  .notif-icon { font-size: 20px; flex-shrink: 0; }
+  .notif-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .notif-meta { font-size: 11px; color: var(--text-muted); }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--bg-surface); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 6px; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width .4s; }
+
+  /* SUMMARY ROW */
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(30,58,95,0.3); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { font-size: 12px; color: var(--text-dim); }
+  .summary-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; }
+  .search-wrap input { padding-left: 34px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { width: 56px; }
+    .logo-text, .logo-sub, .nav-item span, .nav-section, .sidebar-bottom .building-info strong,
+    .sidebar-bottom .building-info p { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .badge { display: none; }
+    .main { margin-left: 56px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    .pay-method-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .content { padding: 14px; }
+    .mobile-nav { display: flex !important; }
+  }
+  .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-surface);
+    border-top: 1px solid var(--border); z-index: 100; padding: 8px 0 env(safe-area-inset-bottom, 0); }
+  .mobile-nav-items { display: flex; justify-content: space-around; }
+  .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 8px;
+    cursor: pointer; color: var(--text-muted); font-size: 10px; font-weight: 600; }
+  .mobile-nav-item.active { color: var(--accent); }
+  .mobile-nav-item span { font-size: 18px; }
+
+  /* AVATAR */
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: inline-flex;
+    align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 2px; background: var(--bg-surface); border-radius: var(--radius-sm);
+    padding: 3px; margin-bottom: 18px; width: fit-content; }
+  .tab { padding: 6px 16px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: var(--text-muted); transition: all .15s; }
+  .tab.active { background: var(--bg-card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .flex { display: flex; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .text-muted { color: var(--text-muted); }
+  .text-success { color: var(--success); }
+  .text-danger { color: var(--danger); }
+  .text-warning { color: var(--warning); }
+  .text-accent { color: var(--accent); }
+  .font-bold { font-weight: 700; }
+  .font-mono { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🏠</div>
+      <div>
+        <div class="logo-text">СӨХ Систем</div>
+        <div class="logo-sub">v1.0 • 2025</div>
+      </div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Үндсэн</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span><span>Хянах самбар</span>
+    </div>
+    <div class="nav-item" onclick="showPage('residents')">
+      <span class="nav-icon">👥</span><span>Оршин суугчид</span>
+    </div>
+    <div class="nav-item" onclick="showPage('finance')">
+      <span class="nav-icon">💰</span><span>Санхүүгийн бүртгэл</span>
+    </div>
+    <div class="nav-section">Үйл ажиллагаа</div>
+    <div class="nav-item" onclick="showPage('payments')">
+      <span class="nav-icon">💳</span><span>Төлбөр</span>
+      <span class="badge" id="overdue-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="showPage('apartments')">
+      <span class="nav-icon">🏠</span><span>Тоотуудын зураглал</span>
+    </div>
+    <div class="nav-section">Тайлан</div>
+    <div class="nav-item" onclick="showPage('reports')">
+      <span class="nav-icon">📋</span><span>Тайлан гаргах</span>
+    </div>
+    <div class="nav-item" onclick="showPage('communications')">
+      <span class="nav-icon">📢</span><span>Мэдэгдэл</span>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="building-info">
+      <strong>🏗 Цэнгэлт орд 3</strong>
+      <p>8 давхар • 48 тоот</p>
+    </div>
+  </div>
+</aside>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <div class="mobile-nav-items">
+    <div class="mobile-nav-item active" onclick="showPage('dashboard')"><span>📊</span>Самбар</div>
+    <div class="mobile-nav-item" onclick="showPage('residents')"><span>👥</span>Суугчид</div>
+    <div class="mobile-nav-item" onclick="showPage('payments')"><span>💳</span>Төлбөр</div>
+    <div class="mobile-nav-item" onclick="showPage('reports')"><span>📋</span>Тайлан</div>
+    <div class="mobile-nav-item" onclick="showPage('communications')"><span>📢</span>Мэдэгдэл</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Хянах самбар</div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" onclick="showPage('payments');openPayModal()">+ Төлбөр бүртгэх</button>
+      <div class="avatar" title="Администратор">А</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Энэ сарын орлого</div>
+          <div class="stat-value text-success" id="stat-income">₮0</div>
+          <div class="stat-change up" id="stat-income-pct">Тооцоолж байна...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Төлбөр хийсэн тоот</div>
+          <div class="stat-value text-accent" id="stat-paid-count">0</div>
+          <div class="stat-change" id="stat-paid-pct">нийт тооттой харьцуулахад</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Өр авлага</div>
+          <div class="stat-value text-danger" id="stat-overdue">₮0</div>
+          <div class="stat-change down" id="stat-overdue-count">тоот</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Нийт оршин суугчид</div>
+          <div class="stat-value" id="stat-residents">0</div>
+          <div class="stat-change">бүртгэлтэй хүн</div>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-16">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Сарын орлого / зарлага</span>
+            <select id="chart-year" onchange="renderChart()" style="width:auto;padding:4px 8px;font-size:12px;">
+              <option>2025</option><option>2024</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;gap:12px;margin-bottom:12px;">
+              <span style="font-size:11px;color:var(--success)">■ Орлого</span>
+              <span style="font-size:11px;color:var(--accent)">■ Зарлага</span>
+            </div>
+            <div class="chart-bars" id="main-chart"></div>
+            <div style="display:flex;gap:8px;padding:4px;" id="chart-labels"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Төлбөрийн явц (энэ сар)</span></div>
+          <div class="card-body">
+            <div id="payment-progress-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Сүүлийн гүйлгээнүүд</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('finance')">Бүгдийг харах →</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table id="recent-tx-table">
+                <thead><tr><th>Тоот</th><th>Дүн</th><th>Арга</th><th>Огноо</th></tr></thead>
+                <tbody id="recent-tx-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Өр авлагатай тооотууд</span></div>
+          <div class="card-body" style="padding:0">
+            <table id="overdue-table">
+              <thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Дүн</th></tr></thead>
+              <tbody id="overdue-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESIDENTS -->
+    <div class="page" id="page-residents">
+      <div class="flex-between mb-16">
+        <div class="search-wrap" style="width:260px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="resident-search" placeholder="Хайх..." oninput="filterResidents()">
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm">📥 Импорт</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Оршин суугч нэмэх</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Утас</th><th>Хүн ам</th><th>Талбай</th><th>Статус</th><th>Үйлдэл</th></tr></thead>
+              <tbody id="residents-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="page" id="page-finance">
+      <div class="tabs">
+        <div class="tab active" onclick="switchFinTab('transactions',this)">Гүйлгээний түүх</div>
+        <div class="tab" onclick="switchFinTab('fees',this)">Хураамжийн тохиргоо</div>
+        <div class="tab" onclick="switchFinTab('expenses',this)">Зарлагын бүртгэл</div>
+      </div>
+
+      <div id="fin-transactions">
+        <div class="flex-between mb-16">
+          <div class="flex gap-8">
+            <select id="tx-month-filter" onchange="renderFinanceTable()" style="width:auto">
+              <option value="">Бүх сар</option>
+              <option value="1">1-р сар</option><option value="2">2-р сар</option>
+              <option value="3">3-р сар</option><option value="4">4-р сар</option>
+              <option value="5">5-р сар</option><option value="6">6-р сар</option>
+              <option value="7">7-р сар</option><option value="8">8-р сар</option>
+              <option value="9">9-р сар</option><option value="10">10-р сар</option>
+              <option value="11">11-р сар</option><option value="12">12-р сар</option>
+            </select>
+            <select id="tx-type-filter" onchange="renderFinanceTable()" style="width:auto">
+              <option value="">Бүх төрөл</option>
+              <option value="income">Орлого</option>
+              <option value="expense">Зарлага</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddExpense()">+ Зарлага нэмэх</button>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Огноо</th><th>Тоот / Тайлбар</th><th>Төрөл</th><th>Дүн</th><th>Арга</th><th>Статус</th></tr></thead>
+                <tbody id="finance-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fin-fees" style="display:none">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Хураамжийн тохиргоо</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>1м² хураамж (₮/м²/сар)</label>
+                <input type="number" id="fee-per-sqm" value="2500" oninput="calcFeePreview()">
+              </div>
+              <div class="form-group">
+                <label>Ашиглалтын зардал (тоот тус бүр)</label>
+                <input type="number" id="fee-utility" value="15000" oninput="calcFeePreview()">
+              </div>
+              <div class="form-group">
+                <label>Нэмэлт зардал (сард)</label>
+                <input type="number" id="fee-extra" value="0" oninput="calcFeePreview()">
+              </div>
+              <div class="form-group">
+                <label>Хугацаа хэтэрсэн торгуулийн хувь (%/сар)</label>
+                <input type="number" id="fee-penalty" value="2">
+              </div>
+              <button class="btn btn-primary" onclick="saveFeeSettings()">Хадгалах</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Тооцооллын жишээ</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Талбай (м²)</label>
+                <input type="number" id="preview-sqm" value="65" oninput="calcFeePreview()">
+              </div>
+              <hr class="divider">
+              <div id="fee-preview-result"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fin-expenses" style="display:none">
+        <div class="card">
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Огноо</th><th>Ангилал</th><th>Тайлбар</th><th>Дүн</th></tr></thead>
+                <tbody id="expense-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page" id="page-payments">
+      <div class="flex-between mb-16">
+        <div class="tabs" style="margin-bottom:0">
+          <div class="tab active" onclick="switchPayTab('pending',this)">Хүлээгдэж буй</div>
+          <div class="tab" onclick="switchPayTab('completed',this)">Төлөгдсөн</div>
+          <div class="tab" onclick="switchPayTab('overdue',this)">Хугацаа хэтэрсэн</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openPayModal()">+ Төлбөр бүртгэх</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Дүн</th><th>Хугацаа</th><th>Арга</th><th>Статус</th><th>Үйлдэл</th></tr></thead>
+              <tbody id="payments-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APARTMENTS -->
+    <div class="page" id="page-apartments">
+      <div class="flex-between mb-16">
+        <div>
+          <div class="section-title">Байшингийн зураглал</div>
+          <div style="font-size:12px;color:var(--text-muted)">Тоот дээр дарж дэлгэрэнгүй харах</div>
+        </div>
+        <select id="apt-floor-filter" onchange="renderAptGrid()" style="width:auto">
+          <option value="">Бүх давхар</option>
+        </select>
+      </div>
+      <div class="card mb-16">
+        <div class="card-body">
+          <div class="apt-grid-container" id="apt-grid-container"></div>
+          <div class="apt-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--success-bg);border:1px solid var(--success)"></div>Төлсөн</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--danger-bg);border:1px solid var(--danger)"></div>Хэтэрсэн</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--warning-bg);border:1px solid var(--warning)"></div>Хэсэгчилсэн</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(100,116,139,0.08);border:1px solid var(--border)"></div>Хоосон</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="grid-3 mb-16">
+        <div class="card" style="cursor:pointer;transition:border-color .15s" onclick="generateReport('income')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="card-body" style="text-align:center;padding:24px">
+            <div style="font-size:36px;margin-bottom:8px">📈</div>
+            <div class="card-title mb-8">Орлогын тайлан</div>
+            <div style="font-size:12px;color:var(--text-muted)">Сарын хураамж, орлогын дүн, оршин суугч бүрийн мэдээлэл</div>
+            <button class="btn btn-primary btn-sm mt-16" style="width:100%">Тайлан гаргах</button>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer;transition:border-color .15s" onclick="generateReport('expense')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="card-body" style="text-align:center;padding:24px">
+            <div style="font-size:36px;margin-bottom:8px">📉</div>
+            <div class="card-title mb-8">Зарлагын тайлан</div>
+            <div style="font-size:12px;color:var(--text-muted)">Ашиглалтын зардал, засвар үйлчилгээний зарлага</div>
+            <button class="btn btn-primary btn-sm mt-16" style="width:100%">Тайлан гаргах</button>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer;transition:border-color .15s" onclick="generateReport('debt')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div class="card-body" style="text-align:center;padding:24px">
+            <div style="font-size:36px;margin-bottom:8px">⚠️</div>
+            <div class="card-title mb-8">Өр авлагын тайлан</div>
+            <div style="font-size:12px;color:var(--text-muted)">Хугацаа хэтэрсэн төлбөр, торгуулийн тооцоо</div>
+            <button class="btn btn-primary btn-sm mt-16" style="width:100%">Тайлан гаргах</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="report-output" style="display:none">
+        <div class="card-header">
+          <span class="card-title" id="report-title">Тайлан</span>
+          <div class="flex gap-8">
+            <button class="btn btn-outline btn-sm" onclick="printReport()">🖨️ Хэвлэх</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('report-output').style.display='none'">✕</button>
+          </div>
+        </div>
+        <div class="card-body" id="report-body"></div>
+      </div>
+    </div>
+
+    <!-- COMMUNICATIONS -->
+    <div class="page" id="page-communications">
+      <div class="grid-2">
+        <div>
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">📢 Мэдэгдэл илгээх</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Хүлээн авагч</label>
+                <select id="notif-recipient">
+                  <option value="all">Бүх оршин суугчид</option>
+                  <option value="overdue">Хугацаа хэтэрсэн тооотууд</option>
+                  <option value="floor1">1-р давхар</option>
+                  <option value="custom">Тусгай тоот сонгох</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Мэдэгдлийн төрөл</label>
+                <select id="notif-type">
+                  <option value="info">ℹ️ Мэдэгдэл</option>
+                  <option value="warning">⚠️ Анхааруулга</option>
+                  <option value="payment">💰 Төлбөрийн сануулга</option>
+                  <option value="maintenance">🔧 Засвар мэдэгдэл</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Гарчиг</label>
+                <input type="text" id="notif-title-input" placeholder="Мэдэгдлийн гарчиг...">
+              </div>
+              <div class="form-group">
+                <label>Агуулга</label>
+                <textarea id="notif-content" placeholder="Мэдэгдлийн агуулга..."></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="sendNotification()" style="width:100%">📤 Илгээх</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">📊 Санал асуулга</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Асуулт</label>
+                <input type="text" id="poll-question" placeholder="Санал асуулгын асуулт...">
+              </div>
+              <div id="poll-options-wrap">
+                <div class="form-group">
+                  <label>Хариулт 1</label>
+                  <input type="text" class="poll-opt" placeholder="Хариулт...">
+                </div>
+                <div class="form-group">
+                  <label>Хариулт 2</label>
+                  <input type="text" class="poll-opt" placeholder="Хариулт...">
+                </div>
+              </div>
+              <div class="flex gap-8 mb-16">
+                <button class="btn btn-outline btn-sm" onclick="addPollOption()">+ Хариулт нэмэх</button>
+              </div>
+              <button class="btn btn-success" onclick="createPoll()" style="width:100%">📊 Санал асуулга үүсгэх</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card-title mb-8">Илгээсэн мэдэгдлүүд</div>
+          <div id="notifications-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- content -->
+</main><!-- main -->
+
+<!-- MODALS -->
+
+<!-- Add Resident Modal -->
+<div class="modal-overlay" id="modal-resident">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-resident-title">Оршин суугч нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-resident')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Давхар</label>
+          <select id="res-floor">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Тоот дугаар</label>
+          <input type="number" id="res-apt" placeholder="101">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Эзэмшигчийн нэр</label>
+          <input type="text" id="res-owner" placeholder="Овог Нэр">
+        </div>
+        <div class="form-group">
+          <label>Регистрийн дугаар</label>
+          <input type="text" id="res-reg" placeholder="АА00000000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Утасны дугаар</label>
+          <input type="tel" id="res-phone" placeholder="9900-0000">
+        </div>
+        <div class="form-group">
+          <label>И-мэйл</label>
+          <input type="email" id="res-email" placeholder="email@example.mn">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Оршин суугч тоо</label>
+          <input type="number" id="res-people" value="2" min="0">
+        </div>
+        <div class="form-group">
+          <label>Талбай (м²)</label>
+          <input type="number" id="res-sqm" value="65" min="20">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Тэмдэглэл</label>
+        <textarea id="res-note" placeholder="Нэмэлт мэдэгдэл..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-resident')">Болих</button>
+      <button class="btn btn-primary" onclick="saveResident()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">💳 Төлбөр бүртгэх</span>
+      <button class="modal-close" onclick="closeModal('modal-payment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Тоот</label>
+          <select id="pay-apt-select"></select>
+        </div>
+        <div class="form-group">
+          <label>Сар</label>
+          <select id="pay-month">
+            <option value="1">1-р сар</option><option value="2">2-р сар</option>
+            <option value="3">3-р сар</option><option value="4">4-р сар</option>
+            <option value="5">5-р сар</option><option value="6">6-р сар</option>
+            <option value="6" selected>6-р сар</option><option value="7">7-р сар</option>
+            <option value="8">8-р сар</option><option value="9">9-р сар</option>
+            <option value="10">10-р сар</option><option value="11">11-р сар</option>
+            <option value="12">12-р сар</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Төлбөрийн арга</label>
+        <div class="pay-method-grid">
+          <div class="pay-method-card selected" onclick="selectPayMethod(this,'qpay')">
+            <div class="pay-method-icon">📱</div>
+            <div class="pay-method-name">QPay</div>
+          </div>
+          <div class="pay-method-card" onclick="selectPayMethod(this,'bank')">
+            <div class="pay-method-icon">🏦</div>
+            <div class="pay-method-name">Данс шилжүүлэг</div>
+          </div>
+          <div class="pay-method-card" onclick="selectPayMethod(this,'cash')">
+            <div class="pay-method-icon">💵</div>
+            <div class="pay-method-name">Бэлэн мөнгө</div>
+          </div>
+        </div>
+        <input type="hidden" id="pay-method" value="qpay">
+      </div>
+      <div class="form-group">
+        <label>Дүн (₮)</label>
+        <input type="number" id="pay-amount" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Гүйлгээний дугаар / лавлагаа</label>
+        <input type="text" id="pay-ref" placeholder="Гүйлгээний дугаар...">
+      </div>
+      <div id="qpay-info" style="background:var(--accent-glow);border:1px solid rgba(59,130,246,0.3);border-radius:var(--radius-sm);padding:12px;margin-top:8px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--accent)">📱 QPay холбоос</div>
+        <div style="font-size:12px;color:var(--text-dim)">QPay данс: <strong style="color:var(--text)">1234567890</strong></div>
+        <div style="font-size:12px;color:var(--text-dim)">Хүлээн авагч: <strong style="color:var(--text)">Цэнгэлт орд 3 СӨХ</strong></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">⚠️ Гүйлгээний утга: тоот дугаараа бичнэ үү</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-payment')">Болих</button>
+      <button class="btn btn-primary" onclick="savePayment()">✓ Бүртгэх</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📝 Зарлага нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-expense')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ангилал</label>
+          <select id="exp-category">
+            <option value="utility">Ашиглалтын зардал</option>
+            <option value="maintenance">Засвар үйлчилгээ</option>
+            <option value="cleaning">Цэвэрлэгээ</option>
+            <option value="security">Хамгаалалт</option>
+            <option value="other">Бусад</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дүн (₮)</label>
+          <input type="number" id="exp-amount" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Тайлбар</label>
+        <input type="text" id="exp-desc" placeholder="Зарлагын тайлбар...">
+      </div>
+      <div class="form-group">
+        <label>Огноо</label>
+        <input type="date" id="exp-date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-expense')">Болих</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<!-- Apt Detail Modal -->
+<div class="modal-overlay" id="modal-apt-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="apt-detail-title">Тоот дэлгэрэнгүй</span>
+      <button class="modal-close" onclick="closeModal('modal-apt-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="apt-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-apt-detail')">Хаах</button>
+      <button class="btn btn-primary" onclick="quickPay()">💳 Төлбөр бүртгэх</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// DATA STORE
+// ============================================================
+let residents = [
+  {id:1,floor:1,apt:101,owner:'Б.Болормаа',reg:'АА11223344',phone:'9911-2233',email:'bolor@mail.mn',people:3,sqm:72,note:''},
+  {id:2,floor:1,apt:102,owner:'Г.Ганбаатар',reg:'АА22334455',phone:'9922-3344',email:'ganba@mail.mn',people:2,sqm:58,note:''},
+  {id:3,floor:1,apt:103,owner:'Д.Дулмаа',reg:'АА33445566',phone:'9933-4455',email:'dulma@mail.mn',people:4,sqm:85,note:'2 хүүхэдтэй'},
+  {id:4,floor:2,apt:201,owner:'Э.Энхтүвшин',reg:'АА44556677',phone:'9944-5566',email:'enkh@mail.mn',people:2,sqm:65,note:''},
+  {id:5,floor:2,apt:202,owner:'М.Мөнхбаяр',reg:'АА55667788',phone:'9955-6677',email:'munkh@mail.mn',people:1,sqm:52,note:''},
+  {id:6,floor:2,apt:203,owner:'Н.Нандинцэцэг',reg:'АА66778899',phone:'9966-7788',email:'nandin@mail.mn',people:3,sqm:70,note:''},
+  {id:7,floor:3,apt:301,owner:'О.Отгонбаяр',reg:'АА77889900',phone:'9977-8899',email:'otgon@mail.mn',people:2,sqm:62,note:''},
+  {id:8,floor:3,apt:302,owner:'П.Пүрэвдорж',reg:'АА88990011',phone:'9988-9900',email:'purev@mail.mn',people:5,sqm:90,note:'3 хүүхэдтэй'},
+  {id:9,floor:4,apt:401,owner:'Р.Рэнчинлхам',reg:'АА99001122',phone:'9999-0011',email:'renchin@mail.mn',people:2,sqm:68,note:''},
+  {id:10,floor:4,apt:402,owner:'С.Солонго',reg:'АА00112233',phone:'9900-1122',email:'solong@mail.mn',people:3,sqm:75,note:''},
+  {id:11,floor:5,apt:501,owner:'Т.Тэмүжин',reg:'АА11334455',phone:'9911-3344',email:'temuj@mail.mn',people:2,sqm:60,note:''},
+  {id:12,floor:5,apt:502,owner:'У.Уянга',reg:'АА22445566',phone:'9922-4455',email:'uyanga@mail.mn',people:1,sqm:50,note:''},
+];
+
+let transactions = [
+  {id:1,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY123456',month:6,year:2025,date:'2025-06-02',status:'completed'},
+  {id:2,aptId:2,apt:102,desc:'Сарын хураамж',type:'income',amount:160000,method:'bank',ref:'TXN789012',month:6,year:2025,date:'2025-06-03',status:'completed'},
+  {id:3,aptId:3,apt:103,desc:'Сарын хураамж',type:'income',amount:227500,method:'cash',ref:'CASH001',month:6,year:2025,date:'2025-06-05',status:'completed'},
+  {id:4,apt:null,desc:'Лифт засвар',type:'expense',amount:450000,method:'bank',ref:'INV-2025-06',month:6,year:2025,date:'2025-06-10',status:'completed',category:'maintenance'},
+  {id:5,apt:null,desc:'Цэвэрлэгээний үйлчилгээ',type:'expense',amount:180000,method:'cash',ref:'',month:6,year:2025,date:'2025-06-15',status:'completed',category:'cleaning'},
+  {id:6,aptId:4,apt:201,desc:'Сарын хураамж',type:'income',amount:177500,method:'qpay',ref:'QPY234567',month:5,year:2025,date:'2025-05-01',status:'completed'},
+  {id:7,aptId:5,apt:202,desc:'Сарын хураамж',type:'income',amount:145000,method:'bank',ref:'TXN890123',month:5,year:2025,date:'2025-05-04',status:'completed'},
+  {id:8,aptId:1,apt:101,desc:'Сарын хураамж',type:'income',amount:195000,method:'qpay',ref:'QPY345678',month:5,year:2025,date:'2025-05-02',status:'completed'},
+];
+
+let notifications = [
+  {id:1,type:'payment',title:'Төлбөрийн сануулга',content:'2025 оны 6-р сарын хураамжийг 2025-06-25 хүртэл төлнө үү.',recipient:'all',date:'2025-06-01',sent:42},
+  {id:2,type:'maintenance',title:'Лифт засвар ажил',content:'2025-06-10-ний 09:00-17:00 цагт лифт ашиглалтгүй байна.',recipient:'all',date:'2025-06-08',sent:42},
+];
+
+let feeSettings = {perSqm: 2500, utility: 15000, extra: 0, penalty: 2};
+let selectedAptForDetail = null;
+let editingResidentId = null;
+let nextId = 100;
+
+const FLOORS = 8;
+const APTS_PER_FLOOR = 6;
+
+// Generate all apartment slots
+function getAllApts() {
+  const apts = [];
+  for(let f=1; f<=FLOORS; f++) {
+    for(let u=1; u<=APTS_PER_FLOOR; u++) {
+      const aptNum = f*100 + u;
+      const res = residents.find(r=>r.apt===aptNum);
+      apts.push({floor:f, unit:u, aptNum, resident:res||null});
+    }
+  }
+  return apts;
+}
+
+function calcFee(sqm) {
+  return sqm * feeSettings.perSqm + feeSettings.utility + feeSettings.extra;
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const navMap = {dashboard:'Хянах самбар',residents:'Оршин суугчид',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл'};
+  document.getElementById('page-title').textContent = navMap[name]||'';
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
+  document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
+  if(name==='dashboard') refreshDashboard();
+  if(name==='residents') renderResidents();
+  if(name==='finance') {renderFinanceTable();renderExpenses();calcFeePreview();}
+  if(name==='payments') renderPaymentsTable('pending');
+  if(name==='apartments') {renderAptGrid();renderFloorFilter();}
+  if(name==='communications') renderNotifications();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function refreshDashboard() {
+  const now = new Date();
+  const thisMonth = now.getMonth()+1, thisYear = now.getFullYear();
+  const monthTx = transactions.filter(t=>t.month===thisMonth&&t.year===thisYear);
+  const income = monthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>t.apt))];
+  const totalApts = residents.length;
+  // Overdue: residents who haven't paid this month
+  const overdueRes = residents.filter(r=>!paidApts.includes(r.apt));
+  const overdueAmt = overdueRes.reduce((s,r)=>s+calcFee(r.sqm),0);
+  document.getElementById('stat-income').textContent = fmt(income);
+  document.getElementById('stat-income-pct').textContent = `${paidApts.length} / ${totalApts} тоот төлсөн`;
+  document.getElementById('stat-paid-count').textContent = paidApts.length;
+  document.getElementById('stat-paid-pct').textContent = `${totalApts} нийт тооттой харьцуулахад`;
+  document.getElementById('stat-overdue').textContent = fmt(overdueAmt);
+  document.getElementById('stat-overdue-count').textContent = `${overdueRes.length} тоот`;
+  document.getElementById('stat-residents').textContent = residents.reduce((s,r)=>s+r.people,0);
+  document.getElementById('overdue-badge').textContent = overdueRes.length;
+  renderChart();
+  renderPaymentProgress(paidApts, overdueRes);
+  renderRecentTx();
+  renderOverdueList(overdueRes);
+}
+
+function fmt(n){return '₮'+n.toLocaleString('mn-MN');}
+function fmtShort(n){return n>=1e6?(n/1e6).toFixed(1)+'сая':n>=1e3?(n/1e3).toFixed(0)+'мян':n;}
+
+function renderChart() {
+  const months = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+  const incomes = months.map((_,i)=>transactions.filter(t=>t.type==='income'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
+  const expenses = months.map((_,i)=>transactions.filter(t=>t.type==='expense'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
+  const maxVal = Math.max(...incomes,...expenses,1);
+  const chartEl = document.getElementById('main-chart');
+  const labelEl = document.getElementById('chart-labels');
+  chartEl.innerHTML = '';
+  labelEl.innerHTML = '';
+  months.forEach((m,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className='chart-bar-wrap';
+    wrap.style.gap='3px';
+    // Income bar
+    const ib = document.createElement('div');
+    ib.className='chart-bar income';
+    ib.style.height=(incomes[i]/maxVal*100)+'%';
+    ib.style.width='45%';
+    ib.title = fmt(incomes[i]);
+    // Expense bar
+    const eb = document.createElement('div');
+    eb.className='chart-bar expense';
+    eb.style.height=(expenses[i]/maxVal*100)+'%';
+    eb.style.width='45%';
+    eb.title = fmt(expenses[i]);
+    const barsRow = document.createElement('div');
+    barsRow.style.cssText='display:flex;gap:2px;align-items:flex-end;height:100%;width:100%;justify-content:center;';
+    barsRow.appendChild(ib); barsRow.appendChild(eb);
+    wrap.appendChild(barsRow);
+    chartEl.appendChild(wrap);
+    const lbl = document.createElement('div');
+    lbl.className='chart-label'; lbl.style.cssText='flex:1;text-align:center;font-size:9px;';
+    lbl.textContent=m+'р';
+    labelEl.appendChild(lbl);
+  });
+}
+
+function renderPaymentProgress(paidApts, overdueRes) {
+  const el = document.getElementById('payment-progress-list');
+  const total = residents.length;
+  const paidCount = paidApts.length;
+  const overdueCount = overdueRes.length;
+  const pendingCount = total - paidCount - overdueCount;
+  el.innerHTML = `
+    <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${total}</span></div>
+    <div class="summary-row"><span class="summary-key">Төлсөн</span><span class="summary-val text-success">${paidCount}</span></div>
+    <div class="summary-row"><span class="summary-key">Хугацаа хэтэрсэн</span><span class="summary-val text-danger">${overdueCount}</span></div>
+    <div style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
+        <span>Төлбөрийн явц</span><span>${Math.round(paidCount/total*100)}%</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${paidCount/total*100}%;background:var(--success)"></div></div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px">
+        <span>Өр авлагын харьцаа</span><span>${Math.round(overdueCount/total*100)}%</span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${overdueCount/total*100}%;background:var(--danger)"></div></div>
+    </div>
+  `;
+}
+
+function renderRecentTx() {
+  const body = document.getElementById('recent-tx-body');
+  const recent = [...transactions].filter(t=>t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
+  body.innerHTML = recent.map(t=>`<tr>
+    <td><strong>${t.apt}</strong></td>
+    <td class="text-success font-mono">${fmt(t.amount)}</td>
+    <td>${methodIcon(t.method)} ${methodName(t.method)}</td>
+    <td style="color:var(--text-muted)">${t.date}</td>
+  </tr>`).join('');
+}
+
+function renderOverdueList(overdueRes) {
+  const body = document.getElementById('overdue-body');
+  if(!overdueRes.length){body.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Хугацаа хэтэрсэн тоот байхгүй ✓</td></tr>';return;}
+  body.innerHTML = overdueRes.map(r=>`<tr>
+    <td><strong>${r.apt}</strong></td>
+    <td>${r.owner}</td>
+    <td class="text-danger font-mono">${fmt(calcFee(r.sqm))}</td>
+  </tr>`).join('');
+}
+
+// ============================================================
+// RESIDENTS
+// ============================================================
+function renderResidents(filter='') {
+  const body = document.getElementById('residents-table-body');
+  const list = filter ? residents.filter(r=>r.owner.toLowerCase().includes(filter)||String(r.apt).includes(filter)||r.phone.includes(filter)) : residents;
+  if(!list.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted)">Оршин суугч олдсонгүй</td></tr>';return;}
+  const now = new Date(); const thisMonth = now.getMonth()+1;
+  body.innerHTML = list.map(r=>{
+    const paid = transactions.some(t=>t.apt===r.apt&&t.type==='income'&&t.month===thisMonth);
+    return `<tr>
+      <td><span class="tag tag-blue">${r.floor}-${String(r.unit||r.apt%100).padStart(2,'0')}</span> <strong>${r.apt}</strong></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:28px;height:28px;font-size:11px">${r.owner[0]}</div>${r.owner}</div></td>
+      <td>${r.phone}</td>
+      <td>${r.people} хүн</td>
+      <td>${r.sqm} м²</td>
+      <td><span class="tag ${paid?'tag-success':'tag-danger'}">${paid?'✓ Төлсөн':'✗ Төлөөгүй'}</span></td>
+      <td><div class="flex gap-8">
+        <button class="btn btn-outline btn-sm" onclick="editResident(${r.id})">✏️</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteResident(${r.id})">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterResidents(){renderResidents(document.getElementById('resident-search').value.toLowerCase());}
+
+function openAddResident() {
+  editingResidentId = null;
+  document.getElementById('modal-resident-title').textContent='Оршин суугч нэмэх';
+  ['res-floor','res-apt','res-owner','res-reg','res-phone','res-email','res-people','res-sqm','res-note'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value = id==='res-people'?'2':id==='res-sqm'?'65':'';
+  });
+  openModal('modal-resident');
+}
+
+function editResident(id) {
+  editingResidentId = id;
+  const r = residents.find(x=>x.id===id); if(!r) return;
+  document.getElementById('modal-resident-title').textContent='Оршин суугч засах';
+  document.getElementById('res-floor').value=r.floor;
+  document.getElementById('res-apt').value=r.apt;
+  document.getElementById('res-owner').value=r.owner;
+  document.getElementById('res-reg').value=r.reg;
+  document.getElementById('res-phone').value=r.phone;
+  document.getElementById('res-email').value=r.email;
+  document.getElementById('res-people').value=r.people;
+  document.getElementById('res-sqm').value=r.sqm;
+  document.getElementById('res-note').value=r.note;
+  openModal('modal-resident');
+}
+
+function saveResident() {
+  const floor=+document.getElementById('res-floor').value;
+  const apt=+document.getElementById('res-apt').value;
+  const owner=document.getElementById('res-owner').value.trim();
+  if(!apt||!owner){toast('Тоот болон эзэмшигчийн нэрийг оруулна уу','error');return;}
+  const data={floor,apt,owner,reg:document.getElementById('res-reg').value,phone:document.getElementById('res-phone').value,
+    email:document.getElementById('res-email').value,people:+document.getElementById('res-people').value,
+    sqm:+document.getElementById('res-sqm').value,note:document.getElementById('res-note').value};
+  if(editingResidentId) {
+    const idx=residents.findIndex(r=>r.id===editingResidentId);
+    if(idx>=0) residents[idx]={...residents[idx],...data};
+    toast('Мэдээлэл шинэчлэгдлээ ✓','success');
+  } else {
+    if(residents.some(r=>r.apt===apt)){toast('Тоот аль хэдийн бүртгэлтэй байна','error');return;}
+    residents.push({id:nextId++,...data});
+    toast('Оршин суугч нэмэгдлээ ✓','success');
+  }
+  closeModal('modal-resident');
+  renderResidents();
+}
+
+function deleteResident(id) {
+  if(!confirm('Устгах уу?')) return;
+  residents = residents.filter(r=>r.id!==id);
+  renderResidents();
+  toast('Устгагдлаа','success');
+}
+
+// ============================================================
+// FINANCE
+// ============================================================
+function switchFinTab(name, el) {
+  ['fin-transactions','fin-fees','fin-expenses'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('fin-'+name).style.display='block';
+  document.querySelectorAll('#page-finance .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(name==='fees') calcFeePreview();
+  if(name==='expenses') renderExpenses();
+}
+
+function renderFinanceTable() {
+  const mFilter = document.getElementById('tx-month-filter').value;
+  const tFilter = document.getElementById('tx-type-filter').value;
+  let list = transactions.filter(t=>{
+    if(mFilter && t.month!=mFilter) return false;
+    if(tFilter && t.type!==tFilter) return false;
+    return true;
+  }).sort((a,b)=>b.id-a.id);
+  const body = document.getElementById('finance-table-body');
+  body.innerHTML = list.map(t=>`<tr>
+    <td style="color:var(--text-muted)">${t.date}</td>
+    <td>${t.apt?'🏠 '+t.apt+' тоот':t.desc}</td>
+    <td><span class="tag ${t.type==='income'?'tag-success':'tag-danger'}">${t.type==='income'?'Орлого':'Зарлага'}</span></td>
+    <td class="font-mono ${t.type==='income'?'text-success':'text-danger'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td>
+    <td>${methodIcon(t.method)} ${methodName(t.method)}</td>
+    <td><span class="tag tag-success">Дууссан</span></td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Гүйлгээ байхгүй</td></tr>';
+}
+
+function renderExpenses() {
+  const exps = transactions.filter(t=>t.type==='expense').sort((a,b)=>b.id-a.id);
+  const body = document.getElementById('expense-table-body');
+  const catNames = {utility:'Ашиглалтын зардал',maintenance:'Засвар',cleaning:'Цэвэрлэгээ',security:'Хамгаалалт',other:'Бусад'};
+  body.innerHTML = exps.map(t=>`<tr>
+    <td style="color:var(--text-muted)">${t.date}</td>
+    <td><span class="tag tag-gray">${catNames[t.category]||'Бусад'}</span></td>
+    <td>${t.desc}</td>
+    <td class="text-danger font-mono">${fmt(t.amount)}</td>
+  </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">Зарлага байхгүй</td></tr>';
+}
+
+function calcFeePreview() {
+  feeSettings.perSqm = +document.getElementById('fee-per-sqm').value||2500;
+  feeSettings.utility = +document.getElementById('fee-utility').value||15000;
+  feeSettings.extra = +document.getElementById('fee-extra').value||0;
+  const sqm = +document.getElementById('preview-sqm').value||65;
+  const base = sqm * feeSettings.perSqm;
+  const total = calcFee(sqm);
+  document.getElementById('fee-preview-result').innerHTML = `
+    <div class="summary-row"><span class="summary-key">Талбай хураамж (${sqm}м² × ${feeSettings.perSqm.toLocaleString()}₮)</span><span class="summary-val">${fmt(base)}</span></div>
+    <div class="summary-row"><span class="summary-key">Ашиглалтын зардал</span><span class="summary-val">${fmt(feeSettings.utility)}</span></div>
+    ${feeSettings.extra?`<div class="summary-row"><span class="summary-key">Нэмэлт зардал</span><span class="summary-val">${fmt(feeSettings.extra)}</span></div>`:''}
+    <div class="summary-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px"><span class="summary-key font-bold" style="font-weight:700;color:var(--text)">Нийт хураамж</span><span class="summary-val text-accent" style="font-size:18px">${fmt(total)}</span></div>
+  `;
+}
+
+function saveFeeSettings() {
+  feeSettings.penalty = +document.getElementById('fee-penalty').value||2;
+  toast('Хураамжийн тохиргоо хадгалагдлаа ✓','success');
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+function renderPaymentsTable(tab='pending') {
+  const now = new Date(); const thisMonth = now.getMonth()+1;
+  const paidApts = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+  let list;
+  if(tab==='pending') list=residents.filter(r=>!paidApts.includes(r.apt)).map(r=>({...r,status:'pending'}));
+  else if(tab==='completed') list=residents.filter(r=>paidApts.includes(r.apt)).map(r=>({...r,status:'completed'}));
+  else list=residents.filter(r=>!paidApts.includes(r.apt)).map(r=>({...r,status:'overdue'})); // same as pending for demo
+  const body = document.getElementById('payments-table-body');
+  body.innerHTML = list.map(r=>{
+    const fee = calcFee(r.sqm);
+    return `<tr>
+      <td><strong>${r.apt}</strong></td>
+      <td>${r.owner}</td>
+      <td class="font-mono">${fmt(fee)}</td>
+      <td style="color:var(--text-muted)">2025-06-25</td>
+      <td>—</td>
+      <td><span class="tag ${tab==='completed'?'tag-success':tab==='overdue'?'tag-danger':'tag-warning'}">${tab==='completed'?'✓ Төлсөн':tab==='overdue'?'Хэтэрсэн':'Хүлээгдэж байна'}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="quickPayForApt(${r.id})">Бүртгэх</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">Мэдээлэл байхгүй</td></tr>`;
+}
+
+function switchPayTab(tab, el) {
+  document.querySelectorAll('#page-payments .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderPaymentsTable(tab);
+}
+
+function openPayModal() {
+  const sel = document.getElementById('pay-apt-select');
+  sel.innerHTML = residents.map(r=>`<option value="${r.id}">${r.apt} - ${r.owner}</option>`).join('');
+  document.getElementById('pay-amount').value='';
+  document.getElementById('pay-ref').value='';
+  openModal('modal-payment');
+}
+
+function quickPayForApt(resId) {
+  const sel = document.getElementById('pay-apt-select');
+  sel.innerHTML = residents.map(r=>`<option value="${r.id}" ${r.id===resId?'selected':''}>${r.apt} - ${r.owner}</option>`).join('');
+  const r = residents.find(x=>x.id===resId);
+  if(r) document.getElementById('pay-amount').value = calcFee(r.sqm);
+  document.getElementById('pay-ref').value='';
+  openModal('modal-payment');
+}
+
+function selectPayMethod(el, method) {
+  document.querySelectorAll('.pay-method-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('pay-method').value=method;
+  document.getElementById('qpay-info').style.display = method==='qpay'?'block':'none';
+}
+
+function savePayment() {
+  const resId = +document.getElementById('pay-apt-select').value;
+  const r = residents.find(x=>x.id===resId);
+  const amount = +document.getElementById('pay-amount').value;
+  const method = document.getElementById('pay-method').value;
+  const ref = document.getElementById('pay-ref').value;
+  const month = +document.getElementById('pay-month').value;
+  if(!amount){toast('Дүн оруулна уу','error');return;}
+  const now=new Date();
+  transactions.push({id:nextId++,aptId:r.id,apt:r.apt,desc:'Сарын хураамж',type:'income',amount,method,ref,month,year:now.getFullYear(),date:now.toISOString().slice(0,10),status:'completed'});
+  toast(`${r.apt} тоотын төлбөр бүртгэгдлээ ✓`,'success');
+  closeModal('modal-payment');
+  renderPaymentsTable('pending');
+}
+
+// ============================================================
+// APARTMENTS GRID
+// ============================================================
+function renderFloorFilter() {
+  const sel = document.getElementById('apt-floor-filter');
+  if(sel.options.length>1) return;
+  for(let f=1;f<=FLOORS;f++) {
+    const opt = document.createElement('option');
+    opt.value=f; opt.textContent=f+'-р давхар';
+    sel.appendChild(opt);
+  }
+}
+
+function renderAptGrid() {
+  const filter = document.getElementById('apt-floor-filter').value;
+  const now = new Date(); const thisMonth = now.getMonth()+1;
+  const paidApts = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+  const container = document.getElementById('apt-grid-container');
+  container.innerHTML='';
+  for(let f=FLOORS;f>=1;f--) {
+    if(filter && +filter!==f) continue;
+    const row = document.createElement('div');
+    row.className='apt-floor-row';
+    const lbl=document.createElement('div');
+    lbl.className='floor-label'; lbl.textContent=f+'Д';
+    row.appendChild(lbl);
+    for(let u=1;u<=APTS_PER_FLOOR;u++) {
+      const aptNum=f*100+u;
+      const res=residents.find(r=>r.apt===aptNum);
+      const paid=paidApts.includes(aptNum);
+      let cls='empty';
+      if(res) cls=paid?'paid':'overdue';
+      const cell=document.createElement('div');
+      cell.className='apt-unit '+cls;
+      cell.innerHTML=`<span>${aptNum}</span><span style="font-size:8px;opacity:.7">${res?res.sqm+'м²':'—'}</span>`;
+      cell.onclick=()=>showAptDetail(aptNum,res,paid);
+      row.appendChild(cell);
+    }
+    container.appendChild(row);
+  }
+}
+
+function showAptDetail(aptNum, res, paid) {
+  selectedAptForDetail = res;
+  document.getElementById('apt-detail-title').textContent = aptNum+' тоот';
+  const now=new Date(); const thisMonth=now.getMonth()+1;
+  const history = transactions.filter(t=>t.apt===aptNum&&t.type==='income').sort((a,b)=>b.id-a.id).slice(0,5);
+  document.getElementById('apt-detail-body').innerHTML = res ? `
+    <div class="flex-between mb-16">
+      <div><div style="font-size:18px;font-weight:800">${res.owner}</div><div style="color:var(--text-muted);font-size:13px">${res.phone} • ${res.email}</div></div>
+      <span class="tag ${paid?'tag-success':'tag-danger'} "style="font-size:13px;padding:6px 14px">${paid?'✓ Төлсөн':'✗ Төлөөгүй'}</span>
+    </div>
+    <div class="summary-row"><span class="summary-key">Давхар / Тоот</span><span class="summary-val">${res.floor}-р давхар, ${res.apt}</span></div>
+    <div class="summary-row"><span class="summary-key">Талбай</span><span class="summary-val">${res.sqm} м²</span></div>
+    <div class="summary-row"><span class="summary-key">Хүн ам</span><span class="summary-val">${res.people} хүн</span></div>
+    <div class="summary-row"><span class="summary-key">Сарын хураамж</span><span class="summary-val text-accent">${fmt(calcFee(res.sqm))}</span></div>
+    <hr class="divider">
+    <div class="card-title mb-8">Төлбөрийн түүх</div>
+    ${history.length?history.map(t=>`<div class="summary-row"><span class="summary-key">${t.year}-${t.month}р сар ${methodIcon(t.method)}</span><span class="summary-val text-success">${fmt(t.amount)}</span></div>`).join(''):'<div style="color:var(--text-muted);font-size:13px">Түүх байхгүй</div>'}
+  ` : `<div class="empty-state"><div class="empty-icon">🏠</div><div>Энэ тоотод оршин суугч бүртгэлгүй байна</div></div>`;
+  openModal('modal-apt-detail');
+}
+
+function quickPay() {
+  if(!selectedAptForDetail){closeModal('modal-apt-detail');return;}
+  closeModal('modal-apt-detail');
+  quickPayForApt(selectedAptForDetail.id);
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+function generateReport(type) {
+  const el = document.getElementById('report-output');
+  const title = document.getElementById('report-title');
+  const body = document.getElementById('report-body');
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth'});
+  const now = new Date();
+  const thisMonth = now.getMonth()+1;
+  if(type==='income') {
+    title.textContent='📈 Орлогын тайлан — 2025 оны '+thisMonth+'-р сар';
+    const monthTx = transactions.filter(t=>t.type==='income'&&t.month===thisMonth);
+    const total = monthTx.reduce((s,t)=>s+t.amount,0);
+    const expected = residents.reduce((s,r)=>s+calcFee(r.sqm),0);
+    body.innerHTML=`
+      <div class="grid-2 mb-16">
+        <div><div class="summary-row"><span class="summary-key">Нийт орлого</span><span class="summary-val text-success">${fmt(total)}</span></div>
+        <div class="summary-row"><span class="summary-key">Хүлээгдэж буй орлого</span><span class="summary-val">${fmt(expected)}</span></div>
+        <div class="summary-row"><span class="summary-key">Цуглуулалтын хувь</span><span class="summary-val">${Math.round(total/expected*100)}%</span></div></div>
+        <div><div class="summary-row"><span class="summary-key">Төлсөн тоот</span><span class="summary-val">${monthTx.length}</span></div>
+        <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${residents.length}</span></div></div>
+      </div>
+      <table><thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Дүн</th><th>Арга</th><th>Огноо</th></tr></thead>
+      <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?r.owner:'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
+  } else if(type==='expense') {
+    title.textContent='📉 Зарлагын тайлан — 2025';
+    const exps = transactions.filter(t=>t.type==='expense');
+    const total = exps.reduce((s,t)=>s+t.amount,0);
+    const catNames = {utility:'Ашиглалтын зардал',maintenance:'Засвар',cleaning:'Цэвэрлэгээ',security:'Хамгаалалт',other:'Бусад'};
+    const byCat = {};
+    exps.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.amount;});
+    body.innerHTML=`
+      <div class="mb-16">${Object.entries(byCat).map(([c,v])=>`<div class="summary-row"><span class="summary-key">${catNames[c]||c}</span><span class="summary-val text-danger">${fmt(v)}</span></div>`).join('')}
+      <div class="summary-row" style="border-top:1px solid var(--border)"><span class="summary-key font-bold" style="font-weight:700">Нийт зарлага</span><span class="summary-val text-danger" style="font-size:18px">${fmt(total)}</span></div></div>
+      <table><thead><tr><th>Огноо</th><th>Ангилал</th><th>Тайлбар</th><th>Дүн</th></tr></thead>
+      <tbody>${exps.map(t=>`<tr><td>${t.date}</td><td>${catNames[t.category]||'Бусад'}</td><td>${t.desc}</td><td class="text-danger font-mono">${fmt(t.amount)}</td></tr>`).join('')}</tbody></table>`;
+  } else {
+    title.textContent='⚠️ Өр авлагын тайлан — 2025 оны '+thisMonth+'-р сар';
+    const paidApts = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+    const overdue = residents.filter(r=>!paidApts.includes(r.apt));
+    const total = overdue.reduce((s,r)=>s+calcFee(r.sqm),0);
+    body.innerHTML=`
+      <div class="mb-16"><div class="summary-row"><span class="summary-key">Нийт өр авлага</span><span class="summary-val text-danger">${fmt(total)}</span></div>
+      <div class="summary-row"><span class="summary-key">Хэтэрсэн тоот</span><span class="summary-val">${overdue.length}</span></div></div>
+      <table><thead><tr><th>Тоот</th><th>Эзэмшигч</th><th>Утас</th><th>Хураамж</th><th>Торгууль (${feeSettings.penalty}%)</th><th>Нийт дүн</th></tr></thead>
+      <tbody>${overdue.map(r=>{const fee=calcFee(r.sqm);const penalty=Math.round(fee*feeSettings.penalty/100);return`<tr><td>${r.apt}</td><td>${r.owner}</td><td>${r.phone}</td><td class="font-mono">${fmt(fee)}</td><td class="text-warning font-mono">${fmt(penalty)}</td><td class="text-danger font-mono font-bold">${fmt(fee+penalty)}</td></tr>`;}).join('')}</tbody></table>`;
+  }
+}
+
+function printReport() { window.print(); }
+
+// ============================================================
+// COMMUNICATIONS
+// ============================================================
+function renderNotifications() {
+  const list = document.getElementById('notifications-list');
+  const icons = {info:'ℹ️',warning:'⚠️',payment:'💰',maintenance:'🔧'};
+  list.innerHTML = notifications.slice().reverse().map(n=>`
+    <div class="notif-card">
+      <div class="notif-icon">${icons[n.type]||'📢'}</div>
+      <div style="flex:1">
+        <div class="notif-title">${n.title}</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">${n.content.slice(0,80)}${n.content.length>80?'...':''}</div>
+        <div class="notif-meta">${n.date} • ${n.sent} хүнд илгээсэн</div>
+      </div>
+    </div>`).join('') || '<div class="empty-state"><div class="empty-icon">📭</div><div>Мэдэгдэл байхгүй</div></div>';
+}
+
+function sendNotification() {
+  const title=document.getElementById('notif-title-input').value.trim();
+  const content=document.getElementById('notif-content').value.trim();
+  const type=document.getElementById('notif-type').value;
+  const recipient=document.getElementById('notif-recipient').value;
+  if(!title||!content){toast('Гарчиг болон агуулга оруулна уу','error');return;}
+  const recCount = recipient==='all'?residents.reduce((s,r)=>s+r.people,0):
+    recipient==='overdue'?5:12;
+  const now=new Date();
+  notifications.push({id:nextId++,type,title,content,recipient,date:now.toISOString().slice(0,10),sent:recCount});
+  document.getElementById('notif-title-input').value='';
+  document.getElementById('notif-content').value='';
+  renderNotifications();
+  toast(`Мэдэгдэл ${recCount} хүнд илгээгдлээ ✓`,'success');
+}
+
+function addPollOption() {
+  const wrap = document.getElementById('poll-options-wrap');
+  const count = wrap.querySelectorAll('.poll-opt').length+1;
+  const div=document.createElement('div');div.className='form-group';
+  div.innerHTML=`<label>Хариулт ${count}</label><input type="text" class="poll-opt" placeholder="Хариулт...">`;
+  wrap.appendChild(div);
+}
+
+function createPoll() {
+  const q=document.getElementById('poll-question').value.trim();
+  const opts=[...document.querySelectorAll('.poll-opt')].map(i=>i.value.trim()).filter(Boolean);
+  if(!q||opts.length<2){toast('Асуулт болон 2-оос дээш хариулт оруулна уу','error');return;}
+  notifications.push({id:nextId++,type:'info',title:'📊 Санал асуулга: '+q,content:`Хариулт: ${opts.join(', ')}`,recipient:'all',date:new Date().toISOString().slice(0,10),sent:residents.reduce((s,r)=>s+r.people,0)});
+  renderNotifications();
+  toast('Санал асуулга илгээгдлээ ✓','success');
+  document.getElementById('poll-question').value='';
+  document.querySelectorAll('.poll-opt').forEach(i=>i.value='');
+}
+
+// ============================================================
+// EXPENSE MODAL
+// ============================================================
+function openAddExpense() {
+  document.getElementById('exp-date').value = new Date().toISOString().slice(0,10);
+  openModal('modal-expense');
+}
+
+function saveExpense() {
+  const amount=+document.getElementById('exp-amount').value;
+  const desc=document.getElementById('exp-desc').value.trim();
+  const category=document.getElementById('exp-category').value;
+  const date=document.getElementById('exp-date').value;
+  if(!amount||!desc){toast('Дүн болон тайлбар оруулна уу','error');return;}
+  transactions.push({id:nextId++,apt:null,desc,type:'expense',amount,method:'bank',ref:'',month:+date.split('-')[1],year:+date.split('-')[0],date,status:'completed',category});
+  closeModal('modal-expense');
+  renderFinanceTable();
+  renderExpenses();
+  toast('Зарлага нэмэгдлээ ✓','success');
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function methodIcon(m){return{qpay:'📱',bank:'🏦',cash:'💵'}[m]||'💳';}
+function methodName(m){return{qpay:'QPay',bank:'Данс шилжүүлэг',cash:'Бэлэн мөнгө'}[m]||m;}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+
+function toast(msg, type='success') {
+  const el=document.createElement('div');
+  el.className='toast-msg '+type;
+  el.innerHTML=(type==='success'?'✅':'❌')+' '+msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  refreshDashboard();
+  // Set today's date in expense form
+  document.getElementById('exp-date').value = new Date().toISOString().slice(0,10);
+});
+</script>
+</body>
+</html>
