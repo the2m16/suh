@@ -299,10 +299,16 @@
   .font-bold { font-weight: 700; }
   .font-mono { font-variant-numeric: tabular-nums; }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <!-- SIDEBAR -->
+<div id="db-loading" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:40px;height:40px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3B82F6;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div style="color:#94A3B8;font-size:14px">Өгөгдөл ачаалж байна...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-top">ХҮННҮ 2222 РЕЗИДЕНС</div>
@@ -1284,6 +1290,171 @@
 
 <script>
 // ============================================================
+// SUPABASE ХОЛБОЛТ
+// ============================================================
+const SUPABASE_URL = 'https://qtgclaxboefxfelmuksn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_DPQcCFdo62kNWnDlZQl2AA_ygTAjgzE';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
+// SUPABASE CRUD ФУНКЦҮҮД
+// ============================================================
+
+// --- RESIDENTS ---
+async function db_loadResidents() {
+  const {data,error} = await sb.from('residents').select('*').order('apt');
+  if(error){console.error('residents load error:', JSON.stringify(error), error.message, error.code, error.details);return;}
+  residents = data.map(r=>({
+    id:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
+    owner:r.owner, reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
+    phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
+    email:(r.emails||[])[0]||'', people:r.people||1, note:r.note||'',
+    parkings:r.parkings||[], storages:r.storages||[], vehicles:r.vehicles||[]
+  }));
+}
+
+async function db_saveResident(r) {
+  const row = {
+    building:r.building, floor:r.floor, door:r.door, apt:r.apt,
+    owner:r.owner, reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
+    phones:r.phones, emails:r.emails, people:r.people, note:r.note,
+    parkings:r.parkings, storages:r.storages, vehicles:r.vehicles
+  };
+  // Upsert ашиглана — байвал update, байхгүй бол insert
+  const {data,error} = await sb.from('residents').upsert(row, {onConflict:'apt'}).select().single();
+  if(error){console.error('resident save error:',error.message);return;}
+  if(data) r.id = data.id;
+}
+
+async function db_deleteResident(id) {
+  const {error} = await sb.from('residents').delete().eq('id',id);
+  if(error) console.error('resident delete error:',error);
+}
+
+// --- BUSINESSES ---
+async function db_loadBusinesses() {
+  const {data,error} = await sb.from('businesses').select('*').order('id');
+  if(error){console.error('businesses load error:', JSON.stringify(error), error.message);return;}
+  businesses = data.map(b=>({
+    id:b.id, name:b.name, regno:b.regno||'', type:b.type||'tenant',
+    ceo:b.ceo||'', mobile:b.mobile||'', phone:b.phone||'', email:b.email||'',
+    contract:b.contract||'', start:b.start_date||'', end:b.end_date||'',
+    note:b.note||'', vehicles:b.vehicles||[]
+  }));
+}
+
+async function db_saveBusiness(b) {
+  const row = {
+    name:b.name, regno:b.regno, type:b.type, ceo:b.ceo,
+    mobile:b.mobile, phone:b.phone, email:b.email, contract:b.contract,
+    start_date:b.start, end_date:b.end, note:b.note, vehicles:b.vehicles
+  };
+  if(b.id && b.dbId) {
+    // DB-д байгаа бол update
+    const {error} = await sb.from('businesses').update(row).eq('id',b.dbId);
+    if(error) console.error('business update error:',error.message);
+  } else {
+    const {data,error} = await sb.from('businesses').insert(row).select().single();
+    if(error){console.error('business insert error:',error.message);return;}
+    if(data) b.dbId = data.id;
+  }
+}
+
+async function db_deleteBusiness(id) {
+  const {error} = await sb.from('businesses').delete().eq('id',id);
+  if(error) console.error('business delete error:',error);
+}
+
+// --- TRANSACTIONS ---
+async function db_loadTransactions() {
+  const {data,error} = await sb.from('transactions').select('*').order('id');
+  if(error){console.error('transactions load error:', JSON.stringify(error), error.message);return;}
+  transactions = data.map(t=>({
+    id:t.id, apt:t.apt, aptId:t.resident_id, desc:t.description||'',
+    subcat:t.subcat||'', type:t.type, amount:+t.amount, method:t.method||'',
+    ref:t.ref||'', month:t.month, year:t.year, date:t.date||'',
+    status:t.status||'completed', category:t.category||''
+  }));
+}
+
+async function db_saveTransaction(t) {
+  const row = {
+    apt:t.apt, description:t.desc,
+    subcat:t.subcat, type:t.type, amount:t.amount, method:t.method,
+    ref:t.ref, month:t.month, year:t.year, date:t.date,
+    status:t.status, category:t.category
+  };
+  const {data,error} = await sb.from('transactions').insert(row).select().single();
+  if(error){console.error('transaction insert error:',error);return;}
+  t.id = data.id;
+}
+
+// --- SETTINGS ---
+async function db_loadSettings() {
+  const {data,error} = await sb.from('settings').select('*');
+  if(error){console.error('settings load error:', JSON.stringify(error), error.message);return;}
+  data.forEach(s=>{
+    if(s.key==='fee') Object.assign(feeSettings, s.value);
+    if(s.key==='rent') Object.assign(rentSettings, s.value);
+  });
+}
+
+async function db_saveSettings(key, value) {
+  await sb.from('settings').upsert({key, value, updated_at:new Date().toISOString()});
+}
+
+// --- NOTIFICATIONS ---
+async function db_loadNotifications() {
+  const {data,error} = await sb.from('notifications').select('*').order('id',{ascending:false});
+  if(error){console.error('notifications load error:', JSON.stringify(error), error.message);return;}
+  notifications = data;
+}
+
+async function db_saveNotification(n) {
+  const {data,error} = await sb.from('notifications').insert({
+    type:n.type, title:n.title, content:n.content,
+    recipient:n.recipient, date:n.date, sent:n.sent
+  }).select().single();
+  if(error){console.error('notification insert error:',error);return;}
+  n.id = data.id;
+}
+
+// --- INIT: бүх өгөгдөл ачаалах ---
+async function db_init() {
+  const loading = document.getElementById('db-loading');
+  if(loading) loading.style.display='flex';
+  try {
+    // Demo өгөгдлийг хадгалах (DB хоосон бол ашиглана)
+    const demoResidents = [...residents];
+    const demoBusinesses = [...businesses];
+    const demoTransactions = [...transactions];
+
+    await Promise.all([
+      db_loadResidents(),
+      db_loadBusinesses(),
+      db_loadTransactions(),
+      db_loadSettings(),
+      db_loadNotifications()
+    ]);
+
+    // DB хоосон бол demo өгөгдөл хэвээр байлга
+    if(residents.length === 0) residents = demoResidents;
+    if(businesses.length === 0) businesses = demoBusinesses;
+    if(transactions.length === 0) transactions = demoTransactions;
+
+    toast('Өгөгдөл ачаалагдлаа','success');
+  } catch(e) {
+    console.error('DB init error:',e);
+    toast('Өгөгдөл ачаалахад алдаа гарлаа','error');
+  } finally {
+    if(loading) loading.style.display='none';
+  }
+  refreshDashboard();
+  onExpTypeChange();
+  updateSidebarCount();
+}
+
+// ============================================================
 // ОДООГИЙН ЦАГ (бодит системд автоматаар өнөөдрийн огноо ашиглана)
 // ============================================================
 const NOW_ = new Date();
@@ -1814,7 +1985,7 @@ function editResident(id) {
   openModal('modal-resident');
 }
 
-function saveResident() {
+async function saveResident() {
   const building=+document.getElementById('res-building').value;
   const floor=+document.getElementById('res-floor').value;
   const door=+document.getElementById('res-apt').value;
@@ -1856,12 +2027,13 @@ function saveResident() {
     residents.push({id:nextId++,...data});
     toast(`${building}-р байр ${aptLabel(building,floor,door)} тоот өмчлөгч нэмэгдлээ ✓`,'success');
   }
+  await db_saveResident(data);
   closeModal('modal-resident');
   renderResidents();
   saveToLocal();
 }
 
-function deleteResident(id) {
+async function deleteResident(id) {
   if(!confirm('Устгах уу?')) return;
   residents = residents.filter(r=>r.id!==id);
   renderResidents();updateSidebarCount();
@@ -2002,7 +2174,7 @@ function editBusiness(id) {
   openModal('modal-business');
 }
 
-function saveBusiness() {
+async function saveBusiness() {
   const name = document.getElementById('biz-name').value.trim();
   if(!name){toast('Байгууллагын нэр оруулна уу','error');return;}
   const data = {
@@ -2026,13 +2198,15 @@ function saveBusiness() {
     businesses.push({id:nextId++,...data});
     toast(name+' нэмэгдлээ','success');
   }
+  await db_saveBusiness(data);
   closeModal('modal-business');
   renderBusinesses();
   saveToLocal();
 }
 
-function deleteBusiness(id) {
+async function deleteBusiness(id) {
   if(!confirm('Устгах уу?')) return;
+  await db_deleteBusiness(id);
   businesses = businesses.filter(b=>b.id!==id);
   renderBusinesses();
   saveToLocal();
@@ -2069,8 +2243,9 @@ function calcRentPreview() {
     </div>`;
 }
 
-function saveRentSettings() {
+async function saveRentSettings() {
   rentSettings.penalty = +(document.getElementById('rent-penalty')?.value)||2;
+  await db_saveSettings('rent', rentSettings);
   toast('Түрээсийн төлбөрийн тохиргоо хадгалагдлаа','success');
 }
 
@@ -2173,7 +2348,7 @@ function calcFeePreview() {
       <span class="summary-val text-accent" style="font-size:18px">${fmt(total)}</span></div>`;
 }
 
-function saveFeeSettings(){
+async function saveFeeSettings(){
   feeSettings.penalty=+document.getElementById('fee-penalty').value||2;
   feeSettings.garage=+(document.getElementById('fee-garage')?.value)||25000;
   feeSettings.storageSqm=+(document.getElementById('fee-storage')?.value)||1500;
@@ -2353,7 +2528,7 @@ function selectPayMethod(el,method){
   document.getElementById('qpay-info').style.display=method==='qpay'?'block':'none';
 }
 
-function savePayment() {
+async function savePayment() {
   const resId=+document.getElementById('pay-apt-select').value;
   if(!resId){toast('Тоот сонгоно уу','error');return;}
   const r=residents.find(x=>x.id===resId);
@@ -2405,7 +2580,7 @@ function openAddIncome(){
   document.getElementById('exp-date').value=todayStr();
   openModal('modal-expense');
 }
-function saveExpense(){
+async function saveExpense(){
   const amount=+document.getElementById('exp-amount').value;
   const subcat=document.getElementById('exp-category').value;
   const desc=document.getElementById('exp-desc').value.trim()||subcat;
@@ -2416,6 +2591,7 @@ function saveExpense(){
   const month=+parts[1]||1; const year=+parts[0]||2026;
   const dateOut=parts[0]+'/'+String(parts[1]||'01').padStart(2,'0')+'/'+String(parts[2]||'01').padStart(2,'0');
   transactions.push({id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type});
+  await db_saveTransaction(transactions[transactions.length-1]);
   closeModal('modal-expense');
   saveToLocal();
   if(type==='expense')renderExpenseTable();else renderIncomeTable();
@@ -2840,9 +3016,8 @@ function clearLocalStorage() {
   }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  loadFromLocal();
-  refreshDashboard();onExpTypeChange();updateSidebarCount();
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await db_init();
   document.getElementById('exp-date').value = todayStr();
 });
 </script>
