@@ -53,7 +53,7 @@
     padding: 10px 14px 3px;
   }
   .nav-item {
-    display: flex; align-items: center; gap: 9px;
+    display: flex; align-items: center; gap: 6px; padding-left: 16px;
     padding: 8px 14px; cursor: pointer; transition: all .12s;
     color: #64748B; font-size: 12.5px; font-weight: 500;
     border-left: 2px solid transparent; margin: 1px 0;
@@ -87,10 +87,10 @@
   .mbadge.unpaid { background:rgba(239,68,68,0.15); color:#EF4444; border:1px solid rgba(239,68,68,0.25); }
   .mbadge.future { background:rgba(100,116,139,0.1); color:#475569; border:1px solid rgba(100,116,139,0.15); }
   /* RESIDENTS TABLE */
-  #residents-main-table th { font-size:9px; font-weight:700; color:#475569; letter-spacing:.07em; padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; background:#0B1A2E; }
-  #residents-main-table td { padding:7px 10px; font-size:12px; border-bottom:1px solid rgba(30,58,95,0.25); vertical-align:middle; }
-  #residents-main-table tr:hover td { background:rgba(30,58,95,0.2); }
-  #residents-main-table tr:last-child td { border-bottom:none; }
+  #residents-main-table th, #business-main-table th { font-size:9px; font-weight:700; color:#475569; letter-spacing:.07em; padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; background:#0B1A2E; }
+  #residents-main-table td, #business-main-table td { padding:7px 10px; font-size:12px; border-bottom:1px solid rgba(30,58,95,0.25); vertical-align:middle; }
+  #residents-main-table tr:hover td, #business-main-table tr:hover td { background:rgba(30,58,95,0.2); }
+  #residents-main-table tr:last-child td, #business-main-table tr:last-child td { border-bottom:none; }
   .res-bldg-badge { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; background:rgba(59,130,246,0.12); color:#60A5FA; border:1px solid rgba(59,130,246,0.2); }
 
   /* TOPBAR */
@@ -311,34 +311,38 @@
   <nav>
     <div class="nav-section">Үндсэн</div>
     <div class="nav-item active" onclick="showPage('dashboard')">
-      <span class="nav-icon">📊</span><span>Хянах самбар</span>
+      <span>Хянах самбар</span>
     </div>
     <div class="nav-item" onclick="showPage('residents')">
-      <span class="nav-icon">👥</span><span>Өмчлөгчид</span>
+      <span>Өмчлөгчид</span>
+    </div>
+    <div class="nav-item" onclick="showPage('business')">
+      <span>Аж ахуйн нэгж</span>
     </div>
     <div class="nav-item" onclick="showPage('finance')">
-      <span class="nav-icon">💰</span><span>Санхүүгийн бүртгэл</span>
+      <span>Санхүүгийн бүртгэл</span>
     </div>
     <div class="nav-section">Үйл ажиллагаа</div>
     <div class="nav-item" onclick="showPage('payments')">
-      <span class="nav-icon">💳</span><span>Төлбөр</span>
+      <span>Төлбөр</span>
       <span class="nav-badge" id="overdue-badge">3</span>
     </div>
     <div class="nav-item" onclick="showPage('apartments')">
-      <span class="nav-icon">🏠</span><span>Тоотуудын зураглал</span>
+      <span>Тоотуудын зураглал</span>
     </div>
     <div class="nav-section">Тайлан</div>
     <div class="nav-item" onclick="showPage('reports')">
-      <span class="nav-icon">📋</span><span>Тайлан гаргах</span>
+      <span>Тайлан гаргах</span>
     </div>
     <div class="nav-item" onclick="showPage('communications')">
-      <span class="nav-icon">📢</span><span>Мэдэгдэл</span>
+      <span>Мэдэгдэл</span>
     </div>
   </nav>
   <div class="sidebar-bottom">
     <div class="building-info">
       <strong style="color:#94A3B8;font-size:11px">Хүннү 2222 Резиденс</strong>
       <span style="display:block;margin-top:2px;color:#64748B;font-size:10px">18 байр · 1420 өрх</span>
+      <span id="sidebar-residents-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Хүн ам · 0</span>
     </div>
     <div style="margin-top:6px;font-size:9px;color:#1E3A5F;line-height:1.5">
       Management system v2.0
@@ -428,14 +432,14 @@
           <div class="card-body" style="padding:0">
             <div class="table-wrap">
               <table id="recent-tx-table">
-                <thead><tr><th>Тоот</th><th>Дүн</th><th>Арга</th><th>Огноо</th></tr></thead>
+                <thead><tr><th>Тоот</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
                 <tbody id="recent-tx-body"></tbody>
               </table>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Өр авлагатай тооотууд</span></div>
+          <div class="card-header"><span class="card-title">Өр авлагатай тоотууд</span></div>
           <div class="card-body" style="padding:0">
             <table id="overdue-table">
               <thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th></tr></thead>
@@ -454,8 +458,8 @@
           <input type="text" id="resident-search" placeholder="Хайх..." oninput="filterResidents()">
         </div>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV татах">📥 Татах</button>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">📤 Импорт</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV татах">Татах</button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">Импорт</button>
           <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)">
           <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Өмчлөгч нэмэх</button>
         </div>
@@ -491,26 +495,70 @@
       </div>
     </div>
 
+    <!-- BUSINESS -->
+    <div class="page" id="page-business">
+      <div class="flex-between mb-16">
+        <div class="search-wrap" style="width:220px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="business-search" placeholder="Хайх..." oninput="filterBusinesses()">
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="exportBusinessCSV()">Татах</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddBusiness()">+ Аж ахуйн нэгж нэмэх</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table id="business-main-table" style="min-width:1400px">
+            <thead>
+              <tr style="background:rgba(11,26,46,0.8)">
+                <th style="width:36px"></th>
+                <th style="min-width:180px;white-space:nowrap">ХУУЛИЙН ЭТГЭЭДИЙН НЭР</th>
+                <th style="width:100px;white-space:nowrap">ГЭРЧИЛГЭЭ №</th>
+                <th style="width:80px;white-space:nowrap">ТӨРӨЛ</th>
+                <th style="min-width:130px;white-space:nowrap">ГҮЙЦЭТГЭХ УДИРДЛАГА</th>
+                <th style="width:100px;white-space:nowrap">УТАС</th>
+                <th style="width:140px;white-space:nowrap">ИМЭЙЛ</th>
+                <th style="width:110px;white-space:nowrap">ГЭРЭЭ №</th>
+                <th style="width:95px;white-space:nowrap">ГЭРЭЭ ЭХЛЭХ</th>
+                <th style="width:95px;white-space:nowrap">ГЭРЭЭ ДУУСАХ</th>
+                <th style="min-width:220px;white-space:nowrap">ГЭРЭЭНИЙ ТӨЛБӨРИЙН ТҮҮХ (1-12 сар)</th>
+                <th style="width:70px;white-space:nowrap">ҮЙЛДЭЛ</th>
+              </tr>
+            </thead>
+            <tbody id="business-table-body"></tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)" id="business-stat"></div>
+      </div>
+    </div>
+
     <!-- FINANCE -->
     <div class="page" id="page-finance">
       <div class="tabs" id="fin-tabs">
         <div class="tab active" onclick="switchFinTab('income',this)">Орлого</div>
         <div class="tab" onclick="switchFinTab('expenses',this)">Зарлага</div>
+        <div class="tab" onclick="switchFinTab('accumulation',this)">Хуримтлал</div>
         <div class="tab" onclick="switchFinTab('fees',this)">СӨХ-ийн төлбөрийн тохиргоо</div>
+        <div class="tab" onclick="switchFinTab('rent',this)">Түрээсийн төлбөрийн тохиргоо</div>
       </div>
 
       <!-- ОРЛОГО -->
       <div id="fin-income">
         <div class="flex-between mb-16">
           <div class="flex gap-8">
+            <select id="inc-year-filter" onchange="renderIncomeTable()" style="width:auto">
+              <option value="2026">2026</option><option value="2025">2025</option>
+              <option value="2024">2024</option><option value="">Бүх он</option>
+            </select>
             <select id="inc-month-filter" onchange="renderIncomeTable()" style="width:auto">
-              <option value="">Бүх сар</option>
-              <option value="1">1-р сар</option><option value="2">2-р сар</option>
+              <option value="1" selected>1-р сар</option><option value="2">2-р сар</option>
               <option value="3">3-р сар</option><option value="4">4-р сар</option>
               <option value="5">5-р сар</option><option value="6">6-р сар</option>
               <option value="7">7-р сар</option><option value="8">8-р сар</option>
               <option value="9">9-р сар</option><option value="10">10-р сар</option>
               <option value="11">11-р сар</option><option value="12">12-р сар</option>
+              <option value="">Бүх сар</option>
             </select>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddIncome()">+ Орлого нэмэх</button>
@@ -519,7 +567,7 @@
           <div class="card-body" style="padding:0">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Огноо</th><th>Тоот</th><th>Орлогын төрөл</th><th>Дэд ангилал</th><th>Дүн</th><th>Арга</th></tr></thead>
+                <thead><tr><th>Огноо</th><th>Тоот</th><th>Дэд ангилал</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th></tr></thead>
                 <tbody id="income-table-body"></tbody>
               </table>
             </div>
@@ -531,14 +579,18 @@
       <div id="fin-expenses" style="display:none">
         <div class="flex-between mb-16">
           <div class="flex gap-8">
+            <select id="exp-year-filter" onchange="renderExpenseTable()" style="width:auto">
+              <option value="2026">2026</option><option value="2025">2025</option>
+              <option value="2024">2024</option><option value="">Бүх он</option>
+            </select>
             <select id="tx-month-filter" onchange="renderExpenseTable()" style="width:auto">
-              <option value="">Бүх сар</option>
-              <option value="1">1-р сар</option><option value="2">2-р сар</option>
+              <option value="1" selected>1-р сар</option><option value="2">2-р сар</option>
               <option value="3">3-р сар</option><option value="4">4-р сар</option>
               <option value="5">5-р сар</option><option value="6">6-р сар</option>
               <option value="7">7-р сар</option><option value="8">8-р сар</option>
               <option value="9">9-р сар</option><option value="10">10-р сар</option>
               <option value="11">11-р сар</option><option value="12">12-р сар</option>
+              <option value="">Бүх сар</option>
             </select>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddExpense()">+ Зарлага нэмэх</button>
@@ -547,8 +599,27 @@
           <div class="card-body" style="padding:0">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Огноо</th><th>Зарлагын төрөл</th><th>Дэд ангилал</th><th>Тайлбар</th><th>Дүн</th></tr></thead>
+                <thead><tr><th>Огноо</th><th>Дэд ангилал</th><th>Тайлбар</th><th>Дүн</th></tr></thead>
                 <tbody id="expense-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ХУРИМТЛАЛ -->
+      <div id="fin-accumulation" style="display:none">
+        <div class="grid-2 mb-16">
+          <div class="card">
+            <div class="card-header"><span class="card-title">2026 оны хуримтлал</span></div>
+            <div class="card-body" id="accumulation-body"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Сарын хуримтлал</span></div>
+            <div class="card-body" style="padding:0">
+              <table>
+                <thead><tr><th>Сар</th><th>Орлого</th><th>Зарлага</th><th>Зөрүү</th><th>Хуримтлал</th></tr></thead>
+                <tbody id="accumulation-table-body"></tbody>
               </table>
             </div>
           </div>
@@ -605,15 +676,60 @@
           </div>
         </div>
       </div>
+
+      <!-- ТҮРЭЭСИЙН ТӨЛБӨРИЙН ТОХИРГОО -->
+      <div id="fin-rent" style="display:none">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Түрээсийн талбайн тохиргоо</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Түрээсийн талбайн төлбөр (₮/м²/сар)</label>
+                <input type="number" id="rent-per-sqm" value="15000" oninput="calcRentPreview()">
+              </div>
+              <div class="form-group">
+                <label>Хог хаягдлын төлбөр (₮/сар, нэг нэгж)</label>
+                <input type="number" id="rent-waste" value="50000" oninput="calcRentPreview()">
+              </div>
+              <div class="form-group">
+                <label>Нэмэлт үйлчилгээний төлбөр (₮/сар)</label>
+                <input type="number" id="rent-extra" value="0" oninput="calcRentPreview()">
+              </div>
+              <div class="form-group">
+                <label>Хугацаа хэтэрсэн торгуулийн хувь (%/сар)</label>
+                <input type="number" id="rent-penalty" value="2">
+              </div>
+              <button class="btn btn-primary" onclick="saveRentSettings()">Хадгалах</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Тооцооллын жишээ</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Түрээсийн талбай (м²)</label>
+                <input type="number" id="rent-preview-sqm" value="50" oninput="calcRentPreview()">
+              </div>
+              <div class="form-group">
+                <label>Нэгж тоо</label>
+                <input type="number" id="rent-preview-units" value="1" min="1" oninput="calcRentPreview()">
+              </div>
+              <hr class="divider">
+              <div id="rent-preview-result"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- PAYMENTS -->
     <div class="page" id="page-payments">
       <div class="flex-between mb-16">
         <div class="tabs" style="margin-bottom:0">
-          <div class="tab active" onclick="switchPayTab('pending',this)">Хүлээгдэж буй</div>
-          <div class="tab" onclick="switchPayTab('completed',this)">Төлөгдсөн</div>
+          <div class="tab active" onclick="switchPayTab('completed',this)">Төлөгдсөн</div>
+          <div class="tab" onclick="switchPayTab('pending',this)">Хүлээлттэй</div>
           <div class="tab" onclick="switchPayTab('overdue',this)">Хугацаа хэтэрсэн</div>
+          <div class="tab" onclick="switchPayTab('risk',this)">Эрсдэлтэй</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openPayModal()">+ Төлбөр бүртгэх</button>
       </div>
@@ -621,7 +737,18 @@
         <div class="card-body" style="padding:0">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Хугацаа</th><th>Арга</th><th>Статус</th><th>Үйлдэл</th></tr></thead>
+              <thead>
+                <tr>
+                  <th style="width:110px">ТООТ</th>
+                  <th style="min-width:150px">ӨМЧЛӨГЧ</th>
+                  <th style="width:120px">ДҮН</th>
+                  <th style="width:80px">САР</th>
+                  <th style="width:110px">ХУГАЦАА</th>
+                  <th style="width:150px">ТӨЛБӨРИЙН ХЭЛБЭР</th>
+                  <th style="width:110px;white-space:nowrap">СТАТУС</th>
+                  <th style="width:90px">ҮЙЛДЭЛ</th>
+                </tr>
+              </thead>
               <tbody id="payments-table-body"></tbody>
             </table>
           </div>
@@ -690,8 +817,8 @@
         <div class="card-header">
           <span class="card-title" id="report-title">Тайлан</span>
           <div class="flex gap-8">
-            <button class="btn btn-outline btn-sm" onclick="printReport()">🖨️ Хэвлэх</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('report-output').style.display='none'">✕</button>
+            <button class="btn btn-outline btn-sm" onclick="printReport()">Хэвлэх</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('report-output').style.display='none'">×</button>
           </div>
         </div>
         <div class="card-body" id="report-body"></div>
@@ -703,24 +830,23 @@
       <div class="grid-2">
         <div>
           <div class="card mb-16">
-            <div class="card-header"><span class="card-title">📢 Мэдэгдэл илгээх</span></div>
+            <div class="card-header"><span class="card-title">Мэдэгдэл илгээх</span></div>
             <div class="card-body">
               <div class="form-group">
                 <label>Хүлээн авагч</label>
                 <select id="notif-recipient">
-                  <option value="all">Бүх оршин суугчид</option>
-                  <option value="overdue">Хугацаа хэтэрсэн тооотууд</option>
-                  <option value="floor1">1-р давхар</option>
-                  <option value="custom">Тусгай тоот сонгох</option>
+                  <option value="all">Бүх өмчлөгчид</option>
+                  <option value="overdue">Хугацаа хэтэрсэн тоотууд</option>
+                  <option value="business">Аж ахуйн нэгж</option>
                 </select>
               </div>
               <div class="form-group">
                 <label>Мэдэгдлийн төрөл</label>
                 <select id="notif-type">
-                  <option value="info">ℹ️ Мэдэгдэл</option>
-                  <option value="warning">⚠️ Анхааруулга</option>
-                  <option value="payment">💰 Төлбөрийн сануулга</option>
-                  <option value="maintenance">🔧 Засвар мэдэгдэл</option>
+                  <option value="info">Мэдэгдэл</option>
+                  <option value="warning">Анхааруулга</option>
+                  <option value="payment">Төлбөрийн сануулга</option>
+                  <option value="announcement">Зар мэдээлэл</option>
                 </select>
               </div>
               <div class="form-group">
@@ -731,12 +857,12 @@
                 <label>Агуулга</label>
                 <textarea id="notif-content" placeholder="Мэдэгдлийн агуулга..."></textarea>
               </div>
-              <button class="btn btn-primary" onclick="sendNotification()" style="width:100%">📤 Илгээх</button>
+              <button class="btn btn-primary" onclick="sendNotification()" style="width:100%">Илгээх</button>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-header"><span class="card-title">📊 Санал асуулга</span></div>
+            <div class="card-header"><span class="card-title">Санал асуулга</span></div>
             <div class="card-body">
               <div class="form-group">
                 <label>Асуулт</label>
@@ -755,7 +881,7 @@
               <div class="flex gap-8 mb-16">
                 <button class="btn btn-outline btn-sm" onclick="addPollOption()">+ Хариулт нэмэх</button>
               </div>
-              <button class="btn btn-success" onclick="createPoll()" style="width:100%">📊 Санал асуулга үүсгэх</button>
+              <button class="btn btn-success" onclick="createPoll()" style="width:100%">Санал асуулга үүсгэх</button>
             </div>
           </div>
         </div>
@@ -768,6 +894,11 @@
     </div>
 
   </div><!-- content -->
+
+  <div style="text-align:center;padding:12px 0;font-size:11px;color:#1E3A5F;background:transparent;">
+    2026 © dorjzodov
+  </div>
+
 </main><!-- main -->
 
 <!-- MODALS -->
@@ -777,7 +908,7 @@
   <div class="modal" style="width:600px">
     <div class="modal-header">
       <span class="modal-title" id="modal-resident-title">Өмчлөгч нэмэх</span>
-      <button class="modal-close" onclick="closeModal('modal-resident')">✕</button>
+      <button class="modal-close" onclick="closeModal('modal-resident')">×</button>
     </div>
     <div class="modal-body" style="max-height:75vh;overflow-y:auto">
 
@@ -843,7 +974,7 @@
         <div id="phone-rows">
           <div class="phone-row" style="display:flex;gap:6px;margin-bottom:6px">
             <input type="tel" class="res-phone-input" placeholder="99001234" style="flex:1">
-            <button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>
+            <button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>
           </div>
         </div>
       </div>
@@ -857,7 +988,7 @@
         <div id="email-rows">
           <div class="email-row" style="display:flex;gap:6px;margin-bottom:6px">
             <input type="email" class="res-email-input" placeholder="email@example.mn" style="flex:1">
-            <button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>
+            <button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>
           </div>
         </div>
       </div>
@@ -874,7 +1005,7 @@
       </div>
 
       <!-- Агуулах -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">📦 Агуулах</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Агуулах</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <input type="checkbox" id="res-has-storage" onchange="toggleStorage()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
         <label for="res-has-storage" style="margin:0;cursor:pointer">Агуулахтай</label>
@@ -885,7 +1016,7 @@
       </div>
 
       <!-- Зогсоол -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">🚗 Дулаан зогсоол</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">Дулаан зогсоол</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <input type="checkbox" id="res-has-parking" onchange="toggleParking()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
         <label for="res-has-parking" style="margin:0;cursor:pointer">Зогсоолтой</label>
@@ -903,12 +1034,88 @@
   </div>
 </div>
 
+<!-- Business Modal -->
+<div class="modal-overlay" id="modal-business">
+  <div class="modal" style="width:600px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-business-title">Аж ахуйн нэгж нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-business')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:78vh;overflow-y:auto">
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Байгууллагын мэдээлэл</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Хуулийн этгээдийн нэр</label>
+          <input type="text" id="biz-name" placeholder="ХХК, ХК, ТББ...">
+        </div>
+        <div class="form-group">
+          <label>Гэрчилгээний дугаар</label>
+          <input type="text" id="biz-regno" placeholder="1234567">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Төрөл</label>
+        <select id="biz-type">
+          <option value="owner">Өмчлөгч</option>
+          <option value="tenant">Түрээслэгч</option>
+        </select>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px">Гүйцэтгэх удирдлага</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Овог нэр</label>
+          <input type="text" id="biz-ceo" placeholder="Овог Нэр">
+        </div>
+        <div class="form-group">
+          <label>Гар утас</label>
+          <input type="tel" id="biz-mobile" placeholder="99001234">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Утас (оффис)</label>
+          <input type="tel" id="biz-phone" placeholder="70001234">
+        </div>
+        <div class="form-group">
+          <label>И-мэйл</label>
+          <input type="email" id="biz-email" placeholder="info@company.mn">
+        </div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 8px">Гэрээний мэдээлэл</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Гэрээний дугаар</label>
+          <input type="text" id="biz-contract" placeholder="СӨХ-2026-001">
+        </div>
+        <div class="form-group">
+          <label>Байгуулсан огноо</label>
+          <input type="text" id="biz-start" placeholder="2026/01/01">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Дуусгавар болох огноо</label>
+        <input type="text" id="biz-end" placeholder="2027/01/01">
+      </div>
+      <div class="form-group">
+        <label>Тэмдэглэл</label>
+        <textarea id="biz-note" placeholder="..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-business')">Болих</button>
+      <button class="btn btn-primary" onclick="saveBusiness()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
 <!-- Payment Modal -->
 <div class="modal-overlay" id="modal-payment">
   <div class="modal" style="width:540px">
     <div class="modal-header">
-      <span class="modal-title">💳 СӨХ-ийн төлбөр бүртгэх</span>
-      <button class="modal-close" onclick="closeModal('modal-payment')">✕</button>
+      <span class="modal-title">СӨХ-ийн төлбөр бүртгэх</span>
+      <button class="modal-close" onclick="closeModal('modal-payment')">×</button>
     </div>
     <div class="modal-body">
       <div class="form-row">
@@ -981,39 +1188,31 @@
         <input type="text" id="pay-ref" placeholder="Гүйлгээний дугаар...">
       </div>
       <div id="qpay-info" style="background:var(--accent-glow);border:1px solid rgba(59,130,246,0.3);border-radius:var(--radius-sm);padding:12px;margin-top:8px">
-        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--accent)">📱 QPay холбоос</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--accent)">QPay холбоос</div>
         <div style="font-size:12px;color:var(--text-dim)">QPay данс: <strong style="color:var(--text)">1234567890</strong></div>
         <div style="font-size:12px;color:var(--text-dim)">Хүлээн авагч: <strong style="color:var(--text)">Хүннү-2222 СӨХ</strong></div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">⚠️ Гүйлгээний утга: <span id="qpay-apt-hint" style="color:var(--accent);font-weight:700">байр-тоот</span></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Гүйлгээний утга: <span id="qpay-apt-hint" style="color:var(--accent);font-weight:700">байр-тоот</span></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-payment')">Болих</button>
-      <button class="btn btn-primary" onclick="savePayment()">✓ Бүртгэх</button>
+      <button class="btn btn-primary" onclick="savePayment()">Бүртгэх</button>
     </div>
   </div>
 </div>
 
 <!-- Expense/Income Modal -->
 <div class="modal-overlay" id="modal-expense">
-  <div class="modal" style="width:500px">
+  <div class="modal" style="width:460px">
     <div class="modal-header">
-      <span class="modal-title" id="modal-expense-title">📝 Зарлага нэмэх</span>
-      <button class="modal-close" onclick="closeModal('modal-expense')">✕</button>
+      <span class="modal-title" id="modal-expense-title">Зарлага нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-expense')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Ангилал</label>
-          <select id="exp-type" onchange="onExpTypeChange()">
-            <option value="expense">Зарлага</option>
-            <option value="income" id="exp-income-opt" style="display:none">Орлого</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Дэд ангилал</label>
-          <select id="exp-category"></select>
-        </div>
+      <input type="hidden" id="exp-type" value="expense">
+      <div class="form-group">
+        <label>Дэд ангилал</label>
+        <select id="exp-category"></select>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1022,7 +1221,7 @@
         </div>
         <div class="form-group">
           <label>Огноо</label>
-          <input type="text" id="exp-date" placeholder="2026/01/15">
+          <input type="text" id="exp-date" placeholder="2026/01/28">
         </div>
       </div>
       <div class="form-group">
@@ -1042,13 +1241,13 @@
   <div class="modal" style="width:540px">
     <div class="modal-header">
       <span class="modal-title" id="apt-detail-title">Тоот дэлгэрэнгүй</span>
-      <button class="modal-close" onclick="closeModal('modal-apt-detail')">✕</button>
+      <button class="modal-close" onclick="closeModal('modal-apt-detail')">×</button>
     </div>
     <div class="modal-body" style="max-height:78vh;overflow-y:auto" id="apt-detail-body"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" id="apt-detail-edit-btn" onclick="aptDetailEdit()"></button>
       <button class="btn btn-outline" onclick="closeModal('modal-apt-detail')">Хаах</button>
-      <button class="btn btn-primary" onclick="quickPay()" id="apt-detail-pay-btn">💳 Төлбөр бүртгэх</button>
+      <button class="btn btn-primary" onclick="quickPay()" id="apt-detail-pay-btn">Төлбөр бүртгэх</button>
     </div>
   </div>
 </div>
@@ -1076,19 +1275,19 @@ let residents = [
 ];
 
 let transactions = [
-  {id:1,aptId:1,apt:makeAptId(101,3,1),desc:'Сарын хураамж',type:'income',amount:182600,method:'qpay',ref:'QPY123456',month:1,year:2026,date:'2026-01-03',status:'completed'},
-  {id:2,aptId:2,apt:makeAptId(101,3,3),desc:'Сарын хураамж',type:'income',amount:149875,method:'bank',ref:'TXN789012',month:1,year:2026,date:'2026-01-04',status:'completed'},
-  {id:3,aptId:3,apt:makeAptId(102,5,2),desc:'Сарын хураамж',type:'income',amount:182600,method:'cash',ref:'CASH001',month:1,year:2026,date:'2026-01-05',status:'completed'},
-  {id:4,apt:null,desc:'Лифт засвар',type:'expense',amount:450000,method:'bank',ref:'INV-2026-01',month:1,year:2026,date:'2026-01-10',status:'completed',category:'maintenance'},
-  {id:5,apt:null,desc:'Цэвэрлэгээний үйлчилгээ',type:'expense',amount:180000,method:'cash',ref:'',month:1,year:2026,date:'2026-01-15',status:'completed',category:'cleaning'},
-  {id:6,aptId:4,apt:makeAptId(105,4,1),desc:'Сарын хураамж',type:'income',amount:309175,method:'qpay',ref:'QPY234567',month:1,year:2026,date:'2026-01-02',status:'completed'},
-  {id:7,aptId:5,apt:makeAptId(105,4,2),desc:'Сарын хураамж',type:'income',amount:309575,method:'bank',ref:'TXN890123',month:1,year:2026,date:'2026-01-06',status:'completed'},
-  {id:8,aptId:6,apt:makeAptId(110,7,2),desc:'Сарын хураамж',type:'income',amount:254650,method:'qpay',ref:'QPY345678',month:1,year:2026,date:'2026-01-07',status:'completed'},
+  {id:1,aptId:1,apt:makeAptId(101,3,1),desc:'Сарын хураамж',type:'income',amount:182600,method:'qpay',ref:'QPY123456',month:1,year:2026,date:'2026/01/03',status:'completed'},
+  {id:2,aptId:2,apt:makeAptId(101,3,3),desc:'Сарын хураамж',type:'income',amount:149875,method:'bank',ref:'TXN789012',month:1,year:2026,date:'2026/01/04',status:'completed'},
+  {id:3,aptId:3,apt:makeAptId(102,5,2),desc:'Сарын хураамж',type:'income',amount:182600,method:'cash',ref:'CASH001',month:1,year:2026,date:'2026/01/05',status:'completed'},
+  {id:4,apt:null,desc:'Лифт засвар',type:'expense',amount:450000,method:'bank',ref:'INV-2026-01',month:1,year:2026,date:'2026/01/10',status:'completed',category:'maintenance'},
+  {id:5,apt:null,desc:'Цэвэрлэгээний үйлчилгээ',type:'expense',amount:180000,method:'cash',ref:'',month:1,year:2026,date:'2026/01/15',status:'completed',category:'cleaning'},
+  {id:6,aptId:4,apt:makeAptId(105,4,1),desc:'Сарын хураамж',type:'income',amount:309175,method:'qpay',ref:'QPY234567',month:1,year:2026,date:'2026/01/02',status:'completed'},
+  {id:7,aptId:5,apt:makeAptId(105,4,2),desc:'Сарын хураамж',type:'income',amount:309575,method:'bank',ref:'TXN890123',month:1,year:2026,date:'2026/01/06',status:'completed'},
+  {id:8,aptId:6,apt:makeAptId(110,7,2),desc:'Сарын хураамж',type:'income',amount:254650,method:'qpay',ref:'QPY345678',month:1,year:2026,date:'2026/01/07',status:'completed'},
 ];
 
 let notifications = [
-  {id:1,type:'payment',title:'Төлбөрийн сануулга',content:'2026 оны 1-р сарын хураамжийг 2026-01-25 хүртэл төлнө үү.',recipient:'all',date:'2026-01-01',sent:42},
-  {id:2,type:'maintenance',title:'Лифт засвар ажил',content:'2026-01-10-ний 09:00-17:00 цагт лифт ашиглалтгүй байна.',recipient:'all',date:'2026-01-08',sent:42},
+  {id:1,type:'payment',title:'Төлбөрийн сануулга',content:'2026 оны 1-р сарын хураамжийг 2026/01/25 хүртэл төлнө үү.',recipient:'all',date:'2026/01/01',sent:42},
+  {id:2,type:'maintenance',title:'Лифт засвар ажил',content:'2026-01-10-ний 09:00-17:00 цагт лифт ашиглалтгүй байна.',recipient:'all',date:'2026/01/08',sent:42},
 ];
 
 let feeSettings = {perSqm: 2500, utility: 15000, extra: 0, penalty: 2, garage: 25000, storageSqm: 1500};
@@ -1175,16 +1374,19 @@ function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл'};
+  const pageEl = document.getElementById('page-'+name);
+  if(!pageEl) return;
+  pageEl.classList.add('active');
+  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
-  if(name==='dashboard') refreshDashboard();onExpTypeChange();
+  if(name==='dashboard') refreshDashboard();
   if(name==='residents') renderResidents();
-  if(name==='finance') {renderIncomeTable();calcFeePreview();}
-  if(name==='payments') renderPaymentsTable('pending');
-  if(name==='apartments') {renderBuildingTabs();renderAptGrid(selectedBuilding);}
+  if(name==='business') renderBusinesses();
+  if(name==='finance') { renderIncomeTable(); calcFeePreview(); }
+  if(name==='payments') renderPaymentsTable('completed');
+  if(name==='apartments') { renderBuildingTabs(); renderAptGrid(selectedBuilding); }
   if(name==='communications') renderNotifications();
 }
 
@@ -1214,7 +1416,8 @@ function refreshDashboard() {
   renderOverdueList(overdueRes);
 }
 
-function fmt(n){return '₮'+n.toLocaleString('mn-MN');}
+function fmt(n){return n.toLocaleString('mn-MN')+'₮';}
+function fmtMoney(n){return n.toLocaleString('mn-MN')+'₮';}
 function fmtShort(n){return n>=1e6?(n/1e6).toFixed(1)+'сая':n>=1e3?(n/1e3).toFixed(0)+'мян':n;}
 
 function renderChart() {
@@ -1288,7 +1491,7 @@ function renderRecentTx() {
     return `<tr>
     <td><strong>${lbl}</strong></td>
     <td class="text-success font-mono">${fmt(t.amount)}</td>
-    <td>${methodIcon(t.method)} ${methodName(t.method)}</td>
+    <td>${methodName(t.method)}</td>
     <td style="color:var(--text-muted)">${t.date}</td>
   </tr>`;}).join('');
 }
@@ -1397,14 +1600,14 @@ function addPhoneRow(val='') {
   const row=document.createElement('div');
   row.className='phone-row';
   row.style.cssText='display:flex;gap:6px;margin-bottom:6px';
-  row.innerHTML=`<input type="tel" class="res-phone-input" placeholder="99001234" value="${val}" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>`;
+  row.innerHTML=`<input type="tel" class="res-phone-input" placeholder="99001234" value="${val}" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>`;
   document.getElementById('phone-rows').appendChild(row);
 }
 function addEmailRow(val='') {
   const row=document.createElement('div');
   row.className='email-row';
   row.style.cssText='display:flex;gap:6px;margin-bottom:6px';
-  row.innerHTML=`<input type="email" class="res-email-input" placeholder="email@example.mn" value="${val}" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>`;
+  row.innerHTML=`<input type="email" class="res-email-input" placeholder="email@example.mn" value="${val}" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>`;
   document.getElementById('email-rows').appendChild(row);
 }
 function removeRow(btn, cls) {
@@ -1430,7 +1633,7 @@ function addStorageRow(num='',sqm='') {
     <input type="text" class="storage-num" placeholder="Дугаар (жиш: A-101)" value="${num}" style="flex:2">
     <input type="number" class="storage-sqm" placeholder="м²" value="${sqm}" style="flex:1;min-width:70px">
     <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">м²</span>
-    <button class="btn btn-ghost btn-sm" onclick="this.closest('.storage-row').remove()" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>`;
+    <button class="btn btn-ghost btn-sm" onclick="this.closest('.storage-row').remove()" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>`;
   document.getElementById('storage-rows').appendChild(row);
 }
 function addParkingRow(val='') {
@@ -1442,15 +1645,15 @@ function addParkingRow(val='') {
       ${['A','B','C','D','E','F','G','H','L','M','N','O'].map(z=>`<option${val.startsWith(z)?' selected':''}>${z}</option>`).join('')}
     </select>
     <input type="text" class="parking-num" placeholder="001" maxlength="3" value="${val.slice(1)}" style="flex:1;font-variant-numeric:tabular-nums">
-    <button class="btn btn-ghost btn-sm" onclick="this.closest('.parking-row').remove()" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button>`;
+    <button class="btn btn-ghost btn-sm" onclick="this.closest('.parking-row').remove()" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button>`;
   document.getElementById('parking-rows').appendChild(row);
 }
 
 function resetResidentModal() {
   // Утас
-  document.getElementById('phone-rows').innerHTML=`<div class="phone-row" style="display:flex;gap:6px;margin-bottom:6px"><input type="tel" class="res-phone-input" placeholder="99001234" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button></div>`;
+  document.getElementById('phone-rows').innerHTML=`<div class="phone-row" style="display:flex;gap:6px;margin-bottom:6px"><input type="tel" class="res-phone-input" placeholder="99001234" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'phone-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button></div>`;
   // И-мэйл
-  document.getElementById('email-rows').innerHTML=`<div class="email-row" style="display:flex;gap:6px;margin-bottom:6px"><input type="email" class="res-email-input" placeholder="email@example.mn" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">✕</button></div>`;
+  document.getElementById('email-rows').innerHTML=`<div class="email-row" style="display:flex;gap:6px;margin-bottom:6px"><input type="email" class="res-email-input" placeholder="email@example.mn" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="removeRow(this,'email-row')" style="color:var(--danger);font-size:14px;padding:4px 8px">×</button></div>`;
   // Агуулах
   document.getElementById('res-has-storage').checked=false;
   document.getElementById('storage-section').style.display='none';
@@ -1569,25 +1772,14 @@ function deleteResident(id) {
 // ============================================================
 // ОРЛОГО / ЗАРЛАГЫН АНГИЛАЛ
 // ============================================================
-const INCOME_CATS = ['Айл, өрх, зогсоол, агуулах','Аж ахуйн нэгж байгууллага','Антены, лифтний самбарын түрээс','Банкны хүүгийн орлого','Зогсоолын хураамж','Чипний орлого','Ажилчдаас авах авлага','Бусад'];
+const INCOME_CATS = ['Айл, өрх, зогсоол, агуулах','Аж ахуйн нэгж','Антены, лифтний самбарын түрээс','Банкны хүүгийн орлого','Зогсоолын хураамж','Чипний орлого','Ажилчдаас авах авлага','Бусад'];
 const EXPENSE_CATS = {
   'Урсгал зардал': ['Цалин хөлсний зардал','НДШ зардал','Татварын зардал (ХХОАТ)','Ашиглалтын зардалд төлсөн (цахилгаан, ус, дулаан, санхүүгийн програм)','Барилга гүйцэтгүүлсэн ажил, үйлчилгээ (харуул, хог ачит, лифт, генератор, ариутгал)','Цэвэрлэгээний материал','Гэрэлтүүлэг, цахилгаан кабель','Сантехникийн материал','Барилга, аж ахуйн материал','Лифтний сэлбэг','Ачааны машин, шалны машины сэлбэг','Камер, домофон, галын дохиоллын сэлбэг','Зогсоолын хаалга, хаалт, сэлбэг хэрэгсэл','Орцны хаалга, сэлбэг, шил','Интернет, шуудан холбоо, бичиг хэрэг','Баяр ёслолын зардал','Шатахуун, тээврийн хөлс','Банкны шимтгэл','Хангамжийн материал (БҮТЗЭ)','Ажилчдын хоолны материал','Нотриат, Шүүх эмнэлгийн зардал','Хохирлын үнэлгээний төлбөр','Бусад /данс андуурсан гүйлгээ буцаалт/'],
   'Хөрөнгө оруулалтын зардал': ['Шалны машины төлбөр','Автомат хаалганы төлбөр','Зогсоолын хаалга','Баримт шүүгээ','Сагсны талбай','Шалны чулуу','Бусад'],
 };
 
 function onExpTypeChange() {
-  const type = document.getElementById('exp-type').value;
-  const catSel = document.getElementById('exp-category');
-  catSel.innerHTML = '';
-  if(type==='income') {
-    INCOME_CATS.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;catSel.appendChild(o);});
-  } else {
-    Object.entries(EXPENSE_CATS).forEach(([group,items])=>{
-      const og=document.createElement('optgroup');og.label=group;
-      items.forEach(item=>{const o=document.createElement('option');o.value=item;o.textContent=item;og.appendChild(o);});
-      catSel.appendChild(og);
-    });
-  }
+  loadExpCats(document.getElementById('exp-type').value);
 }
 
 function fmtApt(r){return r.building+'-'+aptLabel(r.building,r.floor,r.door);}
@@ -1596,86 +1788,252 @@ function fmtApt(r){return r.building+'-'+aptLabel(r.building,r.floor,r.door);}
 // FINANCE TABS
 // ============================================================
 function switchFinTab(name, el) {
-  ['fin-income','fin-expenses','fin-fees'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  ['fin-income','fin-expenses','fin-accumulation','fin-fees','fin-rent'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   document.getElementById('fin-'+name).style.display='block';
   document.querySelectorAll('#fin-tabs .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   if(name==='income') renderIncomeTable();
   if(name==='expenses') renderExpenseTable();
+  if(name==='accumulation') renderAccumulation();
   if(name==='fees') calcFeePreview();
+  if(name==='rent') calcRentPreview();
 }
 
+let rentSettings = {perSqm: 15000, waste: 50000, extra: 0, penalty: 2};
+let editingBusinessId = null;
+
+let businesses = [
+  {id:205,name:'Хүннү Supermarket',regno:'4412381',type:'tenant',ceo:'Б.Мөнхсайхан',mobile:'80133424',phone:'',email:'',contract:'СӨХ-2025-004',start:'2025/03/01',end:'2027/03/01',note:''},
+  {id:206,name:'Алтантариа Фүүдс ХХК',regno:'6638201',type:'tenant',ceo:'Т.Алтантуяа',mobile:'88091912',phone:'',email:'',contract:'СӨХ-2025-005',start:'2025/04/01',end:'2027/04/01',note:''},
+  {id:207,name:'Tous Les Jours',regno:'9924571',type:'tenant',ceo:'Г.Оюун',mobile:'75105808',phone:'',email:'',contract:'СӨХ-2025-006',start:'2025/05/01',end:'2027/05/01',note:'Нарийн боов'},
+  {id:208,name:'Эрхий Мэргэн Цэцэрлэг',regno:'2234819',type:'tenant',ceo:'Д.Нарантуяа',mobile:'80630004',phone:'',email:'',contract:'СӨХ-2025-007',start:'2025/01/15',end:'2027/01/15',note:'Цэцэрлэгийн үйлчилгээ'},
+  {id:209,name:'Андууд Supermarket',regno:'7751234',type:'tenant',ceo:'М.Анхтуяа',mobile:'99166804',phone:'',email:'',contract:'СӨХ-2026-001',start:'2026/01/01',end:'2028/01/01',note:''},
+  {id:210,name:'CU Convenience Store',regno:'3312045',type:'tenant',ceo:'Б.Баярсайхан',mobile:'77330101',phone:'',email:'',contract:'СӨХ-2026-002',start:'2026/01/01',end:'2028/01/01',note:'24 цагийн дэлгүүр'},
+];
+
+// ============================================================
+// АЖ АХУЙН НЭГЖ
+// ============================================================
+function renderBusinesses(filter='') {
+  const body = document.getElementById('business-table-body');
+  if(!body) return;
+  const list = filter ? businesses.filter(b=>
+    b.name.toLowerCase().includes(filter)||b.ceo.toLowerCase().includes(filter)||
+    b.regno.includes(filter)||b.contract.includes(filter)
+  ) : businesses;
+  if(!list.length){body.innerHTML='<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-muted)">Аж ахуйн нэгж олдсонгүй</td></tr>';return;}
+  const now = new Date();
+  const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
+  body.innerHTML = list.map((b,i)=>{
+    const endDate = new Date(b.end.replace(/\//g,'-'));
+    const expired = b.end && endDate < now;
+    const expiring = !expired && b.end && (endDate - now) < 30*24*60*60*1000;
+    const typeLabel = b.type==='owner'?'Өмчлөгч':'Түрээслэгч';
+    const typeColor = b.type==='owner'?'var(--accent)':'var(--success)';
+    // Гэрээний төлбөрийн 1-12 сарын badge
+    const monthBadges = MONTHS.map(m=>{
+      const wasPaid = transactions.some(t=>t.apt===null&&t.type==='income'&&t.month===m&&t.year===2026&&t.desc&&t.desc.includes(b.name));
+      const cls = m > 1 ? 'future' : (wasPaid ? 'paid' : 'unpaid');
+      return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
+    }).join('');
+    return `<tr style="cursor:pointer" onclick="editBusiness(${b.id})">
+      <td><div class="avatar" style="width:24px;height:24px;font-size:10px;font-weight:700;background:rgba(59,130,246,0.18);color:#60A5FA">${i+1}</div></td>
+      <td><strong style="font-size:12.5px;font-weight:600">${b.name}</strong></td>
+      <td style="color:var(--text-dim);font-size:12px;font-variant-numeric:tabular-nums">${b.regno||'—'}</td>
+      <td><span style="color:${typeColor};font-size:11px;font-weight:600">${typeLabel}</span></td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(59,130,246,0.15);color:#60A5FA;flex-shrink:0">${(b.ceo||'?')[0]}</div><span style="font-size:12.5px;font-weight:600">${b.ceo||'—'}</span></div></td>
+      <td style="font-size:11.5px;color:var(--text-dim);font-variant-numeric:tabular-nums">${b.mobile||b.phone||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-dim)">${b.email||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-dim)">${b.contract||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-muted)">${b.start||'—'}</td>
+      <td style="font-size:11.5px;color:${expired?'var(--danger)':expiring?'var(--warning)':'var(--text-muted)'}">${b.end||'—'}</td>
+      <td><div class="month-badges">${monthBadges}</div></td>
+      <td><div class="flex gap-8">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editBusiness(${b.id})" style="padding:3px 6px;font-size:12px" title="Засах">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteBusiness(${b.id})" style="padding:3px 6px;font-size:12px;color:var(--danger)" title="Устгах">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const stat = document.getElementById('business-stat');
+  if(stat) stat.textContent = `Нийт: ${list.length} байгууллага · Өмчлөгч: ${list.filter(b=>b.type==='owner').length} · Түрээслэгч: ${list.filter(b=>b.type==='tenant').length}`;
+}
+
+function filterBusinesses(){renderBusinesses(document.getElementById('business-search')?.value.toLowerCase()||'');}
+
+function openAddBusiness() {
+  editingBusinessId = null;
+  document.getElementById('modal-business-title').textContent = 'Аж ахуйн нэгж нэмэх';
+  ['biz-name','biz-regno','biz-ceo','biz-mobile','biz-phone','biz-email','biz-contract','biz-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('biz-type').value='tenant';
+  document.getElementById('biz-start').value=todayStr();
+  document.getElementById('biz-end').value='';
+  openModal('modal-business');
+}
+
+function editBusiness(id) {
+  editingBusinessId = id;
+  const b = businesses.find(x=>x.id===id); if(!b) return;
+  document.getElementById('modal-business-title').textContent = 'Аж ахуйн нэгж засах';
+  document.getElementById('biz-name').value=b.name;
+  document.getElementById('biz-regno').value=b.regno;
+  document.getElementById('biz-type').value=b.type;
+  document.getElementById('biz-ceo').value=b.ceo;
+  document.getElementById('biz-mobile').value=b.mobile;
+  document.getElementById('biz-phone').value=b.phone;
+  document.getElementById('biz-email').value=b.email;
+  document.getElementById('biz-contract').value=b.contract;
+  document.getElementById('biz-start').value=b.start;
+  document.getElementById('biz-end').value=b.end;
+  document.getElementById('biz-note').value=b.note;
+  openModal('modal-business');
+}
+
+function saveBusiness() {
+  const name = document.getElementById('biz-name').value.trim();
+  if(!name){toast('Байгууллагын нэр оруулна уу','error');return;}
+  const data = {
+    name, regno:document.getElementById('biz-regno').value.trim(),
+    type:document.getElementById('biz-type').value,
+    ceo:document.getElementById('biz-ceo').value.trim(),
+    mobile:document.getElementById('biz-mobile').value.trim(),
+    phone:document.getElementById('biz-phone').value.trim(),
+    email:document.getElementById('biz-email').value.trim(),
+    contract:document.getElementById('biz-contract').value.trim(),
+    start:document.getElementById('biz-start').value.trim(),
+    end:document.getElementById('biz-end').value.trim(),
+    note:document.getElementById('biz-note').value.trim()
+  };
+  if(editingBusinessId) {
+    const idx=businesses.findIndex(b=>b.id===editingBusinessId);
+    if(idx>=0) businesses[idx]={...businesses[idx],...data};
+    toast('Мэдээлэл шинэчлэгдлээ','success');
+  } else {
+    businesses.push({id:nextId++,...data});
+    toast(name+' нэмэгдлээ','success');
+  }
+  closeModal('modal-business');
+  renderBusinesses();
+}
+
+function deleteBusiness(id) {
+  if(!confirm('Устгах уу?')) return;
+  businesses = businesses.filter(b=>b.id!==id);
+  renderBusinesses();
+  toast('Устгагдлаа','success');
+}
+
+function exportBusinessCSV() {
+  const headers=['Нэр','Гэрчилгээ','Төрөл','ГУ овог нэр','Гар утас','Утас','И-мэйл','Гэрээний №','Эхлэх','Дуусах','Тэмдэглэл'];
+  const rows=businesses.map(b=>[b.name,b.regno,b.type==='owner'?'Өмчлөгч':'Түрээслэгч',b.ceo,b.mobile,b.phone,b.email,b.contract,b.start,b.end,b.note]);
+  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='aaj_ahuiin_negj_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
+  toast('Татагдлаа','success');
+}
+
+function calcRentPreview() {
+  rentSettings.perSqm = +(document.getElementById('rent-per-sqm')?.value)||15000;
+  rentSettings.waste = +(document.getElementById('rent-waste')?.value)||50000;
+  rentSettings.extra = +(document.getElementById('rent-extra')?.value)||0;
+  const sqm = +(document.getElementById('rent-preview-sqm')?.value)||50;
+  const units = +(document.getElementById('rent-preview-units')?.value)||1;
+  const base = sqm * rentSettings.perSqm;
+  const waste = units * rentSettings.waste;
+  const extra = rentSettings.extra;
+  const total = base + waste + extra;
+  const el = document.getElementById('rent-preview-result'); if(!el) return;
+  el.innerHTML = `
+    <div class="summary-row"><span class="summary-key">Түрээсийн талбайн төлбөр (${sqm}м²)</span><span class="summary-val">${fmtMoney(base)}</span></div>
+    <div class="summary-row"><span class="summary-key">Хог хаягдлын төлбөр (${units} нэгж)</span><span class="summary-val">${fmtMoney(waste)}</span></div>
+    ${extra?`<div class="summary-row"><span class="summary-key">Нэмэлт үйлчилгээ</span><span class="summary-val">${fmtMoney(extra)}</span></div>`:''}
+    <div class="summary-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+      <span class="summary-key" style="font-weight:700;color:var(--text)">Нийт түрээсийн төлбөр</span>
+      <span class="summary-val text-accent" style="font-size:18px">${fmtMoney(total)}</span>
+    </div>`;
+}
+
+function saveRentSettings() {
+  rentSettings.penalty = +(document.getElementById('rent-penalty')?.value)||2;
+  toast('Түрээсийн төлбөрийн тохиргоо хадгалагдлаа','success');
+}
+
+function switchAptView(view) {
+  if(view==='business') {
+    // Аж ахуйн нэгжийн жагсаалт харуулах - одоохондоо хоосон
+    document.getElementById('apt-grid-container').innerHTML =
+      '<div class="empty-state" style="padding:40px"><div style="color:var(--text-muted);font-size:14px">Аж ахуйн нэгж бүртгэлгүй байна</div></div>';
+    document.getElementById('apt-building-label').textContent = 'Аж ахуйн нэгж';
+    document.getElementById('apt-building-meta').textContent = '';
+    // Highlight business btn
+    document.getElementById('apt-business-btn').style.borderColor='var(--accent)';
+    document.getElementById('apt-business-btn').style.color='var(--accent)';
+    BUILDINGS.forEach(b=>{const btn=document.getElementById('btab-'+b.id);if(btn){btn.style.background='transparent';btn.style.borderColor='var(--border-light)';btn.style.color='var(--text-muted)';}});
+  }
+}
+
+
 function renderIncomeTable() {
-  const mf=document.getElementById('inc-month-filter')?.value||'';
-  const list=transactions.filter(t=>t.type==='income'&&(!mf||t.month==mf)).sort((a,b)=>b.id-a.id);
+  const mf=document.getElementById('inc-month-filter')?.value;
+  const yf=document.getElementById('inc-year-filter')?.value;
+  const list=transactions.filter(t=>t.type==='income'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('income-table-body');
+  if(!body)return;
   body.innerHTML=list.map(t=>{
     const r=residents.find(x=>x.apt===t.apt);
     return `<tr>
       <td style="color:var(--text-muted)">${t.date}</td>
-      <td>${r?fmtApt(r):'—'}</td>
-      <td><span class="tag tag-success">Орлого</span></td>
+      <td><strong>${r?fmtApt(r):'—'}</strong></td>
       <td style="color:var(--text-dim);font-size:12px">${t.desc}</td>
-      <td class="text-success font-mono">+${fmt(t.amount)}</td>
-      <td>${methodIcon(t.method)} ${methodName(t.method)}</td>
+      <td class="text-success" style="font-variant-numeric:tabular-nums">${fmtMoney(t.amount)}</td>
+      <td style="color:var(--text-dim)">${methodName(t.method)}</td>
     </tr>`;
-  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Орлого байхгүй</td></tr>';
+  }).join('')||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Орлого байхгүй</td></tr>';
 }
 
 function renderExpenseTable() {
-  const mf=document.getElementById('tx-month-filter')?.value||'';
-  const list=transactions.filter(t=>t.type==='expense'&&(!mf||t.month==mf)).sort((a,b)=>b.id-a.id);
+  const mf=document.getElementById('tx-month-filter')?.value;
+  const yf=document.getElementById('exp-year-filter')?.value;
+  const list=transactions.filter(t=>t.type==='expense'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('expense-table-body');
-  body.innerHTML=list.map(t=>{
-    const group=Object.entries(EXPENSE_CATS).find(([g,items])=>items.includes(t.subcat))?.[0]||'—';
-    return `<tr>
-      <td style="color:var(--text-muted)">${t.date}</td>
-      <td><span class="tag tag-gray" style="font-size:10px">${group}</span></td>
-      <td style="font-size:12px;color:var(--text-dim)">${t.subcat||t.desc}</td>
-      <td>${(t.desc&&t.desc!==t.subcat)?t.desc:''}</td>
-      <td class="text-danger font-mono">-${fmt(t.amount)}</td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Зарлага байхгүй</td></tr>';
+  if(!body)return;
+  body.innerHTML=list.map(t=>`<tr>
+    <td style="color:var(--text-muted)">${t.date}</td>
+    <td style="font-size:12px;color:var(--text-dim)">${t.subcat||t.desc}</td>
+    <td style="color:var(--text-dim);font-size:12px">${(t.desc&&t.desc!==t.subcat)?t.desc:''}</td>
+    <td class="text-danger" style="font-variant-numeric:tabular-nums">${fmtMoney(t.amount)}</td>
+  </tr>`).join('')||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">Зарлага байхгүй</td></tr>';
 }
 
-function fmtApt(r){return r.building+'-'+aptLabel(r.building,r.floor,r.door);}
+function renderAccumulation() {
+  const months=[1,2,3,4,5,6,7,8,9,10,11,12];
+  let cumulative=0;
+  const rows=months.map(m=>{
+    const inc=transactions.filter(t=>t.type==='income'&&t.month===m&&t.year===2026).reduce((s,t)=>s+t.amount,0);
+    const exp=transactions.filter(t=>t.type==='expense'&&t.month===m&&t.year===2026).reduce((s,t)=>s+t.amount,0);
+    const diff=inc-exp; const hasTx=inc>0||exp>0;
+    if(hasTx) cumulative+=diff;
+    return `<tr style="${!hasTx?'opacity:.3':''}">
+      <td style="color:var(--text-dim)">${m}-р сар</td>
+      <td class="text-success" style="font-variant-numeric:tabular-nums">${inc?fmtMoney(inc):'—'}</td>
+      <td class="text-danger" style="font-variant-numeric:tabular-nums">${exp?fmtMoney(exp):'—'}</td>
+      <td class="${diff>=0?'text-success':'text-danger'}" style="font-variant-numeric:tabular-nums">${hasTx?fmtMoney(diff):'—'}</td>
+      <td class="text-accent" style="font-variant-numeric:tabular-nums">${hasTx?fmtMoney(cumulative):'—'}</td>
+    </tr>`;
+  });
+  const totInc=transactions.filter(t=>t.type==='income'&&t.year===2026).reduce((s,t)=>s+t.amount,0);
+  const totExp=transactions.filter(t=>t.type==='expense'&&t.year===2026).reduce((s,t)=>s+t.amount,0);
+  const tb=document.getElementById('accumulation-table-body'); if(tb) tb.innerHTML=rows.join('');
+  const ab=document.getElementById('accumulation-body');
+  if(ab) ab.innerHTML=`
+    <div class="summary-row"><span class="summary-key">Нийт орлого</span><span class="summary-val text-success">${fmtMoney(totInc)}</span></div>
+    <div class="summary-row"><span class="summary-key">Нийт зарлага</span><span class="summary-val text-danger">${fmtMoney(totExp)}</span></div>
+    <div class="summary-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
+      <span class="summary-key" style="font-weight:700;color:var(--text)">Нийт хуримтлал</span>
+      <span class="summary-val text-accent" style="font-size:18px">${fmtMoney(totInc-totExp)}</span></div>`;
+}
 
 function renderFinanceTable(){renderIncomeTable();}
 function renderExpenses(){renderExpenseTable();}
-
-function renderIncomeTable() {
-  const mf=document.getElementById('inc-month-filter')?.value||'';
-  const list=transactions.filter(t=>t.type==='income'&&(!mf||t.month==mf)).sort((a,b)=>b.id-a.id);
-  const body=document.getElementById('income-table-body');
-  if(!body)return;
-  body.innerHTML=list.map(t=>{
-    const r=residents.find(x=>x.apt===t.apt);
-    return `<tr>
-      <td style="color:var(--text-muted)">${t.date}</td>
-      <td>${r?fmtApt(r):'—'}</td>
-      <td><span class="tag tag-success">Орлого</span></td>
-      <td style="color:var(--text-dim);font-size:12px">${t.desc}</td>
-      <td class="text-success font-mono">+${fmt(t.amount)}</td>
-      <td>${methodIcon(t.method)} ${methodName(t.method)}</td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">Орлого байхгүй</td></tr>';
-}
-
-function renderExpenseTable() {
-  const mf=document.getElementById('tx-month-filter')?.value||'';
-  const list=transactions.filter(t=>t.type==='expense'&&(!mf||t.month==mf)).sort((a,b)=>b.id-a.id);
-  const body=document.getElementById('expense-table-body');
-  if(!body)return;
-  const grpOf=item=>Object.entries(EXPENSE_CATS).find(([g,items])=>items.includes(item))?.[0]||'—';
-  body.innerHTML=list.map(t=>`<tr>
-    <td style="color:var(--text-muted)">${t.date}</td>
-    <td><span class="tag tag-gray" style="font-size:10px">${grpOf(t.subcat)}</span></td>
-    <td style="font-size:12px;color:var(--text-dim)">${t.subcat||t.desc}</td>
-    <td>${(t.desc&&t.desc!==t.subcat)?t.desc:''}</td>
-    <td class="text-danger font-mono">-${fmt(t.amount)}</td>
-  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Зарлага байхгүй</td></tr>';
-}
-
 function calcFeePreview() {
   feeSettings.perSqm=+document.getElementById('fee-per-sqm').value||2500;
   feeSettings.utility=+document.getElementById('fee-utility').value||15000;
@@ -1708,28 +2066,97 @@ function saveFeeSettings(){
 // ============================================================
 // PAYMENTS
 // ============================================================
-function renderPaymentsTable(tab='pending') {
-  const paidApts=transactions.filter(t=>t.type==='income'&&t.month===1).map(t=>t.apt);
-  let list;
-  if(tab==='pending') list=residents.filter(r=>!paidApts.includes(r.apt));
-  else if(tab==='completed') list=residents.filter(r=>paidApts.includes(r.apt));
-  else list=residents.filter(r=>!paidApts.includes(r.apt));
-  const body=document.getElementById('payments-table-body');
-  body.innerHTML=list.map(r=>{
+function renderPaymentsTable(tab='completed') {
+  const paidTx = transactions.filter(t=>t.type==='income').sort((a,b)=>b.id-a.id);
+  const paidAptIds = paidTx.filter(t=>t.month===1).map(t=>t.apt);
+  const body = document.getElementById('payments-table-body');
+
+  if(tab==='completed') {
+    body.innerHTML = paidTx.map(t=>{
+      const r=residents.find(x=>x.apt===t.apt);
+      return `<tr style="cursor:pointer" onclick="if(${r?r.id:0})openResidentDetail(${r?r.id:0})">
+        <td><strong>${r?fmtApt(r):t.apt||'—'}</strong></td>
+        <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${r.owner[0]}</div>${r.owner}</div>`:'—'}</td>
+        <td style="font-variant-numeric:tabular-nums">${fmtMoney(t.amount)}</td>
+        <td style="color:var(--text-dim)">${t.month}-р сар</td>
+        <td style="color:var(--text-muted)">${t.date}</td>
+        <td style="color:var(--text-dim)">${methodName(t.method)}</td>
+        <td style="color:var(--success);font-size:12px;font-weight:600;white-space:nowrap">Төлсөн</td>
+        <td>—</td>
+      </tr>`;
+    }).join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Төлөгдсөн гүйлгээ байхгүй</td></tr>';
+    return;
+  }
+
+  if(tab==='risk') {
+    // Сүүлийн 12 сар: одоогийн сараас 12 сар хойш буцаад
+    // Одоо: 2026/06 → 12 сар өмнө: 2025/06
+    const now = new Date(2026, 0, 1); // demo: 2026 оны 1-р сар
+    // Сүүлийн 12 сарын огноог тодорхойлно
+    const cutoffYear = now.getFullYear() - 1;
+    const cutoffMonth = now.getMonth() + 1; // 1-р сар → нэг жилийн өмнө = 2025/1
+    const riskResidents = residents.filter(r=>{
+      // Сүүлийн 12 сарын хугацаанд (cutoff-оос хойш) нэг ч төлбөр хийгээгүй
+      const hasPaid = transactions.some(t=>{
+        if(t.apt!==r.apt||t.type!=='income') return false;
+        // cutoff-оос хойших сарууд
+        if(t.year > cutoffYear) return true;
+        if(t.year === cutoffYear && t.month >= cutoffMonth) return true;
+        return false;
+      });
+      return !hasPaid;
+    });
+    body.innerHTML = riskResidents.map(r=>{
+      const fee=calcFee(residentSqm(r));
+      // Хамгийн сүүлийн төлбөрийн огноог олно
+      const lastPay = transactions.filter(t=>t.apt===r.apt&&t.type==='income').sort((a,b)=>(b.year*100+b.month)-(a.year*100+a.month))[0];
+      const lastStr = lastPay ? `${lastPay.year}/${String(lastPay.month).padStart(2,'0')}` : 'Огт төлөөгүй';
+      return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
+        <td><strong>${fmtApt(r)}</strong></td>
+        <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.2);color:#EF4444">${r.owner[0]}</div>${r.owner}</div></td>
+        <td style="font-variant-numeric:tabular-nums;color:var(--danger)">${fmtMoney(fee)}</td>
+        <td style="color:var(--danger)">12+ сар</td>
+        <td style="color:var(--text-muted);font-size:11px">${lastStr}</td>
+        <td style="color:var(--text-dim)">—</td>
+        <td style="color:var(--danger);font-size:12px;font-weight:600;white-space:nowrap">Эрсдэлтэй</td>
+        <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();quickPayForApt(${r.id})">Бүртгэх</button></td>
+      </tr>`;
+    }).join('')||`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Эрсдэлтэй өмчлөгч байхгүй</td></tr>`;
+    return;
+  }
+
+  const isPending = tab==='pending';
+  const list = residents.filter(r=>!paidAptIds.includes(r.apt));
+  const statusColor = isPending ? 'var(--warning)' : 'var(--danger)';
+  const statusText = isPending ? 'Хүлээлттэй' : 'Хэтэрсэн';
+
+  body.innerHTML = list.map(r=>{
     const fee=calcFee(residentSqm(r));
-    return `<tr>
+    return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
       <td><strong>${fmtApt(r)}</strong></td>
-      <td>${r.owner}</td>
-      <td class="font-mono">${fmt(fee)}</td>
-      <td style="color:var(--text-muted)">2026-01-25</td>
-      <td>—</td>
-      <td><span class="tag ${tab==='completed'?'tag-success':tab==='overdue'?'tag-danger':'tag-warning'}">${tab==='completed'?'✓ Төлсөн':tab==='overdue'?'Хэтэрсэн':'Хүлээгдэж байна'}</span></td>
-      <td><button class="btn btn-primary btn-sm" onclick="quickPayForApt(${r.id})">Бүртгэх</button></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.15);color:#EF4444">${r.owner[0]}</div>${r.owner}</div></td>
+      <td style="font-variant-numeric:tabular-nums">${fmtMoney(fee)}</td>
+      <td style="color:var(--text-dim)">1-р сар</td>
+      <td style="color:var(--text-muted)">2026/01/25</td>
+      <td style="color:var(--text-dim)">—</td>
+      <td style="color:${statusColor};font-size:12px;font-weight:600;white-space:nowrap">${statusText}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();quickPayForApt(${r.id})">Бүртгэх</button></td>
     </tr>`;
-  }).join('')||`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">Мэдээлэл байхгүй</td></tr>`;
+  }).join('')||`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Мэдээлэл байхгүй</td></tr>`;
 }
 
-function switchPayTab(tab,el){document.querySelectorAll('#page-payments .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderPaymentsTable(tab);}
+function switchPayTab(tab,el){
+  document.querySelectorAll('#page-payments .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderPaymentsTable(tab);
+}
+
+function openResidentDetail(resId) {
+  const r=residents.find(x=>x.id===resId); if(!r) return;
+  const sqm=residentSqm(r);
+  const paid=transactions.some(t=>t.apt===r.apt&&t.type==='income'&&t.month===1);
+  showAptDetail(r.apt,r.building,r.floor,r.door,r,paid,sqm);
+}
 
 function openPayModal() {
   document.getElementById('pay-building-select').value='';
@@ -1815,7 +2242,7 @@ function savePayment() {
   const ref=document.getElementById('pay-ref').value;
   const month=+document.getElementById('pay-month').value;
   if(!amount){toast('Дүн оруулна уу','error');return;}
-  transactions.push({id:nextId++,aptId:r.id,apt:r.apt,desc:'СӨХ-ийн төлбөр',type:'income',amount,method,ref,month,year:2026,date:`2026-${String(month).padStart(2,'0')}-01`,status:'completed'});
+  transactions.push({id:nextId++,aptId:r.id,apt:r.apt,desc:'СӨХ-ийн төлбөр',type:'income',amount,method,ref,month,year:2026,date:'2026/'+String(month).padStart(2,'0')+'/'+String(new Date().getDate()).padStart(2,'0'),status:'completed'});
   toast(`${fmtApt(r)} СӨХ-ийн төлбөр бүртгэгдлээ ✓`,'success');
   closeModal('modal-payment');renderPaymentsTable('pending');
 }
@@ -1823,24 +2250,39 @@ function savePayment() {
 // ============================================================
 // EXPENSE/INCOME MODAL
 // ============================================================
+function todayStr(){const d=new Date();return d.getFullYear()+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+String(d.getDate()).padStart(2,'0');}
+
+function loadExpCats(type){
+  const catSel=document.getElementById('exp-category');
+  catSel.innerHTML='';
+  if(type==='income'){
+    INCOME_CATS.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;catSel.appendChild(o);});
+  } else {
+    Object.entries(EXPENSE_CATS).forEach(([group,items])=>{
+      const og=document.createElement('optgroup');og.label=group;
+      items.forEach(item=>{const o=document.createElement('option');o.value=item;o.textContent=item;og.appendChild(o);});
+      catSel.appendChild(og);
+    });
+  }
+}
+
 function openAddExpense(){
-  document.getElementById('modal-expense-title').textContent='📝 Зарлага нэмэх';
-  const io=document.getElementById('exp-income-opt');if(io)io.style.display='none';
+  document.getElementById('modal-expense-title').textContent='Зарлага нэмэх';
   document.getElementById('exp-type').value='expense';
-  onExpTypeChange();
+  loadExpCats('expense');
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-desc').value='';
-  document.getElementById('exp-date').value='2026/01/'+String(new Date().getDate()).padStart(2,'0');
+  document.getElementById('exp-date').value=todayStr();
   openModal('modal-expense');
 }
+
 function openAddIncome(){
-  document.getElementById('modal-expense-title').textContent='📈 Орлого нэмэх';
-  const io=document.getElementById('exp-income-opt');if(io)io.style.display='';
+  document.getElementById('modal-expense-title').textContent='Орлого нэмэх';
   document.getElementById('exp-type').value='income';
-  onExpTypeChange();
+  loadExpCats('income');
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-desc').value='';
-  document.getElementById('exp-date').value='2026/01/'+String(new Date().getDate()).padStart(2,'0');
+  document.getElementById('exp-date').value=todayStr();
   openModal('modal-expense');
 }
 function saveExpense(){
@@ -1850,8 +2292,10 @@ function saveExpense(){
   const type=document.getElementById('exp-type').value;
   const dateRaw=document.getElementById('exp-date').value.trim();
   if(!amount){toast('Дүн оруулна уу','error');return;}
-  const parts=dateRaw.replace(/\//g,'-').split('-');const month=+parts[1]||1;
-  transactions.push({id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year:2026,date:dateRaw.replace(/\//g,'-'),status:'completed',category:type});
+  const parts=dateRaw.replace(/\//g,'-').split('-');
+  const month=+parts[1]||1; const year=+parts[0]||2026;
+  const dateOut=parts[0]+'/'+String(parts[1]||'01').padStart(2,'0')+'/'+String(parts[2]||'01').padStart(2,'0');
+  transactions.push({id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type});
   closeModal('modal-expense');
   if(type==='expense')renderExpenseTable();else renderIncomeTable();
   toast((type==='expense'?'Зарлага':'Орлого')+' нэмэгдлээ ✓','success');
@@ -2018,7 +2462,7 @@ function showAptDetail(aptId, buildingId, floor, door, res, paid, sqm) {
       <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin:12px 0 6px">📋 Төлбөрийн түүх</div>
       ${history.length?history.map(t=>`
         <div class="summary-row">
-          <span class="summary-key">${t.year}-${String(t.month).padStart(2,'0')} сар ${methodIcon(t.method)} ${methodName(t.method)}</span>
+          <span class="summary-key">${t.year}-${String(t.month).padStart(2,'0')} сар ${methodName(t.method)}</span>
           <span class="summary-val text-success font-mono">${fmt(t.amount)}</span>
         </div>`).join(''):'<div style="color:var(--text-muted);font-size:13px;padding:8px 0">Төлбөрийн түүх байхгүй</div>'}
     `;
@@ -2035,11 +2479,11 @@ function showAptDetail(aptId, buildingId, floor, door, res, paid, sqm) {
   const editBtn = document.getElementById('apt-detail-edit-btn');
   const payBtn = document.getElementById('apt-detail-pay-btn');
   if(res) {
-    editBtn.textContent = '✏️ Мэдээлэл засварлах';
+    editBtn.textContent = 'Мэдээлэл засварлах';
     editBtn.style.display = '';
     payBtn.style.display = '';
   } else {
-    editBtn.textContent = '+ Өмчлөгч бүртгэх';
+    editBtn.textContent = 'Өмчлөгч бүртгэх';
     editBtn.style.display = '';
     payBtn.style.display = 'none';
   }
@@ -2094,7 +2538,7 @@ function generateReport(type) {
         <div><div class="summary-row"><span class="summary-key">Төлсөн тоот</span><span class="summary-val">${monthTx.length}</span></div>
         <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${residents.length}</span></div></div>
       </div>
-      <table><thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Арга</th><th>Огноо</th></tr></thead>
+      <table><thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
       <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?r.owner:'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
     title.textContent='📉 Зарлагын тайлан — 2025';
@@ -2128,16 +2572,14 @@ function printReport() { window.print(); }
 // ============================================================
 function renderNotifications() {
   const list = document.getElementById('notifications-list');
-  const icons = {info:'ℹ️',warning:'⚠️',payment:'💰',maintenance:'🔧'};
   list.innerHTML = notifications.slice().reverse().map(n=>`
     <div class="notif-card">
-      <div class="notif-icon">${icons[n.type]||'📢'}</div>
       <div style="flex:1">
         <div class="notif-title">${n.title}</div>
         <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">${n.content.slice(0,80)}${n.content.length>80?'...':''}</div>
-        <div class="notif-meta">${n.date} • ${n.sent} хүнд илгээсэн</div>
+        <div class="notif-meta">${n.date} · ${n.sent} хүнд илгээсэн</div>
       </div>
-    </div>`).join('') || '<div class="empty-state"><div class="empty-icon">📭</div><div>Мэдэгдэл байхгүй</div></div>';
+    </div>`).join('') || '<div class="empty-state"><div style="margin-bottom:8px;color:var(--text-muted)">Мэдэгдэл байхгүй</div></div>';
 }
 
 function sendNotification() {
@@ -2153,7 +2595,7 @@ function sendNotification() {
   document.getElementById('notif-title-input').value='';
   document.getElementById('notif-content').value='';
   renderNotifications();
-  toast(`Мэдэгдэл ${recCount} хүнд илгээгдлээ ✓`,'success');
+  toast(`Мэдэгдэл ${recCount} хүнд илгээгдлээ`,'success');
 }
 
 function addPollOption() {
@@ -2168,9 +2610,9 @@ function createPoll() {
   const q=document.getElementById('poll-question').value.trim();
   const opts=[...document.querySelectorAll('.poll-opt')].map(i=>i.value.trim()).filter(Boolean);
   if(!q||opts.length<2){toast('Асуулт болон 2-оос дээш хариулт оруулна уу','error');return;}
-  notifications.push({id:nextId++,type:'info',title:'📊 Санал асуулга: '+q,content:`Хариулт: ${opts.join(', ')}`,recipient:'all',date:new Date().toISOString().slice(0,10),sent:residents.reduce((s,r)=>s+r.people,0)});
+  notifications.push({id:nextId++,type:'info',title:'Санал асуулга: '+q,content:`Хариулт: ${opts.join(', ')}`,recipient:'all',date:new Date().toISOString().slice(0,10),sent:residents.reduce((s,r)=>s+r.people,0)});
   renderNotifications();
-  toast('Санал асуулга илгээгдлээ ✓','success');
+  toast('Санал асуулга илгээгдлээ','success');
   document.getElementById('poll-question').value='';
   document.querySelectorAll('.poll-opt').forEach(i=>i.value='');
 }
@@ -2178,28 +2620,9 @@ function createPoll() {
 // ============================================================
 // EXPENSE MODAL
 // ============================================================
-function openAddExpense() {
-  document.getElementById('exp-date').value = new Date().toISOString().slice(0,10);
-  openModal('modal-expense');
-}
-
-function saveExpense() {
-  const amount=+document.getElementById('exp-amount').value;
-  const desc=document.getElementById('exp-desc').value.trim();
-  const category=document.getElementById('exp-category').value;
-  const date=document.getElementById('exp-date').value;
-  if(!amount||!desc){toast('Дүн болон тайлбар оруулна уу','error');return;}
-  transactions.push({id:nextId++,apt:null,desc,type:'expense',amount,method:'bank',ref:'',month:+date.split('-')[1],year:+date.split('-')[0],date,status:'completed',category});
-  closeModal('modal-expense');
-  renderFinanceTable();
-  renderExpenses();
-  toast('Зарлага нэмэгдлээ ✓','success');
-}
-
-// ============================================================
 // UTILS
 // ============================================================
-function methodIcon(m){return{qpay:'📱',bank:'🏦',cash:'💵'}[m]||'💳';}
+function methodIcon(m){return '';}
 function methodName(m){return{qpay:'QPay',bank:'Данс шилжүүлэг',cash:'Бэлэн мөнгө'}[m]||m;}
 
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -2212,7 +2635,7 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 function toast(msg, type='success') {
   const el=document.createElement('div');
   el.className='toast-msg '+type;
-  el.innerHTML=(type==='success'?'✅':'❌')+' '+msg;
+  el.innerHTML=(type==='success'?'':'')+' '+msg;
   document.getElementById('toast').appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }
@@ -2223,12 +2646,12 @@ function toast(msg, type='success') {
 function updateSidebarCount() {
   const total = residents.reduce((s,r)=>s+(+r.people||0), 0);
   const el = document.getElementById('sidebar-residents-count');
-  if(el) el.textContent = total.toLocaleString() + ' оршин суугч';
+  if(el) el.textContent = 'Хүн ам · ' + total.toLocaleString();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
   refreshDashboard();onExpTypeChange();updateSidebarCount();
-  document.getElementById('exp-date').value = '2026/01/'+String(new Date().getDate()).padStart(2,'0');
+  document.getElementById('exp-date').value = todayStr();
 });
 </script>
 </body>
