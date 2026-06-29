@@ -374,7 +374,7 @@
       <span>Мэдэгдэл</span>
     </div>
     <div class="nav-section">Тохиргоо</div>
-    <div class="nav-item" onclick="showPage('admin')">
+    <div class="nav-item" id="nav-admin-building" onclick="showPage('admin')">
       <span>⚙️ Байрны тохиргоо</span>
     </div>
     <div class="nav-item" id="nav-auth-levels" onclick="showPage('auth_levels')">
@@ -3865,7 +3865,7 @@ async function saveBuilding() {
     if(error){toast('Алдаа: '+error.message,'error');return;}
     BUILDINGS.push(localRow);
     BUILDINGS.sort((a,b)=>a.id-b.id);
-    toast(`Байр нэмэгдлээ ✓ (нийт ${totalApts} тоот)','success`);
+    toast(`Байр нэмэгдлээ ✓ (нийт ${totalApts} тоот)`,'success');
   }
   closeModal('modal-admin-building');
   populateBuildingSelects();
@@ -4211,7 +4211,7 @@ function applyNavByRole(role) {
   });
 
   // nav-admin (Байрны тохиргоо)
-  const navAdmin = document.querySelector('[onclick="showPage('admin')"]');
+  const navAdmin = document.getElementById('nav-admin-building');
   if(navAdmin) navAdmin.style.display = isAdmin ? 'flex' : 'none';
 }
 
