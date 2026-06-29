@@ -629,7 +629,7 @@
       <div id="fin-accumulation" style="display:none">
         <div class="flex-between mb-16">
           <div class="flex gap-8">
-            <select id="accumulation-year-select" onchange="renderAccumulation()" style="width:90px">
+            <select id="accumulation-year-select" onchange="renderAccumulation()" style="width:auto">
             </select>
           </div>
         </div>
@@ -2637,7 +2637,7 @@ function renderAccumulation() {
     if(!years.includes(CUR_YEAR)) years.push(CUR_YEAR);
     years.sort((a,b)=>b-a);
     const curVal = +sel.value || CUR_YEAR;
-    sel.innerHTML = years.map(y=>`<option value="${y}" ${y===curVal?'selected':''}>${y}</option>`).join('');
+    sel.innerHTML = years.map(y=>`<option value="${y}" ${y===curVal?'selected':''}>${y}</option>`).join('') + '<option value="">Бүх он</option>';
   }
   const selectedYear = sel ? (+sel.value || CUR_YEAR) : CUR_YEAR;
   const titleEl = document.getElementById('accumulation-card-title');
