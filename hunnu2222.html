@@ -1374,7 +1374,7 @@ async function db_loadBusinesses() {
   if(error){console.error('businesses load error:', JSON.stringify(error), error.message);return;}
   if(!data){console.error('businesses: data null');return;}
   businesses = data.map(b=>({
-    id:b.id, name:b.name, regno:b.regno||'', type:b.type||'tenant',
+    id:b.id, dbId:b.id, name:b.name, regno:b.regno||'', type:b.type||'tenant',
     ceo:b.ceo||'', mobile:b.mobile||'', phone:b.phone||'', email:b.email||'',
     contract:b.contract||'', start:b.start_date||'', end:b.end_date||'',
     note:b.note||'', vehicles:b.vehicles||[]
@@ -2388,7 +2388,10 @@ function editBusiness(id) {
 async function saveBusiness() {
   const name = document.getElementById('biz-name').value.trim();
   if(!name){toast('Байгууллагын нэр оруулна уу','error');return;}
+  const _editingBiz = editingBusinessId ? businesses.find(b=>b.id===editingBusinessId) : null;
   const data = {
+    id: _editingBiz?.id || null,
+    dbId: _editingBiz?.dbId || null,
     name, regno:document.getElementById('biz-regno').value.trim(),
     type:document.getElementById('biz-type').value,
     ceo:document.getElementById('biz-ceo').value.trim(),
