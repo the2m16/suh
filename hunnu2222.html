@@ -1506,7 +1506,9 @@ async function db_loadTransactions() {
 
 async function db_saveTransaction(t) {
   const row = {
-    apt:t.apt, description:t.desc,
+    apt:t.apt||null,
+    resident_id:t.aptId||null,
+    description:t.description||t.desc||'',
     subcat:t.subcat, type:t.type, amount:t.amount, method:t.method,
     ref:t.ref, month:t.month, year:t.year, date:t.date,
     status:t.status, category:t.category
@@ -2958,9 +2960,15 @@ function selectPayMethod(el,method){
 }
 
 async function savePayment() {
-  const resId=+document.getElementById('pay-apt-select').value;
+  // Quick pay горимд pay-apt-select нуугдсан тул selectedAptForDetail ашиглана
+  const selectEl = document.getElementById('pay-apt-select');
+  const isQuickMode = document.getElementById('pay-resident-info').style.display !== 'none';
+  let resId = isQuickMode
+    ? (selectedAptForDetail?.id || 0)
+    : +selectEl.value;
   if(!resId){toast('Тоот сонгоно уу','error');return;}
   const r=residents.find(x=>x.id===resId);
+  if(!r){toast('Өмчлөгч олдсонгүй','error');return;}
   const amount=+document.getElementById('pay-amount').value;
   const method=document.getElementById('pay-method').value;
   const ref=document.getElementById('pay-ref').value;
