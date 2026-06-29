@@ -1356,6 +1356,7 @@ async function db_deleteResident(id) {
 async function db_loadBusinesses() {
   const {data,error} = await sb.from('businesses').select('*').order('id');
   if(error){console.error('businesses load error:', JSON.stringify(error), error.message);return;}
+  if(!data){console.error('businesses: data null');return;}
   businesses = data.map(b=>({
     id:b.id, name:b.name, regno:b.regno||'', type:b.type||'tenant',
     ceo:b.ceo||'', mobile:b.mobile||'', phone:b.phone||'', email:b.email||'',
@@ -1415,6 +1416,7 @@ async function db_saveTransaction(t) {
 async function db_loadSettings() {
   const {data,error} = await sb.from('settings').select('*');
   if(error){console.error('settings load error:', JSON.stringify(error), error.message);return;}
+  if(!data){console.error('settings: data null');return;}
   data.forEach(s=>{
     if(s.key==='fee') Object.assign(feeSettings, s.value);
     if(s.key==='rent') Object.assign(rentSettings, s.value);
@@ -1429,6 +1431,7 @@ async function db_saveSettings(key, value) {
 async function db_loadNotifications() {
   const {data,error} = await sb.from('notifications').select('*').order('id',{ascending:false});
   if(error){console.error('notifications load error:', JSON.stringify(error), error.message);return;}
+  if(!data){console.error('notifications: data null');return;}
   notifications = data;
 }
 
@@ -1626,7 +1629,7 @@ function showPage(name) {
 // ============================================================
 function refreshDashboard() {
   const thisMonth = CUR_MONTH, thisYear = CUR_YEAR;
-  const monthTx = transactions.filter(t=>t.month===thisMonth&&t.year===thisYear);
+  const monthTx = transactions.filter(t=>t&&t.month===thisMonth&&t.year===thisYear);
   const income = monthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>t.apt))];
   const totalApts = residents.length;
@@ -1653,8 +1656,8 @@ function fmtShort(n){return n>=1e6?(n/1e6).toFixed(1)+'сая':n>=1e3?(n/1e3).to
 
 function renderChart() {
   const months = ['1','2','3','4','5','6','7','8','9','10','11','12'];
-  const incomes = months.map((_,i)=>transactions.filter(t=>t.type==='income'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
-  const expenses = months.map((_,i)=>transactions.filter(t=>t.type==='expense'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
+  const incomes = months.map((_,i)=>transactions.filter(t=>t&&t.type==='income'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
+  const expenses = months.map((_,i)=>transactions.filter(t=>t&&t.type==='expense'&&t.month===i+1).reduce((s,t)=>s+t.amount,0));
   const maxVal = Math.max(...incomes,...expenses,1);
   const chartEl = document.getElementById('main-chart');
   const labelEl = document.getElementById('chart-labels');
@@ -1806,9 +1809,7 @@ function filterResidents(){renderResidents(document.getElementById('resident-sea
 function exportCSV() {
   const headers=['Байр','Давхар','Хаалга','Тоот','Нэр','Овог','Регистр','ӨЭУБД','Өмчилсөн огноо','Утас','И-мэйл','Ам бүл','0-6 насны хүүхэд','6-18 насны хүүхэд','Талбай (м²)','Зогсоол','Агуулах'];
   const rows=residents.map(r=>{
-    const parts=(r.owner||'').trim().split(' ');
-    const fn=parts[0]||''; const ln=parts.slice(1).join(' ')||'';
-    return [r.building,r.floor,r.door,fmtApt(r),fn,ln,r.reg||'',r.oeubd||'',r.ownDate||'',
+    return [r.building,r.floor,r.door,fmtApt(r),r.firstname||'',r.lastname||'',r.reg||'',r.oeubd||'',r.ownDate||'',
       (r.phones||[r.phone||'']).join(';'),(r.emails||[r.email||'']).join(';'),
       r.people,r.child1||0,r.child2||0,residentSqm(r),
       (r.parkings||[]).join(';'),(r.storages||[]).map(s=>s.num+(s.sqm?':'+s.sqm:'')).join(';')];
@@ -2096,17 +2097,10 @@ function onExpTypeChange() {
 function _fmtOwner2(r) {
   const fn = (r.firstname||'').trim();
   const ln = (r.lastname||'').trim();
-  if(fn && ln) return fn + ' ' + ln[0] + '.';
-  if(fn) return fn;
-  return _fmtOwner(r.owner||'');
+  if(fn || ln) return (fn + (ln ? ' ' + ln : '')).trim();
+  return '—';
 }
 
-function _fmtOwner(owner) {
-  if(!owner) return '—';
-  const parts = owner.trim().split(' ');
-  if(parts.length < 2) return owner;
-  return parts[0] + ' ' + parts[1][0] + '.';
-}
 
 function fmtApt(r){return r.building+'-'+aptLabel(r.building,r.floor,r.door);}
 
@@ -2322,7 +2316,7 @@ function switchAptView(view) {
 function renderIncomeTable() {
   const mf=document.getElementById('inc-month-filter')?.value;
   const yf=document.getElementById('inc-year-filter')?.value;
-  const list=transactions.filter(t=>t.type==='income'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
+  const list=transactions.filter(t=>t&&t.type==='income'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('income-table-body');
   if(!body)return;
   body.innerHTML=list.map(t=>{
@@ -2340,7 +2334,7 @@ function renderIncomeTable() {
 function renderExpenseTable() {
   const mf=document.getElementById('tx-month-filter')?.value;
   const yf=document.getElementById('exp-year-filter')?.value;
-  const list=transactions.filter(t=>t.type==='expense'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
+  const list=transactions.filter(t=>t&&t.type==='expense'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('expense-table-body');
   if(!body)return;
   body.innerHTML=list.map(t=>`<tr>
@@ -2355,8 +2349,8 @@ function renderAccumulation() {
   const months=[1,2,3,4,5,6,7,8,9,10,11,12];
   let cumulative=0;
   const rows=months.map(m=>{
-    const inc=transactions.filter(t=>t.type==='income'&&t.month===m&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
-    const exp=transactions.filter(t=>t.type==='expense'&&t.month===m&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
+    const inc=transactions.filter(t=>t&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
+    const exp=transactions.filter(t=>t&&t.type==='expense'&&t.month===m&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
     const diff=inc-exp; const hasTx=inc>0||exp>0;
     if(hasTx) cumulative+=diff;
     return `<tr style="${!hasTx?'opacity:.3':''}">
@@ -2367,8 +2361,8 @@ function renderAccumulation() {
       <td class="text-accent" style="font-variant-numeric:tabular-nums">${hasTx?fmtMoney(cumulative):'—'}</td>
     </tr>`;
   });
-  const totInc=transactions.filter(t=>t.type==='income'&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
-  const totExp=transactions.filter(t=>t.type==='expense'&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
+  const totInc=transactions.filter(t=>t&&t.type==='income'&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
+  const totExp=transactions.filter(t=>t&&t.type==='expense'&&t.year===CUR_YEAR).reduce((s,t)=>s+t.amount,0);
   const tb=document.getElementById('accumulation-table-body'); if(tb) tb.innerHTML=rows.join('');
   const ab=document.getElementById('accumulation-body');
   if(ab) ab.innerHTML=`
@@ -2432,12 +2426,12 @@ function _payRow(r, bgColor, textColor, statusText, showBtn) {
 }
 
 function _renderPayCompleted(body) {
-  const paidTx = transactions.filter(t=>t.type==='income').sort((a,b)=>b.id-a.id);
+  const paidTx = transactions.filter(t=>t&&t.type==='income').sort((a,b)=>b.id-a.id);
   body.innerHTML = paidTx.map(t=>{
     const r = residents.find(x=>x.apt===t.apt);
     return `<tr style="cursor:pointer" onclick="if(${r?r.id:0})openResidentDetail(${r?r.id:0})">
       <td><strong>${r?fmtApt(r):t.apt||'—'}</strong></td>
-      <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${(r.owner||"?")[0]}</div>${r.owner}</div>`:'—'}</td>
+      <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${(r.firstname||"?")[0]}</div>${((r.firstname||"")+" "+(r.lastname||"")).trim()||"—"}</div>`:'—'}</td>
       <td style="font-variant-numeric:tabular-nums">${fmtMoney(t.amount)}</td>
       <td style="color:var(--text-dim)">${t.month}-р сар</td>
       <td style="color:var(--text-muted)">${t.date}</td>
@@ -2471,11 +2465,11 @@ function _renderPayRisk(body) {
   });
   body.innerHTML = riskResidents.map(r=>{
     const fee = calcFee(residentSqm(r));
-    const lastPay = transactions.filter(t=>t.apt===r.apt&&t.type==='income').sort((a,b)=>(b.year*100+b.month)-(a.year*100+a.month))[0];
+    const lastPay = transactions.filter(t=>t&&t.apt===r.apt&&t.type==='income').sort((a,b)=>(b.year*100+b.month)-(a.year*100+a.month))[0];
     const lastStr = lastPay ? `${lastPay.year}/${String(lastPay.month).padStart(2,'0')}` : 'Огт төлөөгүй';
     return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
       <td><strong>${fmtApt(r)}</strong></td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.2);color:#EF4444">${(r.owner||"?")[0]}</div>${r.owner}</div></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.2);color:#EF4444">${(r.firstname||"?")[0]}</div>${((r.firstname||"")+" "+(r.lastname||"")).trim()||"—"}</div></td>
       <td style="font-variant-numeric:tabular-nums;color:var(--danger)">${fmtMoney(fee)}</td>
       <td style="color:var(--danger)">12+ сар</td>
       <td style="color:var(--text-muted);font-size:11px">${lastStr}</td>
@@ -2488,7 +2482,7 @@ function _renderPayRisk(body) {
 
 function renderPaymentsTable(tab='completed') {
   const body = document.getElementById('payments-table-body');
-  const paidAptIds = transactions.filter(t=>t.type==='income'&&t.month===CUR_MONTH).map(t=>t.apt);
+  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH).map(t=>t.apt);
   if(tab==='completed') _renderPayCompleted(body);
   else if(tab==='pending') _renderPayPending(body, paidAptIds);
   else if(tab==='overdue') _renderPayOverdue(body, paidAptIds);
@@ -2703,7 +2697,7 @@ function renderAptGrid(buildingId) {
   const bld = BUILDINGS.find(b=>b.id===buildingId);
   if(!bld) return;
   const thisMonth = CUR_MONTH;
-  const paidAptIds = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
   const container = document.getElementById('apt-grid-container');
   container.innerHTML='';
 
@@ -2847,7 +2841,7 @@ function showAptDetail(aptId, buildingId, floor, door, res, paid, sqm) {
   _aptDetailDoor = door;
   const label = aptLabel(buildingId, floor, door);
   document.getElementById('apt-detail-title').textContent = `${buildingId}-р байр · ${label} тоот`;
-  const history = transactions.filter(t=>t.apt===aptId&&t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
+  const history = transactions.filter(t=>t&&t.apt===aptId&&t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
   document.getElementById('apt-detail-body').innerHTML = res
     ? _aptDetailResidentHTML(res, buildingId, floor, label, sqm, paid, history)
     : _aptDetailEmptyHTML(buildingId, label, sqm);
@@ -2892,7 +2886,7 @@ function generateReport(type) {
   const thisMonth = CUR_MONTH;
   if(type==='income') {
     title.textContent='📈 Орлогын тайлан — 2026 оны 1-р сар';
-    const monthTx = transactions.filter(t=>t.type==='income'&&t.month===thisMonth);
+    const monthTx = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth);
     const total = monthTx.reduce((s,t)=>s+t.amount,0);
     const expected = residents.reduce((s,r)=>s+calcFee(residentSqm(r)),0);
     body.innerHTML=`
@@ -2907,7 +2901,7 @@ function generateReport(type) {
       <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:''):'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
     title.textContent='📉 Зарлагын тайлан — 2025';
-    const exps = transactions.filter(t=>t.type==='expense');
+    const exps = transactions.filter(t=>t&&t.type==='expense');
     const total = exps.reduce((s,t)=>s+t.amount,0);
     const catNames = {utility:'Ашиглалтын зардал',maintenance:'Засвар',cleaning:'Цэвэрлэгээ',security:'Хамгаалалт',other:'Бусад'};
     const byCat = {};
@@ -2919,7 +2913,7 @@ function generateReport(type) {
       <tbody>${exps.map(t=>`<tr><td>${t.date}</td><td>${catNames[t.category]||'Бусад'}</td><td>${t.desc}</td><td class="text-danger font-mono">${fmt(t.amount)}</td></tr>`).join('')}</tbody></table>`;
   } else {
     title.textContent='⚠️ Өр авлагын тайлан — 2026 оны 1-р сар';
-    const paidApts = transactions.filter(t=>t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+    const paidApts = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
     const overdue = residents.filter(r=>!paidApts.includes(r.apt));
     const total = overdue.reduce((s,r)=>s+calcFee(residentSqm(r)),0);
     body.innerHTML=`
