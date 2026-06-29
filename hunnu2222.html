@@ -1320,7 +1320,7 @@ async function db_loadResidents() {
   if(!data){console.error("residents: data is null");return;}
   residents = data.map(r=>({
     id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    owner:r.owner, reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
+    owner:r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
     phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
     email:(r.emails||[])[0]||'', people:r.people||1, child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings||[], storages:r.storages||[], vehicles:r.vehicles||[]
@@ -1773,7 +1773,7 @@ function renderResidents(filter='') {
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${r.building}</strong></td>
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${aptLabel(r.building,r.floor,r.door)}</strong></td>
       <td style="color:var(--text-dim);white-space:nowrap">${sqm}<span style="font-size:10px"> м²</span></td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:11px;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${r.owner[0]}</div><span style="font-size:12.5px;font-weight:600">${_fmtOwner(r.owner)}</span></div></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:11px;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${(r.owner||"?")[0]}</div><span style="font-size:12.5px;font-weight:600">${_fmtOwner(r.owner||"")}</span></div></td>
       <td style="font-variant-numeric:tabular-nums;color:var(--text-dim);font-size:11.5px">${phones[0]||'—'}${phones.length>1?`<br><span style="color:var(--text-muted);font-size:10px">+${phones.length-1}</span>`:''}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${(r.emails||[r.email||'']).filter(Boolean)[0]||'—'}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${r.ownDate||'—'}</td>
@@ -2414,7 +2414,7 @@ function _payRow(r, bgColor, textColor, statusText, showBtn) {
   const fee = calcFee(residentSqm(r));
   return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
     <td><strong>${fmtApt(r)}</strong></td>
-    <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:${bgColor};color:${textColor}">${r.owner[0]}</div>${r.owner}</div></td>
+    <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:${bgColor};color:${textColor}">${(r.owner||"?")[0]}</div>${r.owner}</div></td>
     <td style="font-variant-numeric:tabular-nums">${fmtMoney(fee)}</td>
     <td style="color:var(--text-dim)">${CUR_MONTH}-р сар</td>
     <td style="color:var(--text-muted)">${CUR_YEAR}/${CUR_MONTH_STR}/25</td>
@@ -2430,7 +2430,7 @@ function _renderPayCompleted(body) {
     const r = residents.find(x=>x.apt===t.apt);
     return `<tr style="cursor:pointer" onclick="if(${r?r.id:0})openResidentDetail(${r?r.id:0})">
       <td><strong>${r?fmtApt(r):t.apt||'—'}</strong></td>
-      <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${r.owner[0]}</div>${r.owner}</div>`:'—'}</td>
+      <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${(r.owner||"?")[0]}</div>${r.owner}</div>`:'—'}</td>
       <td style="font-variant-numeric:tabular-nums">${fmtMoney(t.amount)}</td>
       <td style="color:var(--text-dim)">${t.month}-р сар</td>
       <td style="color:var(--text-muted)">${t.date}</td>
@@ -2468,7 +2468,7 @@ function _renderPayRisk(body) {
     const lastStr = lastPay ? `${lastPay.year}/${String(lastPay.month).padStart(2,'0')}` : 'Огт төлөөгүй';
     return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
       <td><strong>${fmtApt(r)}</strong></td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.2);color:#EF4444">${r.owner[0]}</div>${r.owner}</div></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(239,68,68,0.2);color:#EF4444">${(r.owner||"?")[0]}</div>${r.owner}</div></td>
       <td style="font-variant-numeric:tabular-nums;color:var(--danger)">${fmtMoney(fee)}</td>
       <td style="color:var(--danger)">12+ сар</td>
       <td style="color:var(--text-muted);font-size:11px">${lastStr}</td>
