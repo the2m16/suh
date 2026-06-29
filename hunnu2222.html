@@ -644,7 +644,7 @@
             <div class="card-header"><span class="card-title">Сарын хуримтлал</span></div>
             <div class="card-body" style="padding:0">
               <table>
-                <thead><tr><th>Сар</th><th>Орлого</th><th>Зарлага</th><th>Зөрүү</th><th>Хуримтлал</th></tr></thead>
+                <thead><tr><th>Сар</th><th>Орлого</th><th>Зарлага</th><th>Хуримтлалын сан</th><th>Зөрүү</th><th>Хуримтлал</th></tr></thead>
                 <tbody id="accumulation-table-body"></tbody>
               </table>
             </div>
@@ -2276,6 +2276,7 @@ const INCOME_CATS = ['Айл, өрх, зогсоол, агуулах','Аж ах
 const EXPENSE_CATS = {
   'Урсгал зардал': ['Цалин хөлсний зардал','НДШ зардал','Татварын зардал (ХХОАТ)','Ашиглалтын зардалд төлсөн (цахилгаан, ус, дулаан, санхүүгийн програм)','Барилга гүйцэтгүүлсэн ажил, үйлчилгээ (харуул, хог ачит, лифт, генератор, ариутгал)','Цэвэрлэгээний материал','Гэрэлтүүлэг, цахилгаан кабель','Сантехникийн материал','Барилга, аж ахуйн материал','Лифтний сэлбэг','Ачааны машин, шалны машины сэлбэг','Камер, домофон, галын дохиоллын сэлбэг','Зогсоолын хаалга, хаалт, сэлбэг хэрэгсэл','Орцны хаалга, сэлбэг, шил','Интернет, шуудан холбоо, бичиг хэрэг','Баяр ёслолын зардал','Шатахуун, тээврийн хөлс','Банкны шимтгэл','Хангамжийн материал (БҮТЗЭ)','Ажилчдын хоолны материал','Нотриат, Шүүх эмнэлгийн зардал','Хохирлын үнэлгээний төлбөр','Бусад /данс андуурсан гүйлгээ буцаалт/'],
   'Хөрөнгө оруулалтын зардал': ['Шалны машины төлбөр','Автомат хаалганы төлбөр','Зогсоолын хаалга','Баримт шүүгээ','Сагсны талбай','Шалны чулуу','Бусад'],
+  'Хуримтлалын сан': ['Хуримтлалын сан'],
 };
 
 function onExpTypeChange() {
@@ -2673,27 +2674,34 @@ function renderAccumulation() {
   let cumulative=0;
   const rows=months.map(m=>{
     const inc=transactions.filter(t=>t&&t.type==='income'&&t.month===m&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
-    const exp=transactions.filter(t=>t&&t.type==='expense'&&t.month===m&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
-    const diff=inc-exp; const hasTx=inc>0||exp>0;
+    const expAll=transactions.filter(t=>t&&t.type==='expense'&&t.month===m&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
+    const fund=transactions.filter(t=>t&&t.type==='expense'&&t.month===m&&t.year===selectedYear&&t.subcat==='Хуримтлалын сан').reduce((s,t)=>s+t.amount,0);
+    const exp=expAll-fund;
+    const diff=inc-expAll; const hasTx=inc>0||expAll>0;
     if(hasTx) cumulative+=diff;
     return `<tr style="${!hasTx?'opacity:.3':''}">
       <td style="color:var(--text-dim)">${m}-р сар</td>
       <td class="text-success" style="font-variant-numeric:tabular-nums">${inc?fmtMoney(inc):'—'}</td>
       <td class="text-danger" style="font-variant-numeric:tabular-nums">${exp?fmtMoney(exp):'—'}</td>
+      <td class="text-warning" style="font-variant-numeric:tabular-nums">${fund?fmtMoney(fund):'—'}</td>
       <td class="${diff>=0?'text-success':'text-danger'}" style="font-variant-numeric:tabular-nums">${hasTx?fmtMoney(diff):'—'}</td>
       <td class="text-accent" style="font-variant-numeric:tabular-nums">${hasTx?fmtMoney(cumulative):'—'}</td>
     </tr>`;
   });
   const totInc=transactions.filter(t=>t&&t.type==='income'&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
-  const totExp=transactions.filter(t=>t&&t.type==='expense'&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
+  const totExpAll=transactions.filter(t=>t&&t.type==='expense'&&t.year===selectedYear).reduce((s,t)=>s+t.amount,0);
+  const totFund=transactions.filter(t=>t&&t.type==='expense'&&t.year===selectedYear&&t.subcat==='Хуримтлалын сан').reduce((s,t)=>s+t.amount,0);
+  const totExp=totExpAll-totFund;
+  const totBalance=totInc-totExpAll;
   const tb=document.getElementById('accumulation-table-body'); if(tb) tb.innerHTML=rows.join('');
   const ab=document.getElementById('accumulation-body');
   if(ab) ab.innerHTML=`
     <div class="summary-row"><span class="summary-key">Нийт орлого</span><span class="summary-val text-success">${fmtMoney(totInc)}</span></div>
-    <div class="summary-row"><span class="summary-key">Нийт зарлага</span><span class="summary-val text-danger">${fmtMoney(totExp)}</span></div>
+    <div class="summary-row"><span class="summary-key">Нийт зарлага</span><span class="summary-val text-danger">- ${fmtMoney(totExp)}</span></div>
+    <div class="summary-row"><span class="summary-key">Хуримтлалын сан</span><span class="summary-val text-warning">- ${fmtMoney(totFund)}</span></div>
     <div class="summary-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
-      <span class="summary-key" style="font-weight:700;color:var(--text)">Нийт хуримтлал</span>
-      <span class="summary-val text-accent" style="font-size:18px">${fmtMoney(totInc-totExp)}</span></div>`;
+      <span class="summary-key" style="font-weight:700;color:var(--text)">Банкны данс + Кассын үлдэгдэл</span>
+      <span class="summary-val ${totBalance>=0?'text-accent':'text-danger'}" style="font-size:18px">${fmtMoney(totBalance)}</span></div>`;
 }
 
 function renderFinanceTable(){renderIncomeTable();}
