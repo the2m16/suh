@@ -1316,7 +1316,7 @@ async function db_loadResidents() {
   const {data,error} = await sb.from('residents').select('*').order('apt');
   if(error){console.error('residents load error:', JSON.stringify(error), error.message, error.code, error.details);return;}
   residents = data.map(r=>({
-    id:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
+    id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
     owner:r.owner, reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
     phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
     email:(r.emails||[])[0]||'', people:r.people||1, child1:r.child1||0, child2:r.child2||0, note:r.note||'',
@@ -1328,13 +1328,20 @@ async function db_saveResident(r) {
   const row = {
     building:r.building, floor:r.floor, door:r.door, apt:r.apt,
     owner:r.owner, reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
-    phones:r.phones, emails:r.emails, people:r.people, child1:r.child1||0, child2:r.child2||0, note:r.note,
+    phones:r.phones, emails:r.emails, people:r.people,
+    child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings, storages:r.storages, vehicles:r.vehicles
   };
-  // Upsert ашиглана — байвал update, байхгүй бол insert
-  const {data,error} = await sb.from('residents').upsert(row, {onConflict:'apt'}).select().single();
-  if(error){console.error('resident save error:',error.message);return;}
-  if(data) r.id = data.id;
+  if(r.dbId) {
+    // Байгаа мөрийг id-аар UPDATE
+    const {error} = await sb.from('residents').update(row).eq('id', r.dbId);
+    if(error) console.error('resident update error:', error.message);
+  } else {
+    // Шинэ мөр INSERT
+    const {data, error} = await sb.from('residents').insert(row).select().single();
+    if(error){console.error('resident insert error:', error.message); return;}
+    if(data) r.dbId = data.id;
+  }
 }
 
 async function db_deleteResident(id) {
