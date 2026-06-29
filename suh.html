@@ -343,6 +343,10 @@
     <div class="nav-item" onclick="showPage('communications')">
       <span>Мэдэгдэл</span>
     </div>
+    <div class="nav-section">Тохиргоо</div>
+    <div class="nav-item" onclick="showPage('admin')">
+      <span>⚙️ Байрны тохиргоо</span>
+    </div>
   </nav>
   <div class="sidebar-bottom">
     <div class="building-info">
@@ -923,6 +927,68 @@
       </div>
     </div>
 
+
+    <!-- ADMIN: БАЙРНЫ ТОХИРГОО -->
+    <div class="page" id="page-admin">
+      <div class="tabs" id="admin-tabs">
+        <div class="tab active" onclick="switchAdminTab('buildings',this)">Байрнууд</div>
+        <div class="tab" onclick="switchAdminTab('apttypes',this)">Талбайн төрөл</div>
+      </div>
+
+      <!-- БАЙРНУУД -->
+      <div id="admin-buildings">
+        <div class="flex-between mb-16">
+          <div class="section-title" style="margin:0">Байрнуудын жагсаалт</div>
+          <button class="btn btn-primary btn-sm" onclick="openAddBuilding()">+ Байр нэмэх</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="table-wrap">
+            <table id="admin-buildings-table">
+              <thead>
+                <tr>
+                  <th style="width:60px">ID</th>
+                  <th>Нэр (label)</th>
+                  <th style="width:80px">Давхар</th>
+                  <th style="width:100px">Хаалга/давхар</th>
+                  <th style="width:70px">Бүлэг</th>
+                  <th style="width:80px">Үйлдэл</th>
+                </tr>
+              </thead>
+              <tbody id="admin-buildings-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ТАЛБАЙН ТӨРӨЛ -->
+      <div id="admin-apttypes" style="display:none">
+        <div class="flex-between mb-16">
+          <div class="section-title" style="margin:0">Талбайн төрөл</div>
+          <button class="btn btn-primary btn-sm" onclick="openAddAptType()">+ Төрөл нэмэх</button>
+        </div>
+        <div class="flex gap-8 mb-16">
+          <select id="admin-apttype-building-filter" onchange="renderAptTypesTable()" style="width:180px">
+            <option value="">Бүх байр</option>
+          </select>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="table-wrap">
+            <table id="admin-apttypes-table">
+              <thead>
+                <tr>
+                  <th style="width:100px">Байр</th>
+                  <th>Хаалга дугаарууд</th>
+                  <th style="width:100px">Талбай (м²)</th>
+                  <th style="width:80px">Үйлдэл</th>
+                </tr>
+              </thead>
+              <tbody id="admin-apttypes-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- content -->
 
   <div style="text-align:center;padding:12px 0;font-size:11px;color:#1E3A5F;background:transparent;">
@@ -1386,6 +1452,83 @@
   </div>
 </div>
 
+
+<!-- Admin: Байр нэмэх/засах Modal -->
+<div class="modal-overlay" id="modal-admin-building">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-admin-building-title">Байр нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-admin-building')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Байрны ID дугаар</label>
+          <input type="number" id="admin-bld-id" placeholder="ж: 101" min="1">
+        </div>
+        <div class="form-group">
+          <label>Бүлэг (Group)</label>
+          <select id="admin-bld-group">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Нэр (label)</label>
+        <input type="text" id="admin-bld-label" placeholder="ж: 101-р байр">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Давхарын тоо</label>
+          <input type="number" id="admin-bld-floors" placeholder="ж: 19" min="1">
+        </div>
+        <div class="form-group">
+          <label>Хаалга/давхар</label>
+          <input type="number" id="admin-bld-apts" placeholder="ж: 6" min="1" max="20">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-admin-building')">Болих</button>
+      <button class="btn btn-primary" onclick="saveBuilding()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: Талбайн төрөл нэмэх/засах Modal -->
+<div class="modal-overlay" id="modal-admin-apttype">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-admin-apttype-title">Талбайн төрөл нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-admin-apttype')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Байр</label>
+        <select id="admin-at-building">
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Хаалга дугаарууд (таслалаар тусгаарлах)</label>
+        <input type="text" id="admin-at-doors" placeholder="ж: 1,2,5,6">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Эдгээр хаалганы дугааруудад дор дурдсан талбай хамаарна</div>
+      </div>
+      <div class="form-group">
+        <label>Талбай (м²)</label>
+        <input type="number" id="admin-at-sqm" placeholder="ж: 55.04" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-admin-apttype')">Болих</button>
+      <button class="btn btn-primary" onclick="saveAptType()">Хадгалах</button>
+    </div>
+  </div>
+</div>
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1635,12 +1778,15 @@ function populateBuildingSelects() {
   const configs = [
     {id: 'res-building', withEmpty: false},
     {id: 'pay-building-select', withEmpty: true},
+    {id: 'admin-at-building', withEmpty: false},
+    {id: 'admin-apttype-building-filter', withEmpty: true, emptyLabel: 'Бүх байр'},
   ];
-  configs.forEach(({id, withEmpty}) => {
+  configs.forEach(({id, withEmpty, emptyLabel}) => {
     const el = document.getElementById(id);
     if(!el) return;
     const cur = el.value;
-    const emptyOpt = withEmpty ? '<option value="">— Байр сонгох —</option>' : '';
+    const emptyText = emptyLabel || '— Байр сонгох —';
+    const emptyOpt = withEmpty ? `<option value="">${emptyText}</option>` : '';
     el.innerHTML = emptyOpt + BUILDINGS.map(b=>`<option value="${b.id}">${b.label||b.id+'-р байр'}</option>`).join('');
     if(cur) el.value = cur;
   });
@@ -1723,7 +1869,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -1734,6 +1880,7 @@ function showPage(name) {
   if(name==='payments') renderPaymentsTable('completed');
   if(name==='apartments') { renderBuildingTabs(); renderAptGrid(selectedBuilding); }
   if(name==='communications') renderNotifications();
+  if(name==='admin') renderAdminPage();
 }
 
 // ============================================================
@@ -3331,6 +3478,211 @@ function generateReport(type) {
       <table><thead><tr><th>Байр/Тоот</th><th>Өмчлөгч</th><th>Утас</th><th>Хураамж</th><th>Торгууль (${feeSettings.penalty}%)</th><th>Нийт дүн</th></tr></thead>
       <tbody>${overdue.map(r=>{const fee=calcFee(residentSqm(r));const penalty=Math.round(fee*feeSettings.penalty/100);return`<tr><td>${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}</td><td>${(r.firstname||r.owner||"")+" "+(r.lastname||"")}</td><td>${r.phone}</td><td class="font-mono">${fmt(fee)}</td><td class="text-warning font-mono">${fmt(penalty)}</td><td class="text-danger font-mono font-bold">${fmt(fee+penalty)}</td></tr>`;}).join('')}</tbody></table>`;
   }
+}
+
+
+// ============================================================
+// ADMIN — БАЙРНЫ ТОХИРГОО
+// ============================================================
+
+let editingBuildingId = null;
+let editingAptTypeId = null;
+
+function switchAdminTab(tab, el) {
+  document.getElementById('admin-buildings').style.display = tab==='buildings' ? 'block' : 'none';
+  document.getElementById('admin-apttypes').style.display = tab==='apttypes' ? 'block' : 'none';
+  document.querySelectorAll('#admin-tabs .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(tab==='buildings') renderAdminBuildingsTable();
+  if(tab==='apttypes') renderAptTypesTable();
+}
+
+function renderAdminPage() {
+  renderAdminBuildingsTable();
+  // filter select бөглөх
+  const sel = document.getElementById('admin-apttype-building-filter');
+  if(sel) {
+    sel.innerHTML = '<option value="">Бүх байр</option>' +
+      BUILDINGS.map(b=>`<option value="${b.id}">${b.label}</option>`).join('');
+  }
+}
+
+// --- BUILDINGS TABLE ---
+function renderAdminBuildingsTable() {
+  const body = document.getElementById('admin-buildings-body');
+  if(!body) return;
+  if(!BUILDINGS.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">Байр байхгүй</td></tr>';
+    return;
+  }
+  body.innerHTML = BUILDINGS.map(b => {
+    const gc = GROUP_COLORS[b.group] || GROUP_COLORS['A'];
+    return `<tr>
+      <td><strong>${b.id}</strong></td>
+      <td>${b.label}</td>
+      <td style="text-align:center">${b.floors}</td>
+      <td style="text-align:center">${b.aptsPerFloor}</td>
+      <td><span class="tag" style="background:${gc.bg};color:${gc.text};border:1px solid ${gc.border}">${b.group}</span></td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="openEditBuilding(${b.id})">Засах</button>
+          <button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger)" onclick="deleteBuilding(${b.id})">Устгах</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddBuilding() {
+  editingBuildingId = null;
+  document.getElementById('admin-bld-id').value = '';
+  document.getElementById('admin-bld-label').value = '';
+  document.getElementById('admin-bld-floors').value = '';
+  document.getElementById('admin-bld-apts').value = '';
+  document.getElementById('admin-bld-group').value = 'A';
+  document.getElementById('admin-bld-id').disabled = false;
+  document.getElementById('modal-admin-building-title').textContent = 'Байр нэмэх';
+  openModal('modal-admin-building');
+}
+
+function openEditBuilding(id) {
+  const b = BUILDINGS.find(x=>x.id===id);
+  if(!b) return;
+  editingBuildingId = id;
+  document.getElementById('admin-bld-id').value = b.id;
+  document.getElementById('admin-bld-label').value = b.label;
+  document.getElementById('admin-bld-floors').value = b.floors;
+  document.getElementById('admin-bld-apts').value = b.aptsPerFloor;
+  document.getElementById('admin-bld-group').value = b.group;
+  document.getElementById('admin-bld-id').disabled = true;
+  document.getElementById('modal-admin-building-title').textContent = 'Байр засах';
+  openModal('modal-admin-building');
+}
+
+async function saveBuilding() {
+  const id = +document.getElementById('admin-bld-id').value;
+  const label = document.getElementById('admin-bld-label').value.trim();
+  const floors = +document.getElementById('admin-bld-floors').value;
+  const apts = +document.getElementById('admin-bld-apts').value;
+  const group = document.getElementById('admin-bld-group').value;
+
+  if(!id || !label || !floors || !apts) { toast('Бүх талбарыг бөглөнө үү','error'); return; }
+
+  const row = {id, label, floors, apts_per_floor: apts, group_name: group};
+
+  if(editingBuildingId) {
+    const {error} = await sb.from('buildings').update({label, floors, apts_per_floor:apts, group_name:group}).eq('id', editingBuildingId);
+    if(error){toast('Алдаа: '+error.message,'error');return;}
+    const idx = BUILDINGS.findIndex(b=>b.id===editingBuildingId);
+    if(idx>=0) BUILDINGS[idx] = {id:editingBuildingId, label, floors, aptsPerFloor:apts, group};
+    toast('Байр шинэчлэгдлээ ✓','success');
+  } else {
+    const {error} = await sb.from('buildings').insert(row);
+    if(error){toast('Алдаа: '+error.message,'error');return;}
+    BUILDINGS.push({id, label, floors, aptsPerFloor:apts, group});
+    BUILDINGS.sort((a,b)=>a.id-b.id);
+    toast('Байр нэмэгдлээ ✓','success');
+  }
+  closeModal('modal-admin-building');
+  populateBuildingSelects();
+  renderAdminBuildingsTable();
+  renderAdminPage();
+}
+
+async function deleteBuilding(id) {
+  if(!confirm(id+'-р байрыг устгах уу? Холбоотой өгөгдлүүд хэвээр үлдэнэ.')) return;
+  const {error} = await sb.from('buildings').delete().eq('id', id);
+  if(error){toast('Устгахад алдаа: '+error.message,'error');return;}
+  BUILDINGS = BUILDINGS.filter(b=>b.id!==id);
+  populateBuildingSelects();
+  renderAdminBuildingsTable();
+  renderAdminPage();
+  toast('Байр устгагдлаа','success');
+}
+
+// --- APT TYPES TABLE ---
+function renderAptTypesTable() {
+  const body = document.getElementById('admin-apttypes-body');
+  if(!body) return;
+  const filterBld = +document.getElementById('admin-apttype-building-filter').value || 0;
+  let list = [...APT_TYPES];
+  if(filterBld) list = list.filter(t=>t.building_id===filterBld);
+  list.sort((a,b)=>a.building_id-b.building_id||(a.id-b.id));
+  if(!list.length){
+    body.innerHTML='<tr><td colspan="4" class="empty-state">Өгөгдөл байхгүй</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(t=>{
+    const bld = BUILDINGS.find(b=>b.id===t.building_id);
+    const doors = Array.isArray(t.door_numbers) ? t.door_numbers.join(', ') : t.door_numbers;
+    return `<tr>
+      <td>${bld?bld.label:t.building_id}</td>
+      <td>Хаалга: <strong>${doors}</strong></td>
+      <td class="font-mono"><strong>${t.sqm}</strong> м²</td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="openEditAptType(${t.id})">Засах</button>
+          <button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger)" onclick="deleteAptType(${t.id})">Устгах</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddAptType() {
+  editingAptTypeId = null;
+  document.getElementById('admin-at-building').value = BUILDINGS[0]?.id || '';
+  document.getElementById('admin-at-doors').value = '';
+  document.getElementById('admin-at-sqm').value = '';
+  document.getElementById('modal-admin-apttype-title').textContent = 'Талбайн төрөл нэмэх';
+  openModal('modal-admin-apttype');
+}
+
+function openEditAptType(id) {
+  const t = APT_TYPES.find(x=>x.id===id);
+  if(!t) return;
+  editingAptTypeId = id;
+  document.getElementById('admin-at-building').value = t.building_id;
+  const doors = Array.isArray(t.door_numbers) ? t.door_numbers.join(',') : t.door_numbers;
+  document.getElementById('admin-at-doors').value = doors;
+  document.getElementById('admin-at-sqm').value = t.sqm;
+  document.getElementById('modal-admin-apttype-title').textContent = 'Талбайн төрөл засах';
+  openModal('modal-admin-apttype');
+}
+
+async function saveAptType() {
+  const bldId = +document.getElementById('admin-at-building').value;
+  const doorsRaw = document.getElementById('admin-at-doors').value.trim();
+  const sqm = parseFloat(document.getElementById('admin-at-sqm').value);
+  if(!bldId || !doorsRaw || !sqm) { toast('Бүх талбарыг бөглөнө үү','error'); return; }
+  const doors = doorsRaw.split(/[,\s]+/).map(Number).filter(Boolean);
+  if(!doors.length){ toast('Хаалга дугаарыг зөв оруулна уу (ж: 1,2,3)','error'); return; }
+
+  const row = {building_id: bldId, door_numbers: doors, sqm};
+
+  if(editingAptTypeId) {
+    const {error} = await sb.from('apt_types').update(row).eq('id', editingAptTypeId);
+    if(error){toast('Алдаа: '+error.message,'error');return;}
+    const idx = APT_TYPES.findIndex(t=>t.id===editingAptTypeId);
+    if(idx>=0) APT_TYPES[idx] = {...APT_TYPES[idx], ...row};
+    toast('Талбайн төрөл шинэчлэгдлээ ✓','success');
+  } else {
+    const {data, error} = await sb.from('apt_types').insert(row).select().single();
+    if(error){toast('Алдаа: '+error.message,'error');return;}
+    APT_TYPES.push({id:data.id, ...row});
+    toast('Талбайн төрөл нэмэгдлээ ✓','success');
+  }
+  closeModal('modal-admin-apttype');
+  renderAptTypesTable();
+}
+
+async function deleteAptType(id) {
+  if(!confirm('Энэ талбайн төрлийг устгах уу?')) return;
+  const {error} = await sb.from('apt_types').delete().eq('id', id);
+  if(error){toast('Устгахад алдаа: '+error.message,'error');return;}
+  APT_TYPES = APT_TYPES.filter(t=>t.id!==id);
+  renderAptTypesTable();
+  toast('Устгагдлаа','success');
 }
 
 function printReport() { window.print(); }
