@@ -486,7 +486,7 @@
                 <th style="width:60px">БАЙР</th>
                 <th style="width:54px">ТООТ</th>
                 <th style="width:80px">ТАЛБАЙ</th>
-                <th style="min-width:100px">ӨМЧЛӨГЧ</th>
+                <th style="min-width:90px">НЭР</th><th style="min-width:90px">ОВОГ</th>
                 <th style="width:105px">УТАС</th>
                 <th style="width:160px">ИМЭЙЛ</th>
                 <th style="width:110px">ӨМЧИЛСӨН ОГНОО</th>
@@ -1320,7 +1320,7 @@ async function db_loadResidents() {
   if(!data){console.error("residents: data is null");return;}
   residents = data.map(r=>({
     id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    firstname:r.firstname||"", lastname:r.lastname||"", owner:((r.firstname||"")+" "+(r.lastname||"")).trim()||r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
+    firstname:r.firstname||"", lastname:r.lastname||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
     phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
     email:(r.emails||[])[0]||'', people:r.people||1, child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings||[], storages:r.storages||[], vehicles:r.vehicles||[]
@@ -1330,7 +1330,7 @@ async function db_loadResidents() {
 async function db_saveResident(r) {
   const row = {
     building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    firstname:r.firstname||r.owner.split(" ")[0]||"", lastname:r.lastname||r.owner.split(" ").slice(1).join(" ")||"", reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
+    firstname:r.firstname||"", lastname:r.lastname||"", reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
     phones:r.phones, emails:r.emails, people:r.people,
     child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings, storages:r.storages, vehicles:r.vehicles
@@ -1749,7 +1749,7 @@ function renderResidents(filter='') {
   if(!Array.isArray(residents)) return;
   const list = filter ? residents.filter(r=>{
     const q = filter;
-    return r.owner.toLowerCase().includes(q)
+    return (r.firstname||'').toLowerCase().includes(q)||(r.lastname||'').toLowerCase().includes(q)||(r.owner||'').toLowerCase().includes(q)
       || String(r.building).includes(q)
       || aptLabel(r.building,r.floor,r.door).includes(q)
       || (r.phones||[r.phone||'']).join(' ').includes(q)
@@ -1757,7 +1757,7 @@ function renderResidents(filter='') {
       || (r.storages||[]).map(s=>s.num).join(' ').toLowerCase().includes(q)
       || (r.vehicles||[]).join(' ').toLowerCase().includes(q);
   }) : residents;
-  if(!list.length){body.innerHTML='<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--text-muted)">Өмчлөгч олдсонгүй</td></tr>';return;}
+  if(!list.length){body.innerHTML='<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--text-muted)">Өмчлөгч олдсонгүй</td></tr>';return;}
   const paidThisMonth=transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>t.apt);
   const MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12];
   body.innerHTML=list.map((r,idx)=>{
@@ -1774,7 +1774,7 @@ function renderResidents(filter='') {
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${r.building}</strong></td>
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${aptLabel(r.building,r.floor,r.door)}</strong></td>
       <td style="color:var(--text-dim);white-space:nowrap">${sqm}<span style="font-size:10px"> м²</span></td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:11px;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${(r.firstname||r.owner||"?")[0]}</div><span style="font-size:12.5px;font-weight:600">${_fmtOwner2(r)}</span></div></td>
+      <td style="font-size:12.5px;font-weight:600">${r.firstname||'—'}</td><td style="font-size:12.5px;color:var(--text-dim)">${r.lastname||'—'}</td>
       <td style="font-variant-numeric:tabular-nums;color:var(--text-dim);font-size:11.5px">${phones[0]||'—'}${phones.length>1?`<br><span style="color:var(--text-muted);font-size:10px">+${phones.length-1}</span>`:''}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${(r.emails||[r.email||'']).filter(Boolean)[0]||'—'}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${r.ownDate||'—'}</td>
@@ -1979,9 +1979,8 @@ function editResident(id) {
   document.getElementById('res-building').value=r.building;
   document.getElementById('res-floor').value=r.floor;
   document.getElementById('res-apt').value=r.door;
-  const nameParts = (r.owner||'').trim().split(' ');
-  document.getElementById('res-firstname').value = nameParts[0]||'';
-  document.getElementById('res-lastname').value = nameParts.slice(1).join(' ')||'';
+  document.getElementById('res-firstname').value = r.firstname||'';
+  document.getElementById('res-lastname').value = r.lastname||'';
   if(document.getElementById('res-child1')) document.getElementById('res-child1').value=r.child1||0;
   if(document.getElementById('res-child2')) document.getElementById('res-child2').value=r.child2||0;
   document.getElementById('res-reg').value=r.reg||'';
@@ -2030,8 +2029,7 @@ async function saveResident() {
   const door=+document.getElementById('res-apt').value;
   const firstname = document.getElementById('res-firstname').value.trim();
   const lastname = document.getElementById('res-lastname').value.trim();
-  const owner = (firstname + (lastname?' '+lastname:'')).trim();
-  if(!building||!floor||!door||!owner){toast('Байр, давхар, хаалга, өмчлөгчийн нэрийг оруулна уу','error');return;}
+  if(!building||!floor||!door||!firstname){toast('Байр, давхар, хаалга, өмчлөгчийн нэрийг оруулна уу','error');return;}
   const aptId = makeAptId(building,floor,door);
   // ӨЭУБД нэгтгэх
   const oeubdLetter=document.getElementById('res-oeubd-letter').value.trim().toUpperCase();
@@ -2049,7 +2047,7 @@ async function saveResident() {
   const parkings=document.getElementById('res-has-parking').checked
     ? [...document.querySelectorAll('.parking-row')].map(r=>{const z=r.querySelector('.parking-zone').value;const n=r.querySelector('.parking-num').value.trim().padStart(3,'0');return z+n;}).filter(p=>p.length>1)
     : [];
-  const data={building,floor,door,apt:aptId,owner,firstname,lastname,
+  const data={building,floor,door,apt:aptId,firstname,lastname,
     reg:document.getElementById('res-reg').value.trim(),
     oeubd,
     ownDate:document.getElementById('res-own-date').value,
