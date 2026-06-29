@@ -581,6 +581,10 @@
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddIncome()">+ Орлого нэмэх</button>
         </div>
+        <div class="flex gap-8 mb-16">
+          <input type="text" id="inc-apt-filter" placeholder="Байр, тоот хайх..." oninput="renderIncomeTable()" style="width:180px">
+          <input type="text" id="inc-subcat-filter" placeholder="Дэд ангилал хайх..." oninput="renderIncomeTable()" style="width:180px">
+        </div>
         <div class="card">
           <div class="card-body" style="padding:0">
             <div class="table-wrap">
@@ -612,6 +616,9 @@
             </select>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddExpense()">+ Зарлага нэмэх</button>
+        </div>
+        <div class="flex gap-8 mb-16">
+          <input type="text" id="exp-subcat-filter" placeholder="Дэд ангилал хайх..." oninput="renderExpenseTable()" style="width:200px">
         </div>
         <div class="card">
           <div class="card-body" style="padding:0">
@@ -2600,7 +2607,16 @@ function switchAptView(view) {
 function renderIncomeTable() {
   const mf=document.getElementById('inc-month-filter')?.value;
   const yf=document.getElementById('inc-year-filter')?.value;
-  const list=transactions.filter(t=>t&&t.type==='income'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
+  const aptQ=(document.getElementById('inc-apt-filter')?.value||'').toLowerCase();
+  const subcatQ=(document.getElementById('inc-subcat-filter')?.value||'').toLowerCase();
+  const list=transactions.filter(t=>{
+    if(!t||t.type!=='income') return false;
+    if(mf&&t.month!=mf) return false;
+    if(yf&&t.year!=yf) return false;
+    if(aptQ&&!(t.apt||'').toLowerCase().includes(aptQ)) return false;
+    if(subcatQ&&!(t.desc||'').toLowerCase().includes(subcatQ)&&!(t.subcat||'').toLowerCase().includes(subcatQ)) return false;
+    return true;
+  }).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('income-table-body');
   if(!body)return;
   body.innerHTML=list.map(t=>{
@@ -2618,7 +2634,14 @@ function renderIncomeTable() {
 function renderExpenseTable() {
   const mf=document.getElementById('tx-month-filter')?.value;
   const yf=document.getElementById('exp-year-filter')?.value;
-  const list=transactions.filter(t=>t&&t.type==='expense'&&(!mf||t.month==mf)&&(!yf||t.year==yf)).sort((a,b)=>b.id-a.id);
+  const subcatQ=(document.getElementById('exp-subcat-filter')?.value||'').toLowerCase();
+  const list=transactions.filter(t=>{
+    if(!t||t.type!=='expense') return false;
+    if(mf&&t.month!=mf) return false;
+    if(yf&&t.year!=yf) return false;
+    if(subcatQ&&!(t.subcat||'').toLowerCase().includes(subcatQ)&&!(t.desc||'').toLowerCase().includes(subcatQ)) return false;
+    return true;
+  }).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('expense-table-body');
   if(!body)return;
   body.innerHTML=list.map(t=>`<tr>
