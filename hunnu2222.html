@@ -1320,7 +1320,7 @@ async function db_loadResidents() {
   if(!data){console.error("residents: data is null");return;}
   residents = data.map(r=>({
     id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    owner:r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
+    owner:((r.firstname||"")+" "+(r.lastname||"")).trim()||r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
     phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
     email:(r.emails||[])[0]||'', people:r.people||1, child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings||[], storages:r.storages||[], vehicles:r.vehicles||[]
@@ -1330,7 +1330,7 @@ async function db_loadResidents() {
 async function db_saveResident(r) {
   const row = {
     building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    owner:r.owner, reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
+    firstname:r.owner.split(" ")[0]||"", lastname:r.owner.split(" ").slice(1).join(" ")||"", reg:r.reg, oeubd:r.oeubd, own_date:r.ownDate,
     phones:r.phones, emails:r.emails, people:r.people,
     child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings, storages:r.storages, vehicles:r.vehicles
