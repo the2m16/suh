@@ -304,6 +304,36 @@
 <body>
 
 <!-- SIDEBAR -->
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" style="display:flex;position:fixed;inset:0;background:#0A1628;z-index:10000;align-items:center;justify-content:center">
+  <div style="width:400px;background:#0F1E33;border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:40px 36px;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:22px;font-weight:700;color:#E2E8F0;letter-spacing:.02em">suh</div>
+      <div style="font-size:12px;color:#64748B;margin-top:4px">Сууц Өмчлөгчдийн Холбоо</div>
+    </div>
+    <!-- Form -->
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">И-мэйл</label>
+      <input type="email" id="login-email" placeholder="email@example.com"
+        style="width:100%;padding:10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div style="margin-bottom:24px">
+      <label style="display:block;font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Нууц үг</label>
+      <input type="password" id="login-password" placeholder="••••••••"
+        style="width:100%;padding:10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" style="display:none;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:10px 14px;font-size:12px;color:#EF4444;margin-bottom:16px"></div>
+    <button onclick="doLogin()" id="login-btn"
+      style="width:100%;padding:12px;background:#2563EB;border:none;border-radius:6px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em">
+      Нэвтрэх
+    </button>
+    <div id="login-loading" style="display:none;text-align:center;margin-top:12px;font-size:12px;color:#64748B">Нэвтэрч байна...</div>
+  </div>
+</div>
+
 <div id="db-loading" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px">
   <div style="width:40px;height:40px;border:3px solid rgba(59,130,246,0.3);border-top-color:#3B82F6;border-radius:50%;animation:spin 0.8s linear infinite"></div>
   <div style="color:#94A3B8;font-size:14px">Өгөгдөл ачаалж байна...</div>
@@ -347,8 +377,21 @@
     <div class="nav-item" onclick="showPage('admin')">
       <span>⚙️ Байрны тохиргоо</span>
     </div>
+    <div class="nav-item" id="nav-auth-levels" onclick="showPage('auth_levels')">
+      <span>🔐 Auth Level Settings</span>
+    </div>
   </nav>
   <div class="sidebar-bottom">
+    <!-- Нэвтэрсэн хэрэглэгч -->
+    <div id="current-user-info" style="padding:8px 10px;margin-bottom:6px;background:rgba(37,99,235,0.1);border-radius:6px;border:1px solid rgba(37,99,235,0.2);display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div id="current-user-name" style="font-size:11px;font-weight:600;color:#94A3B8"></div>
+          <div id="current-user-role" style="font-size:10px;color:#64748B;margin-top:1px"></div>
+        </div>
+        <button onclick="doLogout()" title="Гарах" style="background:none;border:none;cursor:pointer;color:#64748B;font-size:16px;padding:2px 4px" title="Гарах">⏻</button>
+      </div>
+    </div>
     <div class="building-info">
       <strong style="color:#94A3B8;font-size:11px">suh</strong>
       <span style="display:block;margin-top:2px;color:#64748B;font-size:10px">18 байр · 1420 өрх</span>
@@ -986,6 +1029,40 @@
               <tbody id="admin-apttypes-body"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- AUTH LEVEL SETTINGS -->
+    <div class="page" id="page-auth_levels">
+      <div style="margin-bottom:16px">
+        <!-- Legend -->
+        <div class="card" style="padding:14px 18px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Эрхийн түвшний тайлбар</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 20px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(16,185,129,0.15);color:#10B981">1</span><span style="font-size:12px;color:var(--text)">Бүрэн эрх</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(59,130,246,0.15);color:#3B82F6">2</span><span style="font-size:12px;color:var(--text)">Харах ба засах</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(99,102,241,0.15);color:#6366F1">3</span><span style="font-size:12px;color:var(--text)">Зөвхөн харах</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(245,158,11,0.15);color:#F59E0B">4</span><span style="font-size:12px;color:var(--text)">Хэсэгчлэн харах</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(234,179,8,0.15);color:#EAB308">5</span><span style="font-size:12px;color:var(--text)">Өөрийнхийг харах</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;font-weight:700;font-size:12px;background:rgba(239,68,68,0.12);color:#EF4444">6</span><span style="font-size:12px;color:var(--text)">Харах эрхгүй</span></div>
+          </div>
+        </div>
+
+        <!-- Хүснэгт -->
+        <div class="card" style="overflow:hidden;padding:0">
+          <div style="overflow-x:auto">
+            <table id="auth-levels-table" style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead id="auth-levels-thead"></thead>
+              <tbody id="auth-levels-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-outline" onclick="resetAuthLevels()">Анхны утга</button>
+          <button class="btn btn-primary" onclick="saveAuthLevels()">💾 Хадгалах</button>
         </div>
       </div>
     </div>
@@ -1718,10 +1795,13 @@ async function db_loadSettings() {
   const {data,error} = await sb.from('settings').select('*');
   if(error){console.error('settings load error:', JSON.stringify(error), error.message);return;}
   if(!data){console.error('settings: data null');return;}
+  const settingsMap = {};
   data.forEach(s=>{
+    settingsMap[s.key] = s.value;
     if(s.key==='fee') Object.assign(feeSettings, s.value);
     if(s.key==='rent') Object.assign(rentSettings, s.value);
   });
+  applyAuthLevelsFromSettings(settingsMap);
 }
 
 async function db_saveSettings(key, value) {
@@ -1940,7 +2020,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -1952,6 +2032,7 @@ function showPage(name) {
   if(name==='apartments') { renderBuildingTabs(); renderAptGrid(selectedBuilding); }
   if(name==='communications') renderNotifications();
   if(name==='admin') renderAdminPage();
+  if(name==='auth_levels') renderAuthLevelsPage();
 }
 
 // ============================================================
@@ -3888,6 +3969,274 @@ async function deleteAptType(id) {
   toast('Устгагдлаа','success');
 }
 
+
+// ============================================================
+// AUTH LEVEL SETTINGS
+// ============================================================
+
+const AUTH_ROLES = [
+  {key:'admin',        label:'Админ'},
+  {key:'uz',           label:'Удирдах зөвлөл'},
+  {key:'hz',           label:'Хяналтын зөвлөл'},
+  {key:'gz',           label:'Гүйцэтгэх захирал'},
+  {key:'nb',           label:'Нягтлан бодогч'},
+  {key:'mn',           label:'Менежер'},
+  {key:'vw',           label:'Viewer'},
+  {key:'ot',           label:'Өмчлөгч/Түрээслэгч'},
+];
+
+const AUTH_ACTIONS = [
+  {key:'view',     label:'Харах'},
+  {key:'edit',     label:'Нэмэх ба засах'},
+  {key:'delete',   label:'Устгах'},
+  {key:'print',    label:'Хэвлэх'},
+  {key:'export',   label:'Экспортлох'},
+  {key:'copy',     label:'Copy'},
+  {key:'send',     label:'Илгээх'},
+  {key:'role',     label:'Роль олгох'},
+  {key:'password', label:'Нууц үг олгох'},
+];
+
+// Default утгууд
+const AUTH_LEVELS_DEFAULT = {
+  admin:  {view:1,edit:1,delete:1,print:1,export:1,copy:1,send:1,role:1,password:1},
+  uz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
+  hz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
+  gz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:2,role:6,password:6},
+  nb:     {view:3,edit:2,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
+  mn:     {view:3,edit:2,delete:6,print:4,export:6,copy:3,send:2,role:6,password:6},
+  vw:     {view:3,edit:6,delete:6,print:6,export:6,copy:3,send:6,role:6,password:6},
+  ot:     {view:5,edit:6,delete:6,print:5,export:6,copy:5,send:6,role:6,password:6},
+};
+
+let authLevels = JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT));
+
+const LEVEL_COLORS = {
+  1:'rgba(16,185,129,0.18)',
+  2:'rgba(59,130,246,0.15)',
+  3:'rgba(99,102,241,0.13)',
+  4:'rgba(245,158,11,0.15)',
+  5:'rgba(234,179,8,0.13)',
+  6:'rgba(239,68,68,0.10)',
+};
+const LEVEL_TEXT = {
+  1:'#10B981', 2:'#3B82F6', 3:'#6366F1',
+  4:'#F59E0B', 5:'#EAB308', 6:'#EF4444'
+};
+
+function renderAuthLevelsPage() {
+  const thead = document.getElementById('auth-levels-thead');
+  const tbody = document.getElementById('auth-levels-tbody');
+  if(!thead || !tbody) return;
+
+  // Header
+  thead.innerHTML = `<tr>
+    <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-surface);white-space:nowrap;border-bottom:1px solid var(--border);min-width:140px">Үйлдэл</th>
+    ${AUTH_ROLES.map(r=>`<th style="padding:10px 8px;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-surface);border-bottom:1px solid var(--border);text-align:center;min-width:110px">${r.label}</th>`).join('')}
+  </tr>`;
+
+  // Body
+  tbody.innerHTML = AUTH_ACTIONS.map(action => `
+    <tr style="border-bottom:0.5px solid var(--border-light)">
+      <td style="padding:8px 14px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap">${action.label}</td>
+      ${AUTH_ROLES.map(role => {
+        const val = (authLevels[role.key]?.[action.key]) || 6;
+        return `<td style="padding:6px 8px;text-align:center">
+          <select
+            id="al-${role.key}-${action.key}"
+            onchange="onAuthLevelChange('${role.key}','${action.key}',this)"
+            style="width:64px;padding:4px 2px;text-align:center;font-weight:700;font-size:13px;border-radius:5px;border:1.5px solid var(--border);background:${LEVEL_COLORS[val]};color:${LEVEL_TEXT[val]};cursor:pointer;appearance:auto">
+            ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===val?'selected':''}>${n}</option>`).join('')}
+          </select>
+        </td>`;
+      }).join('')}
+    </tr>
+  `).join('');
+}
+
+function onAuthLevelChange(roleKey, actionKey, sel) {
+  const val = +sel.value;
+  if(!authLevels[roleKey]) authLevels[roleKey] = {};
+  authLevels[roleKey][actionKey] = val;
+  sel.style.background = LEVEL_COLORS[val];
+  sel.style.color = LEVEL_TEXT[val];
+  // Admin-ийг 1-ээс дээш болгохоос хамгаалах
+  if(roleKey === 'admin' && val !== 1) {
+    toast('Админ бүрэн эрхтэй байх ёстой', 'error');
+    sel.value = 1;
+    authLevels[roleKey][actionKey] = 1;
+    sel.style.background = LEVEL_COLORS[1];
+    sel.style.color = LEVEL_TEXT[1];
+  }
+}
+
+async function saveAuthLevels() {
+  const {error} = await sb.from('settings')
+    .upsert({key:'auth_levels', value: authLevels, updated_at: new Date().toISOString()}, {onConflict:'key'});
+  if(error){toast('Хадгалахад алдаа: '+error.message,'error');return;}
+  toast('Auth Level тохиргоо хадгалагдлаа ✓','success');
+  // Локал state шинэчлэх
+  if(window.appSettings) window.appSettings.auth_levels = authLevels;
+}
+
+function resetAuthLevels() {
+  if(!confirm('Анхны утгад буцаах уу?')) return;
+  authLevels = JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT));
+  renderAuthLevelsPage();
+  toast('Анхны утгад буцлаа','success');
+}
+
+// Auth levels-ийг settings-аас ачаалах
+function applyAuthLevelsFromSettings(settingsData) {
+  const al = settingsData?.auth_levels;
+  if(al && typeof al === 'object') {
+    authLevels = {...JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT)), ...al};
+    // Role-уудыг нэгтгэх
+    AUTH_ROLES.forEach(r=>{
+      if(al[r.key]) authLevels[r.key] = {...AUTH_LEVELS_DEFAULT[r.key], ...al[r.key]};
+    });
+  }
+}
+
+// Admin-д nav харуулах (currentUser тодорхойлогдсоны дараа дуудна)
+function applyAdminNav(role) {
+  const navEl = document.getElementById('nav-auth-levels');
+  if(navEl) navEl.style.display = (role === 'admin') ? 'flex' : 'none';
+}
+
+
+// ============================================================
+// AUTH — НЭВТРЭЛТИЙН СИСТЕМ
+// ============================================================
+
+const ROLE_LABELS = {
+  admin:'Админ', uz:'Удирдах зөвлөл', hz:'Хяналтын зөвлөл',
+  gz:'Гүйцэтгэх захирал', nb:'Нягтлан бодогч',
+  mn:'Менежер', vw:'Viewer', ot:'Өмчлөгч/Түрээслэгч'
+};
+
+// Зөвхөн admin-д харагдах nav items
+const ADMIN_ONLY_PAGES = ['admin', 'auth_levels'];
+// Нэвтрэх шаардлагагүй хуудас байхгүй — бүгд нэвтэрсэн байх ёстой
+
+let currentUser = null;      // Supabase auth user
+let currentProfile = null;   // user_profiles row
+
+// Нэвтрэх
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const loadEl = document.getElementById('login-loading');
+  const btn = document.getElementById('login-btn');
+
+  if(!email || !password) {
+    errEl.textContent = 'И-мэйл болон нууц үгийг оруулна уу';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  btn.style.display = 'none';
+  loadEl.style.display = 'block';
+
+  const {data, error} = await sb.auth.signInWithPassword({email, password});
+
+  if(error) {
+    errEl.textContent = error.message === 'Invalid login credentials'
+      ? 'И-мэйл эсвэл нууц үг буруу байна'
+      : error.message;
+    errEl.style.display = 'block';
+    btn.style.display = 'block';
+    loadEl.style.display = 'none';
+    return;
+  }
+
+  currentUser = data.user;
+  await loadUserProfile();
+  await onLoginSuccess();
+}
+
+// Гарах
+async function doLogout() {
+  if(!confirm('Системээс гарах уу?')) return;
+  await sb.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('current-user-info').style.display = 'none';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+}
+
+// Profile ачаалах
+async function loadUserProfile() {
+  if(!currentUser) return;
+  const {data, error} = await sb.from('user_profiles').select('*').eq('id', currentUser.id).single();
+  if(error || !data) {
+    // Profile байхгүй бол vw роль өгнө
+    currentProfile = {id: currentUser.id, role:'vw', full_name: currentUser.email, active:true};
+  } else {
+    currentProfile = data;
+  }
+}
+
+// Нэвтэрсний дараах үйлдэл
+async function onLoginSuccess() {
+  // Login overlay нуух
+  document.getElementById('login-overlay').style.display = 'none';
+
+  // Sidebar хэрэглэгчийн мэдээлэл харуулах
+  const role = currentProfile?.role || 'vw';
+  const name = currentProfile?.full_name || currentUser?.email || '';
+  document.getElementById('current-user-name').textContent = name;
+  document.getElementById('current-user-role').textContent = ROLE_LABELS[role] || role;
+  document.getElementById('current-user-info').style.display = 'block';
+
+  // Admin-д л харагдах nav items
+  applyNavByRole(role);
+
+  // Өгөгдөл ачаалах
+  await db_init();
+}
+
+// Роллоор nav удирдах
+function applyNavByRole(role) {
+  const isAdmin = role === 'admin';
+
+  // Admin-only pages
+  ADMIN_ONLY_PAGES.forEach(page => {
+    const el = document.getElementById('nav-' + page.replace('_','-'));
+    if(el) el.style.display = isAdmin ? 'flex' : 'none';
+  });
+
+  // nav-admin (Байрны тохиргоо)
+  const navAdmin = document.querySelector('[onclick="showPage('admin')"]');
+  if(navAdmin) navAdmin.style.display = isAdmin ? 'flex' : 'none';
+}
+
+// Хуудас хандах эрх шалгах
+function canAccessPage(pageName) {
+  const role = currentProfile?.role || 'vw';
+  if(role === 'admin') return true;
+  if(ADMIN_ONLY_PAGES.includes(pageName)) return false;
+  return true;
+}
+
+// showPage override — эрх шалгаж дараа нээнэ
+const _origShowPage = window.showPage;
+
+// Session шалгах — хуудас дахин ачаалахад
+async function checkExistingSession() {
+  const {data: {session}} = await sb.auth.getSession();
+  if(session) {
+    currentUser = session.user;
+    await loadUserProfile();
+    await onLoginSuccess();
+  }
+  // Session байхгүй бол login overlay харагдаж байна
+}
+
 function printReport() { window.print(); }
 
 // ============================================================
@@ -4038,8 +4387,9 @@ function clearLocalStorage() {
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
-  await db_init();
   document.getElementById('exp-date').value = todayStr();
+  // Session шалгах — нэвтэрсэн байвал шууд ачаална
+  await checkExistingSession();
 });
 </script>
 </body>
