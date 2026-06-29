@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>suh</title>
+<title>СӨХ Удирдлагын Систем</title>
 <style>
   :root {
     --bg-base: #0A1628;
@@ -311,7 +311,7 @@
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-top">SUH NAME</div>
+    <div class="logo-top">ХҮННҮ 2222 РЕЗИДЕНС</div>
     <div class="logo-top">Сууц Өмчлөгчдийн Холбоо</div>
   </div>
   <nav>
@@ -346,7 +346,7 @@
   </nav>
   <div class="sidebar-bottom">
     <div class="building-info">
-      <strong style="color:#94A3B8;font-size:11px">suh name</strong>
+      <strong style="color:#94A3B8;font-size:11px">Хүннү 2222 Резиденс</strong>
       <span style="display:block;margin-top:2px;color:#64748B;font-size:10px">18 байр · 1420 өрх</span>
       <span id="sidebar-residents-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Оршин суугч · 0</span>
       <span id="sidebar-child1-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Хүүхэд 0-6 нас · 0</span>
@@ -948,15 +948,7 @@
         <div class="form-group">
           <label>Байр дугаар</label>
           <select id="res-building">
-            <option value="101">101</option><option value="102">102</option>
-            <option value="103">103</option><option value="104">104</option>
-            <option value="105">105</option><option value="106">106</option>
-            <option value="107">107</option><option value="108">108</option>
-            <option value="109">109</option><option value="110">110</option>
-            <option value="111">111</option><option value="112">112</option>
-            <option value="113">113</option><option value="114">114</option>
-            <option value="115">115</option><option value="116">116</option>
-            <option value="117">117</option><option value="118">118</option>
+            <!-- Supabase-аас динамикаар ачаална -->
           </select>
         </div>
         <div class="form-group">
@@ -1214,15 +1206,7 @@
           <label>Байр</label>
           <select id="pay-building-select" onchange="onPayBuildingChange()">
             <option value="">— Байр сонгох —</option>
-            <option value="101">101-р байр</option><option value="102">102-р байр</option>
-            <option value="103">103-р байр</option><option value="104">104-р байр</option>
-            <option value="105">105-р байр</option><option value="106">106-р байр</option>
-            <option value="107">107-р байр</option><option value="108">108-р байр</option>
-            <option value="109">109-р байр</option><option value="110">110-р байр</option>
-            <option value="111">111-р байр</option><option value="112">112-р байр</option>
-            <option value="113">113-р байр</option><option value="114">114-р байр</option>
-            <option value="115">115-р байр</option><option value="116">116-р байр</option>
-            <option value="117">117-р байр</option><option value="118">118-р байр</option>
+            <!-- Supabase-аас динамикаар ачаална -->
           </select>
         </div>
         <div class="form-group">
@@ -1409,8 +1393,8 @@
 // ============================================================
 // SUPABASE ХОЛБОЛТ
 // ============================================================
-const SUPABASE_URL = 'https://qtgclaxboefxfelmuksn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_DPQcCFdo62kNWnDlZQl2AA_ygTAjgzE';
+const SUPABASE_URL = 'https://vkkhwemfefgpbximudev.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_iW6hD1U0N1ZUiJz7P03rZQ_PkJgcbDW';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
@@ -1560,6 +1544,10 @@ async function db_init() {
     const demoBusinesses = [...businesses];
     const demoTransactions = [...transactions];
 
+    // Buildings болон apt_types-г эхлээд ачаалах
+    await db_loadBuildings();
+    await db_loadAptTypes();
+
     await Promise.all([
       db_loadResidents(),
       db_loadBusinesses(),
@@ -1604,50 +1592,69 @@ let nextId = 100;
 let selectedBuilding = 101;
 
 // ============================================================
-// ХҮННҮ-2222 БАЙРНЫ МЭДЭЭЛЭЛ
+// БАЙРНЫ МЭДЭЭЛЭЛ — Supabase-аас динамикаар ачаална
 // ============================================================
-// Айлын талбай: хаалганы дугаараар (давхар доторх дугаар)
-// 101-104-р байр: давхарт 6 айл
-//   хаалга 01,02,05,06 → 55.04м²   хаалга 03,04 → 49.95м²
-// 105-109-р байр: давхарт 4 айл (2 орц, орц бүр 2 айл)
-//   хаалга 01,04 → 117.67м²   хаалга 02,03 → 117.83м²
-// 110-114-р байр: давхарт 4 айл
-//   хаалга 01,04 → 95.71м²    хаалга 02,03 → 95.86м²
-// 115-118-р байр: давхарт 4 айл
-//   хаалга 01,04 → 69.92м²    хаалга 02,03 → 79.98м²
 
-const BUILDINGS = [
-  {id:101, floors:19, aptsPerFloor:6, group:'A', label:'101-р байр'},
-  {id:102, floors:19, aptsPerFloor:6, group:'A', label:'102-р байр'},
-  {id:103, floors:16, aptsPerFloor:6, group:'A', label:'103-р байр'},
-  {id:104, floors:16, aptsPerFloor:6, group:'A', label:'104-р байр'},
-  {id:105, floors:19, aptsPerFloor:4, group:'B', label:'105-р байр'},
-  {id:106, floors:18, aptsPerFloor:4, group:'B', label:'106-р байр'},
-  {id:107, floors:18, aptsPerFloor:4, group:'B', label:'107-р байр'},
-  {id:108, floors:17, aptsPerFloor:4, group:'B', label:'108-р байр'},
-  {id:109, floors:15, aptsPerFloor:4, group:'B', label:'109-р байр'},
-  {id:110, floors:19, aptsPerFloor:4, group:'C', label:'110-р байр'},
-  {id:111, floors:18, aptsPerFloor:4, group:'C', label:'111-р байр'},
-  {id:112, floors:18, aptsPerFloor:4, group:'C', label:'112-р байр'},
-  {id:113, floors:17, aptsPerFloor:4, group:'C', label:'113-р байр'},
-  {id:114, floors:15, aptsPerFloor:4, group:'C', label:'114-р байр'},
-  {id:115, floors:19, aptsPerFloor:4, group:'D', label:'115-р байр'},
-  {id:116, floors:19, aptsPerFloor:4, group:'D', label:'116-р байр'},
-  {id:117, floors:19, aptsPerFloor:4, group:'D', label:'117-р байр'},
-  {id:118, floors:19, aptsPerFloor:4, group:'D', label:'118-р байр'},
-];
+let BUILDINGS = [];  // Supabase-аас ачаална
+let APT_TYPES = [];  // Supabase-аас ачаална
 
 const GROUP_COLORS = {
   A: {bg:'rgba(245,158,11,0.12)', border:'#F59E0B', text:'#F59E0B'},
   B: {bg:'rgba(59,130,246,0.12)', border:'#3B82F6', text:'#3B82F6'},
   C: {bg:'rgba(100,116,139,0.12)', border:'#64748B', text:'#94A3B8'},
   D: {bg:'rgba(239,68,68,0.12)', border:'#EF4444', text:'#EF4444'},
+  E: {bg:'rgba(168,85,247,0.12)', border:'#A855F7', text:'#A855F7'},
+  F: {bg:'rgba(20,184,166,0.12)', border:'#14B8A6', text:'#14B8A6'},
 };
 
-// Тухайн байр + давхар доторх хаалганы дугаараар талбай буцаана
+// Supabase-аас buildings ачаалах
+async function db_loadBuildings() {
+  const {data, error} = await sb.from('buildings').select('*').order('id');
+  if(error){console.error('buildings load error:', error.message); return;}
+  if(!data || data.length === 0){console.warn('buildings: хоосон'); return;}
+  BUILDINGS = data.map(b=>({
+    id: b.id,
+    floors: b.floors,
+    aptsPerFloor: b.apts_per_floor,
+    group: b.group_name || 'A',
+    label: b.label
+  }));
+  // buildings ачаалагдсаны дараа select-уудыг шинэчлэх
+  populateBuildingSelects();
+}
+
+// Supabase-аас apt_types ачаалах
+async function db_loadAptTypes() {
+  const {data, error} = await sb.from('apt_types').select('*');
+  if(error){console.error('apt_types load error:', error.message); return;}
+  APT_TYPES = data || [];
+}
+
+// Байрны select-уудыг динамикаар бөглөх
+function populateBuildingSelects() {
+  const configs = [
+    {id: 'res-building', withEmpty: false},
+    {id: 'pay-building-select', withEmpty: true},
+  ];
+  configs.forEach(({id, withEmpty}) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const cur = el.value;
+    const emptyOpt = withEmpty ? '<option value="">— Байр сонгох —</option>' : '';
+    el.innerHTML = emptyOpt + BUILDINGS.map(b=>`<option value="${b.id}">${b.label||b.id+'-р байр'}</option>`).join('');
+    if(cur) el.value = cur;
+  });
+}
+
+// Тухайн байр + хаалганы дугаараар талбай буцаана (apt_types-аас)
 function getSqmByBuildingAndDoor(buildingId, doorNum) {
+  const types = APT_TYPES.filter(t => t.building_id === buildingId);
+  for(const t of types) {
+    const doors = Array.isArray(t.door_numbers) ? t.door_numbers : [];
+    if(doors.includes(doorNum)) return parseFloat(t.sqm) || 0;
+  }
+  // Fallback: хэрэв apt_types хоосон бол хуучин логик хэрэглэнэ
   if (buildingId >= 101 && buildingId <= 104) {
-    // 6 айл: 01,02,05,06→55.04  03,04→49.95
     return (doorNum===3||doorNum===4) ? 49.95 : 55.04;
   } else if (buildingId >= 105 && buildingId <= 109) {
     return (doorNum===1||doorNum===4) ? 117.67 : 117.83;
@@ -3442,7 +3449,7 @@ function updateSidebarCount() {
 // ============================================================
 // LOCAL STORAGE — Supabase холбох хүртэл өгөгдөл хадгалах
 // ============================================================
-const LS_KEY = 'hunnu2222_suh_data';
+const LS_KEY = 'hunnu2222_suh_v2_data';
 
 function saveToLocal() {
   try {
