@@ -1180,6 +1180,23 @@
       <button class="modal-close" onclick="closeModal('modal-payment')">×</button>
     </div>
     <div class="modal-body">
+      <!-- Quick pay горим: өмчлөгчийн мэдээлэл өөрчлөх боломжгүй харагдана -->
+      <div id="pay-resident-info" style="display:none;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Өмчлөгч</div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Байр / Тоот</div>
+            <div id="pay-res-apt" style="padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600">—</div>
+          </div>
+          <div style="flex:2">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Нэр</div>
+            <div id="pay-res-name" style="padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Normal горим: байр, тоот сонгох -->
+      <div id="pay-select-section">
       <div class="form-row">
         <div class="form-group">
           <label>Байр</label>
@@ -1203,6 +1220,8 @@
           </select>
         </div>
       </div>
+
+      </div><!-- /pay-select-section -->
 
       <!-- Төлбөрийн задаргаа -->
       <div id="pay-fee-breakdown" style="display:none;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:13px">
@@ -2762,6 +2781,9 @@ function openResidentDetail(resId) {
 }
 
 function openPayModal() {
+  // Normal горим руу reset
+  document.getElementById('pay-resident-info').style.display='none';
+  document.getElementById('pay-select-section').style.display='block';
   document.getElementById('pay-building-select').value='';
   document.getElementById('pay-apt-select').innerHTML='<option value="">— Эхлээд байр сонгох —</option>';
   document.getElementById('pay-apt-select').disabled=true;
@@ -2822,8 +2844,14 @@ function onPayAptChange() {
 }
 
 function quickPayForApt(resId) {
-  openPayModal();
   const r=residents.find(x=>x.id===resId);if(!r)return;
+  openPayModal();
+  // Өмчлөгчийн мэдээлэл харуулах горим
+  document.getElementById('pay-resident-info').style.display='block';
+  document.getElementById('pay-select-section').style.display='none';
+  document.getElementById('pay-res-apt').textContent=fmtApt(r);
+  document.getElementById('pay-res-name').textContent=((r.firstname||'')+" "+(r.lastname||'')).trim()||r.owner||'—';
+  // Сонгосон байдлаар тохируулах (savePayment-д хэрэгтэй)
   document.getElementById('pay-building-select').value=r.building;
   onPayBuildingChange();
   setTimeout(()=>{document.getElementById('pay-apt-select').value=resId;onPayAptChange();},60);
