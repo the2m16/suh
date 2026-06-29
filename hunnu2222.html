@@ -1807,36 +1807,123 @@ function filterResidents(){renderResidents(document.getElementById('resident-sea
 // CSV EXPORT / IMPORT
 // ============================================================
 function exportCSV() {
-  const headers=['Байр','Давхар','Хаалга','Тоот','Нэр','Овог','Регистр','ӨЭУБД','Өмчилсөн огноо','Утас','И-мэйл','Ам бүл','0-6 насны хүүхэд','6-18 насны хүүхэд','Талбай (м²)','Зогсоол','Агуулах'];
-  const rows=residents.map(r=>{if(!r)return null;
-    return [r.building,r.floor,r.door,fmtApt(r),r.firstname||'',r.lastname||'',r.reg||'',r.oeubd||'',r.ownDate||'',
-      (r.phones||[r.phone||'']).join(';'),(r.emails||[r.email||'']).join(';'),
-      r.people,r.child1||0,r.child2||0,residentSqm(r),
-      (r.parkings||[]).join(';'),(r.storages||[]).map(s=>s.num+(s.sqm?':'+s.sqm:'')).join(';')];
-  });
-  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  // Supabase-ийн бүх багана — id хасаад
+  const headers=[
+    'building','floor','door','apt',
+    'firstname','lastname','reg','oeubd','own_date',
+    'phones','emails','people','child1','child2',
+    'parkings','storages','vehicles'
+  ];
+  const rows=residents.filter(Boolean).map(r=>[
+    r.building, r.floor, r.door, r.apt||'',
+    r.firstname||'', r.lastname||'',
+    r.reg||'', r.oeubd||'', r.ownDate||'',
+    JSON.stringify(r.phones||[]),
+    JSON.stringify(r.emails||[]),
+    r.people||1, r.child1||0, r.child2||0,
+    JSON.stringify(r.parkings||[]),
+    JSON.stringify(r.storages||[]),
+    JSON.stringify(r.vehicles||[])
+  ]);
+  function csvCell(v){return '"'+String(v==null?'':' '+v).trim().replace(/"/g,'""')+'"';}
+  const csv=[headers.map(h=>'"'+h+'"').join(','),...rows.map(r=>r.map(csvCell).join(','))].join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='hunnu2222_omchlugchid_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
-  toast(residents.length+' өмчлөгчийн мэдээлэл татагдлаа','success');
+  a.download='residents_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
+  toast(residents.filter(Boolean).length+' өмчлөгчийн мэдээлэл экспортлогдлоо ✓','success');
 }
 function importCSV(event) {
-  const file=event.target.files[0];if(!file)return;
+  const file=event.target.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    const lines=e.target.result.replace(/\r/g,'').split('\n').filter(Boolean);
-    if(lines.length<2){toast('CSV хоосон байна','error');return;}
-    let count=0;
-    lines.slice(1).forEach(line=>{
-      const cols=line.split(',').map(c=>c.trim().replace(/^"|"$/g,'').replace(/""/g,'"'));
-      const building=+cols[0],floor=+cols[1],door=+cols[2];const owner=(cols[4]||'').trim();
-      if(!building||!floor||!door||!owner)return;
-      const aptId=makeAptId(building,floor,door);
-      if(residents.some(r=>r.apt===aptId))return;
-      residents.push({id:nextId++,building,floor,door,apt:aptId,owner,reg:cols[5]||'',oeubd:cols[6]||'',ownDate:cols[7]||'',phones:(cols[8]||'').split(';').filter(Boolean),phone:(cols[8]||'').split(';')[0]||'',emails:(cols[9]||'').split(';').filter(Boolean),email:(cols[9]||'').split(';')[0]||'',people:+cols[10]||1,note:cols[14]||'',parkings:(cols[12]||'').split(';').filter(Boolean),storages:(cols[13]||'').split(';').filter(Boolean).map(s=>{const[num,sqm]=s.split(':');return{num,sqm:sqm||''};})});
-      count++;
-    });
-    renderResidents();updateSidebarCount();toast(count+' өмчлөгч импортлогдлоо ✓','success');event.target.value='';
+  reader.onload=async e=>{
+    try {
+      const text = e.target.result.replace(/^\uFEFF/,'').replace(/\r/g,'');
+      const lines = text.split('\n').filter(Boolean);
+      if(lines.length<2){toast('CSV хоосон байна','error');return;}
+
+      // Header мөрийг уншиж багануудын индексийг тогтоох
+      function parseRow(line){
+        const cols=[]; let cur='', inQ=false;
+        for(let i=0;i<line.length;i++){
+          const c=line[i];
+          if(c==='"'&&!inQ){inQ=true;}
+          else if(c==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
+          else if(c==='"'&&inQ){inQ=false;}
+          else if(c===','&&!inQ){cols.push(cur);cur='';}
+          else{cur+=c;}
+        }
+        cols.push(cur);
+        return cols.map(c=>c.trim());
+      }
+
+      const headers = parseRow(lines[0]);
+      const idx = {};
+      headers.forEach((h,i)=>idx[h.replace(/^"|"$/g,'')]=i);
+
+      function col(row,name){const v=row[idx[name]];return v===undefined?'':v;}
+      function parseArr(v){
+        try{const a=JSON.parse(v);return Array.isArray(a)?a:[];}
+        catch{return v?v.split(';').filter(Boolean):[];}
+      }
+      function parseStorages(v){
+        try{const a=JSON.parse(v);return Array.isArray(a)?a:[];}
+        catch{return v?v.split(';').filter(Boolean).map(s=>{const[num,sqm]=s.split(':');return{num:num||'',sqm:sqm||''};}):[]; }
+      }
+
+      let added=0, skipped=0;
+      for(const line of lines.slice(1)){
+        const row=parseRow(line);
+        const building=+col(row,'building');
+        const floor=+col(row,'floor');
+        const door=+col(row,'door');
+        const firstname=(col(row,'firstname')||'').trim();
+        const lastname=(col(row,'lastname')||'').trim();
+        if(!building||!floor||!door||!firstname){skipped++;continue;}
+        const aptId=col(row,'apt')||makeAptId(building,floor,door);
+        if(residents.some(r=>r&&r.apt===aptId)){skipped++;continue;}
+
+        const phones=parseArr(col(row,'phones'));
+        const emails=parseArr(col(row,'emails'));
+        const parkings=parseArr(col(row,'parkings'));
+        const storages=parseStorages(col(row,'storages'));
+        const vehicles=parseArr(col(row,'vehicles'));
+
+        const data={
+          building,floor,door,apt:aptId,
+          firstname,lastname,
+          reg:col(row,'reg'),
+          oeubd:col(row,'oeubd'),
+          ownDate:col(row,'own_date'),
+          phones,emails,
+          phone:phones[0]||'',email:emails[0]||'',
+          people:+col(row,'people')||1,
+          child1:+col(row,'child1')||0,
+          child2:+col(row,'child2')||0,
+          parkings,storages,vehicles
+        };
+
+        // Supabase-д хадгалах
+        const {data:saved,error}=await sb.from('residents').insert({
+          building:data.building,floor:data.floor,door:data.door,apt:data.apt,
+          firstname:data.firstname,lastname:data.lastname,
+          reg:data.reg,oeubd:data.oeubd,own_date:data.ownDate,
+          phones:data.phones,emails:data.emails,
+          people:data.people,child1:data.child1,child2:data.child2,
+          parkings:data.parkings,storages:data.storages,vehicles:data.vehicles
+        }).select().single();
+
+        if(error){console.error('import insert error:',error.message);skipped++;continue;}
+        residents.push({id:nextId++,dbId:saved.id,...data});
+        added++;
+      }
+
+      renderResidents();updateSidebarCount();
+      toast(`${added} өмчлөгч импортлогдлоо${skipped?' ('+skipped+' алгасав)':''}  ✓`,'success');
+    } catch(err){
+      console.error('importCSV error:',err);
+      toast('Импортод алдаа гарлаа: '+err.message,'error');
+    }
+    event.target.value='';
   };
   reader.readAsText(file,'UTF-8');
 }
