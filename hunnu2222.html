@@ -1320,7 +1320,7 @@ async function db_loadResidents() {
   if(!data){console.error("residents: data is null");return;}
   residents = data.map(r=>({
     id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
-    owner:((r.firstname||"")+" "+(r.lastname||"")).trim()||r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
+    firstname:r.firstname||"", lastname:r.lastname||"", owner:((r.firstname||"")+" "+(r.lastname||"")).trim()||r.owner||"", reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
     phones:r.phones||[], emails:r.emails||[], phone:(r.phones||[])[0]||'',
     email:(r.emails||[])[0]||'', people:r.people||1, child1:r.child1||0, child2:r.child2||0, note:r.note||'',
     parkings:r.parkings||[], storages:r.storages||[], vehicles:r.vehicles||[]
@@ -1774,7 +1774,7 @@ function renderResidents(filter='') {
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${r.building}</strong></td>
       <td><strong style="font-size:13px;font-variant-numeric:tabular-nums">${aptLabel(r.building,r.floor,r.door)}</strong></td>
       <td style="color:var(--text-dim);white-space:nowrap">${sqm}<span style="font-size:10px"> м²</span></td>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:11px;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${(r.owner||"?")[0]}</div><span style="font-size:12.5px;font-weight:600">${_fmtOwner(r.owner||"")}</span></div></td>
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:11px;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${(r.firstname||r.owner||"?")[0]}</div><span style="font-size:12.5px;font-weight:600">${_fmtOwner2(r)}</span></div></td>
       <td style="font-variant-numeric:tabular-nums;color:var(--text-dim);font-size:11.5px">${phones[0]||'—'}${phones.length>1?`<br><span style="color:var(--text-muted);font-size:10px">+${phones.length-1}</span>`:''}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${(r.emails||[r.email||'']).filter(Boolean)[0]||'—'}</td>
       <td style="font-size:11.5px;color:var(--text-dim)">${r.ownDate||'—'}</td>
@@ -2093,6 +2093,14 @@ const EXPENSE_CATS = {
 
 function onExpTypeChange() {
   loadExpCats(document.getElementById('exp-type').value);
+}
+
+function _fmtOwner2(r) {
+  const fn = (r.firstname||'').trim();
+  const ln = (r.lastname||'').trim();
+  if(fn && ln) return fn + ' ' + ln[0] + '.';
+  if(fn) return fn;
+  return _fmtOwner(r.owner||'');
 }
 
 function _fmtOwner(owner) {
