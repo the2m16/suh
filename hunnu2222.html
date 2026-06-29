@@ -1800,13 +1800,20 @@ function filterResidents(){renderResidents(document.getElementById('resident-sea
 // CSV EXPORT / IMPORT
 // ============================================================
 function exportCSV() {
-  const headers=['Байр','Давхар','Хаалга','Тоот','Өмчлөгч','Регистр','ӨЭУБД','Өмчилсөн огноо','Утас','И-мэйл','Ам бүл','Талбай (м²)','Зогсоол','Агуулах','Тэмдэглэл'];
-  const rows=residents.map(r=>[r.building,r.floor,r.door,fmtApt(r),r.owner,r.reg||'',r.oeubd||'',r.ownDate||'',(r.phones||[r.phone||'']).join(';'),(r.emails||[r.email||'']).join(';'),r.people,residentSqm(r),(r.parkings||[]).join(';'),(r.storages||[]).map(s=>s.num+(s.sqm?':'+s.sqm:'')).join(';'),r.note||'']);
-  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const headers=['Байр','Давхар','Хаалга','Тоот','Нэр','Овог','Регистр','ӨЭУБД','Өмчилсөн огноо','Утас','И-мэйл','Ам бүл','0-6 насны хүүхэд','6-18 насны хүүхэд','Талбай (м²)','Зогсоол','Агуулах'];
+  const rows=residents.map(r=>{
+    const parts=(r.owner||'').trim().split(' ');
+    const fn=parts[0]||''; const ln=parts.slice(1).join(' ')||'';
+    return [r.building,r.floor,r.door,fmtApt(r),fn,ln,r.reg||'',r.oeubd||'',r.ownDate||'',
+      (r.phones||[r.phone||'']).join(';'),(r.emails||[r.email||'']).join(';'),
+      r.people,r.child1||0,r.child2||0,residentSqm(r),
+      (r.parkings||[]).join(';'),(r.storages||[]).map(s=>s.num+(s.sqm?':'+s.sqm:'')).join(';')];
+  });
+  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='hunnu2222_omchlugchid_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  toast(residents.length+' өмчлөгчийн мэдээлэл татагдлаа ✓','success');
+  a.download='hunnu2222_omchlugchid_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
+  toast(residents.length+' өмчлөгчийн мэдээлэл татагдлаа','success');
 }
 function importCSV(event) {
   const file=event.target.files[0];if(!file)return;
