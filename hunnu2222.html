@@ -678,6 +678,10 @@
                 <label>Хугацаа хэтэрсэн торгуулийн хувь (%/сар)</label>
                 <input type="number" id="fee-penalty" value="2">
               </div>
+              <div class="form-group">
+                <label>Сарын хуримтлалын сан (₮/сар)</label>
+                <input type="number" id="fee-fund-amount" value="5000000">
+              </div>
               <button class="btn btn-primary" onclick="saveFeeSettings()">Хадгалах</button>
             </div>
           </div>
@@ -1591,7 +1595,7 @@ const CUR_MONTH_STR = String(CUR_MONTH).padStart(2,'0');
 // DATA STORE
 // ============================================================
 
-let feeSettings = {perSqm: 2500, utility: 15000, extra: 0, penalty: 2, garage: 25000, storageSqm: 1500};
+let feeSettings = {perSqm: 2500, utility: 15000, extra: 0, penalty: 2, garage: 25000, storageSqm: 1500, fundAmount: 5000000};
 let selectedAptForDetail = null;
 let editingResidentId = null;
 let nextId = 100;
@@ -2704,6 +2708,41 @@ function renderAccumulation() {
       <span class="summary-val ${totBalance>=0?'text-accent':'text-danger'}" style="font-size:18px">${fmtMoney(totBalance)}</span></div>`;
 }
 
+
+async function registerMonthlyFund() {
+  const month = CUR_MONTH;
+  const year = CUR_YEAR;
+  const amt = feeSettings.fundAmount || 5000000;
+
+  // Тухайн сард аль хэдийн бүртгэсэн эсэх шалгах
+  const already = transactions.find(t=>t&&t.type==='expense'&&t.subcat==='Хуримтлалын сан'&&t.month===month&&t.year===year);
+  if(already){
+    toast(`${month}-р сарын хуримтлал аль хэдийн бүртгэгдсэн байна`,'error');
+    return;
+  }
+
+  const data = {
+    apt: null,
+    description: `${year} оны ${month}-р сарын хуримтлалын сан`,
+    subcat: 'Хуримтлалын сан',
+    type: 'expense',
+    amount: amt,
+    method: 'bank',
+    ref: `FUND${year}${String(month).padStart(2,'0')}`,
+    month, year,
+    date: todayStr(),
+    status: 'completed',
+    category: 'fund'
+  };
+
+  const {data:saved, error} = await sb.from('transactions').insert(data).select().single();
+  if(error){toast('Алдаа: '+error.message,'error');return;}
+  transactions.push({id:nextId++, dbId:saved.id, ...data});
+  renderAccumulation();
+  saveToLocal();
+  toast(`${month}-р сарын хуримтлал ${(amt/1000000).toFixed(1)}М₮ бүртгэгдлээ ✓`,'success');
+}
+
 function renderFinanceTable(){renderIncomeTable();}
 function renderExpenses(){renderExpenseTable();}
 function calcFeePreview() {
@@ -2732,6 +2771,7 @@ async function saveFeeSettings(){
   feeSettings.penalty=+document.getElementById('fee-penalty').value||2;
   feeSettings.garage=+(document.getElementById('fee-garage')?.value)||25000;
   feeSettings.storageSqm=+(document.getElementById('fee-storage')?.value)||1500;
+  feeSettings.fundAmount=+(document.getElementById('fee-fund-amount')?.value)||5000000;
   toast('СӨХ-ийн төлбөрийн тохиргоо хадгалагдлаа ✓','success');
 }
 
