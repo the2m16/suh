@@ -1317,6 +1317,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 async function db_loadResidents() {
   const {data,error} = await sb.from('residents').select('*').order('apt');
   if(error){console.error('residents load error:', JSON.stringify(error), error.message, error.code, error.details);return;}
+  if(!data){console.error("residents: data is null");return;}
   residents = data.map(r=>({
     id:r.id, dbId:r.id, building:r.building, floor:r.floor, door:r.door, apt:r.apt,
     owner:r.owner, reg:r.reg||'', oeubd:r.oeubd||'', ownDate:r.own_date||'',
@@ -1462,7 +1463,8 @@ async function db_init() {
     if(businesses.length === 0) businesses = demoBusinesses;
     if(transactions.length === 0) transactions = demoTransactions;
 
-    toast('Өгөгдөл ачаалагдлаа','success');
+    console.log('residents loaded:', residents.length);
+    toast('Өгөгдөл ачаалагдлаа ✓ ('+residents.length+' өмчлөгч)','success');
   } catch(e) {
     console.error('DB init error:',e);
     toast('Өгөгдөл ачаалахад алдаа гарлаа','error');
@@ -1743,6 +1745,7 @@ function residentLabel(r){ return r.building+'-р байр '+aptLabel(r.building
 function renderResidents(filter='') {
   const body = document.getElementById('residents-table-body');
   if(!body) return;
+  if(!Array.isArray(residents)) return;
   const list = filter ? residents.filter(r=>{
     const q = filter;
     return r.owner.toLowerCase().includes(q)
