@@ -469,7 +469,7 @@
           <input type="text" id="resident-search" placeholder="Хайх..." oninput="filterResidents()">
         </div>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV татах">Татах</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV экспорт">Экспорт</button>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">Импорт</button>
           <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)">
           <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Өмчлөгч нэмэх</button>
@@ -955,16 +955,21 @@
 
       <!-- Өмчлөгч -->
       <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">👤 Өмчлөгчийн мэдээлэл</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Өмчлөгчийн нэр</label>
-          <input type="text" id="res-owner" placeholder="Овог Нэр">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Нэр</label>
+          <input type="text" id="res-firstname" placeholder="Болормаа">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Овог</label>
+          <input type="text" id="res-lastname" placeholder="Батбаяр">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
           <label>Регистрийн дугаар</label>
           <input type="text" id="res-reg" placeholder="АА00000000">
         </div>
       </div>
+      <input type="hidden" id="res-owner">
       <div class="form-row">
         <div class="form-group">
           <label>Өмчилсөн огноо <span style="color:var(--text-muted);font-weight:400">(YYYY/MM/DD)</span></label>
@@ -1768,8 +1773,8 @@ function renderResidents(filter='') {
   const paid2=list.filter(r=>paidThisMonth.includes(r.apt)).length;
   const e1=document.getElementById('res-stat-total');const e2=document.getElementById('res-stat-paid');const e3=document.getElementById('res-stat-unpaid');
   if(e1)e1.textContent='Нийт: '+list.length+' өмчлөгч';
-  if(e2)e2.textContent='✓ Төлсөн: '+paid2;
-  if(e3)e3.textContent='✗ Төлөөгүй: '+(list.length-paid2);
+  if(e2)e2.innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--success);margin-right:5px;vertical-align:middle"></span>Төлбөрийн үлдэгдэлгүй: '+paid2;
+  if(e3)e3.innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--danger);margin-right:5px;vertical-align:middle"></span>Төлбөрийн үлдэгдэлтэй: '+(list.length-paid2);
 }
 
 function filterResidents(){renderResidents(document.getElementById('resident-search').value.toLowerCase());}
@@ -1922,7 +1927,7 @@ function resetResidentModal() {
   const hv=document.getElementById('res-has-vehicle');
   if(hv){hv.checked=false;document.getElementById('vehicle-section').style.display='none';}
   // Бусад
-  ['res-building','res-floor','res-apt','res-owner','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date','res-note'].forEach(id=>{
+  ['res-building','res-floor','res-apt','res-firstname','res-lastname','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date','res-note'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('res-building').value='101';
@@ -1944,7 +1949,9 @@ function editResident(id) {
   document.getElementById('res-building').value=r.building;
   document.getElementById('res-floor').value=r.floor;
   document.getElementById('res-apt').value=r.door;
-  document.getElementById('res-owner').value=r.owner;
+  const nameParts = (r.owner||'').trim().split(' ');
+  document.getElementById('res-firstname').value = nameParts[0]||'';
+  document.getElementById('res-lastname').value = nameParts.slice(1).join(' ')||'';
   document.getElementById('res-reg').value=r.reg||'';
   // ӨЭУБД хоёр талбарт задлах
   const oeubd=r.oeubd||'';
@@ -1989,7 +1996,9 @@ async function saveResident() {
   const building=+document.getElementById('res-building').value;
   const floor=+document.getElementById('res-floor').value;
   const door=+document.getElementById('res-apt').value;
-  const owner=document.getElementById('res-owner').value.trim();
+  const firstname = document.getElementById('res-firstname').value.trim();
+  const lastname = document.getElementById('res-lastname').value.trim();
+  const owner = (firstname + (lastname?' '+lastname:'')).trim();
   if(!building||!floor||!door||!owner){toast('Байр, давхар, хаалга, өмчлөгчийн нэрийг оруулна уу','error');return;}
   const aptId = makeAptId(building,floor,door);
   // ӨЭУБД нэгтгэх
