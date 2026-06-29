@@ -1263,6 +1263,63 @@
   </div>
 </div>
 
+<!-- Business Payment Modal -->
+<div class="modal-overlay" id="modal-biz-payment">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <span class="modal-title">Гэрээний төлбөр бүртгэх</span>
+      <button class="modal-close" onclick="closeModal('modal-biz-payment')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Байгууллага</label>
+        <div id="biz-pay-name" style="padding:8px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;color:var(--text)">—</div>
+      </div>
+      <div class="form-group">
+        <label>Сар</label>
+        <select id="biz-pay-month">
+          <option value="1">1-р сар</option><option value="2">2-р сар</option>
+          <option value="3">3-р сар</option><option value="4">4-р сар</option>
+          <option value="5">5-р сар</option><option value="6">6-р сар</option>
+          <option value="7">7-р сар</option><option value="8">8-р сар</option>
+          <option value="9">9-р сар</option><option value="10">10-р сар</option>
+          <option value="11">11-р сар</option><option value="12">12-р сар</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Төлбөрийн арга</label>
+        <div class="pay-method-grid">
+          <div class="pay-method-card selected" onclick="selectBizPayMethod(this,'qpay')">
+            <div class="pay-method-icon">📱</div>
+            <div class="pay-method-name">QPay</div>
+          </div>
+          <div class="pay-method-card" onclick="selectBizPayMethod(this,'bank')">
+            <div class="pay-method-icon">🏦</div>
+            <div class="pay-method-name">Данс шилжүүлэг</div>
+          </div>
+          <div class="pay-method-card" onclick="selectBizPayMethod(this,'cash')">
+            <div class="pay-method-icon">💵</div>
+            <div class="pay-method-name">Бэлэн мөнгө</div>
+          </div>
+        </div>
+        <input type="hidden" id="biz-pay-method" value="qpay">
+      </div>
+      <div class="form-group">
+        <label>Дүн (₮)</label>
+        <input type="number" id="biz-pay-amount" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Гүйлгээний дугаар / лавлагаа</label>
+        <input type="text" id="biz-pay-ref" placeholder="Гүйлгээний дугаар...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-biz-payment')">Болих</button>
+      <button class="btn btn-primary" onclick="saveBizPayment()">Бүртгэх</button>
+    </div>
+  </div>
+</div>
+
 <!-- Expense/Income Modal -->
 <div class="modal-overlay" id="modal-expense">
   <div class="modal" style="width:460px">
@@ -2359,7 +2416,44 @@ function bizDetailEdit() {
 
 function bizDetailPay() {
   closeModal('modal-biz-detail');
-  openPayModal();
+  if(selectedBusinessForDetail) openBizPayModal(selectedBusinessForDetail);
+}
+
+
+function openBizPayModal(b) {
+  document.getElementById('biz-pay-name').textContent = b.name;
+  document.getElementById('biz-pay-month').value = CUR_MONTH;
+  document.getElementById('biz-pay-amount').value = '';
+  document.getElementById('biz-pay-ref').value = '';
+  document.getElementById('biz-pay-method').value = 'qpay';
+  document.querySelectorAll('#modal-biz-payment .pay-method-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelector('#modal-biz-payment .pay-method-card').classList.add('selected');
+  openModal('modal-biz-payment');
+}
+
+function selectBizPayMethod(el, method) {
+  document.querySelectorAll('#modal-biz-payment .pay-method-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('biz-pay-method').value = method;
+}
+
+async function saveBizPayment() {
+  const b = selectedBusinessForDetail; if(!b) return;
+  const amount = +document.getElementById('biz-pay-amount').value;
+  if(!amount){toast('Дүн оруулна уу','error');return;}
+  const month = +document.getElementById('biz-pay-month').value;
+  const method = document.getElementById('biz-pay-method').value;
+  const ref = document.getElementById('biz-pay-ref').value.trim();
+  const data = {
+    apt: null, type:'income', amount, method, ref,
+    month, year: CUR_YEAR, date: todayStr(),
+    desc: b.name + ' гэрээний төлбөр', status:'completed', category:'business'
+  };
+  transactions.push({id:nextId++,...data});
+  await db_saveTransaction(data);
+  closeModal('modal-biz-payment');
+  toast(b.name+' '+month+'-р сарын төлбөр бүртгэгдлээ ✓','success');
+  saveToLocal();
 }
 
 function editBusiness(id) {
