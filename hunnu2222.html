@@ -1390,7 +1390,8 @@ async function db_deleteBusiness(id) {
 async function db_loadTransactions() {
   const {data,error} = await sb.from('transactions').select('*').order('id');
   if(error){console.error('transactions load error:', JSON.stringify(error), error.message);return;}
-  transactions = data.map(t=>({
+  if(!data){console.error('transactions: data is null');return;}
+  transactions = data.filter(Boolean).map(t=>({
     id:t.id, apt:t.apt, aptId:t.resident_id, desc:t.description||'',
     subcat:t.subcat||'', type:t.type, amount:+t.amount, method:t.method||'',
     ref:t.ref||'', month:t.month, year:t.year, date:t.date||'',
@@ -1757,14 +1758,14 @@ function renderResidents(filter='') {
       || (r.vehicles||[]).join(' ').toLowerCase().includes(q);
   }) : residents;
   if(!list.length){body.innerHTML='<tr><td colspan="16" style="text-align:center;padding:28px;color:var(--text-muted)">Өмчлөгч олдсонгүй</td></tr>';return;}
-  const paidThisMonth=transactions.filter(t=>t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>t.apt);
+  const paidThisMonth=transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>t.apt);
   const MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12];
   body.innerHTML=list.map((r,idx)=>{
     const sqm=residentSqm(r);const aptId=r.apt;const paid=paidThisMonth.includes(aptId);
     const phones=r.phones||[r.phone||''];
     const parkings=r.parkings||[];const storages=r.storages||[];
     const monthBadges=MONTHS.map(m=>{
-      const wasPaid=transactions.some(t=>t.apt===aptId&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR);
+      const wasPaid=transactions.some(t=>t&&t.apt===aptId&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR);
       const cls=m>1?'future':(wasPaid?'paid':'unpaid');
       return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
     }).join('');
