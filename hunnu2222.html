@@ -955,7 +955,7 @@
 
       <!-- Өмчлөгч -->
       <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">👤 Өмчлөгчийн мэдээлэл</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div class="form-group" style="margin-bottom:0">
           <label>Нэр</label>
           <input type="text" id="res-firstname" placeholder="Болормаа">
@@ -972,14 +972,14 @@
       <input type="hidden" id="res-owner">
       <div class="form-row">
         <div class="form-group">
-          <label>Өмчилсөн огноо <span style="color:var(--text-muted);font-weight:400">(YYYY/MM/DD)</span></label>
+          <label>Өмчилсөн огноо</label>
           <input type="text" id="res-own-date" placeholder="2020/01/15" maxlength="10" style="font-variant-numeric:tabular-nums">
         </div>
         <div class="form-group">
-          <label>ӨЭУБД <span style="color:var(--text-muted);font-weight:400">(кирилл үсэг + 12 цифр)</span></label>
-          <div style="display:flex;gap:6px">
-            <input type="text" id="res-oeubd-letter" placeholder="А" maxlength="1" style="width:52px;text-align:center;font-size:16px;font-weight:700;text-transform:uppercase">
-            <input type="text" id="res-oeubd-num" placeholder="000000000000" maxlength="12" style="flex:1;font-variant-numeric:tabular-nums;letter-spacing:.05em">
+          <label>Өмчийн Улсын бүртгэлийн дугаар</label>
+          <div style="display:flex;gap:6px;margin-top:2px">
+            <input type="text" id="res-oeubd-letter" placeholder="А" maxlength="1" style="width:44px;text-align:center;font-size:15px;font-weight:700;text-transform:uppercase;height:38px">
+            <input type="text" id="res-oeubd-num" placeholder="000000000000" style="flex:1;font-variant-numeric:tabular-nums;letter-spacing:.05em;height:38px">
           </div>
         </div>
       </div>
@@ -1012,14 +1012,18 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
           <label>Ам бүл</label>
           <input type="number" id="res-people" value="2" min="0">
         </div>
-        <div class="form-group">
-          <label>Тэмдэглэл</label>
-          <input type="text" id="res-note" placeholder="...">
+        <div class="form-group" style="margin-bottom:0">
+          <label>0-6 насны хүүхэд</label>
+          <input type="number" id="res-child1" value="0" min="0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>6-18 насны хүүхэд</label>
+          <input type="number" id="res-child2" value="0" min="0">
         </div>
       </div>
 
@@ -1927,7 +1931,7 @@ function resetResidentModal() {
   const hv=document.getElementById('res-has-vehicle');
   if(hv){hv.checked=false;document.getElementById('vehicle-section').style.display='none';}
   // Бусад
-  ['res-building','res-floor','res-apt','res-firstname','res-lastname','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date','res-note'].forEach(id=>{
+  ['res-building','res-floor','res-apt','res-firstname','res-lastname','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('res-building').value='101';
@@ -1952,6 +1956,8 @@ function editResident(id) {
   const nameParts = (r.owner||'').trim().split(' ');
   document.getElementById('res-firstname').value = nameParts[0]||'';
   document.getElementById('res-lastname').value = nameParts.slice(1).join(' ')||'';
+  if(document.getElementById('res-child1')) document.getElementById('res-child1').value=r.child1||0;
+  if(document.getElementById('res-child2')) document.getElementById('res-child2').value=r.child2||0;
   document.getElementById('res-reg').value=r.reg||'';
   // ӨЭУБД хоёр талбарт задлах
   const oeubd=r.oeubd||'';
@@ -2025,7 +2031,8 @@ async function saveResident() {
     phone:phones[0]||'',email:emails[0]||'',
     vehicles: getVehicles('res-vehicle-rows'),
     people:+document.getElementById('res-people').value,
-    note:document.getElementById('res-note').value.trim(),
+    child1:+(document.getElementById('res-child1')?.value||0),
+    child2:+(document.getElementById('res-child2')?.value||0),
     storages,parkings};
   if(editingResidentId) {
     const idx=residents.findIndex(r=>r.id===editingResidentId);
@@ -2060,6 +2067,13 @@ const EXPENSE_CATS = {
 
 function onExpTypeChange() {
   loadExpCats(document.getElementById('exp-type').value);
+}
+
+function _fmtOwner(owner) {
+  if(!owner) return '—';
+  const parts = owner.trim().split(' ');
+  if(parts.length < 2) return owner;
+  return parts[0] + ' ' + parts[1][0] + '.';
 }
 
 function fmtApt(r){return r.building+'-'+aptLabel(r.building,r.floor,r.door);}
