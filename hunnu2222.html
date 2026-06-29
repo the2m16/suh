@@ -579,11 +579,8 @@
               <option value="">Бүх сар</option>
             </select>
           </div>
+          <input type="text" id="inc-apt-filter" placeholder="🔍 Хайх..." oninput="renderIncomeTable()" style="width:160px">
           <button class="btn btn-primary btn-sm" onclick="openAddIncome()">+ Орлого нэмэх</button>
-        </div>
-        <div class="flex gap-8 mb-16">
-          <input type="text" id="inc-apt-filter" placeholder="Байр, тоот хайх..." oninput="renderIncomeTable()" style="width:180px">
-          <input type="text" id="inc-subcat-filter" placeholder="Дэд ангилал хайх..." oninput="renderIncomeTable()" style="width:180px">
         </div>
         <div class="card">
           <div class="card-body" style="padding:0">
@@ -615,10 +612,8 @@
               <option value="">Бүх сар</option>
             </select>
           </div>
+          <input type="text" id="exp-subcat-filter" placeholder="🔍 Хайх..." oninput="renderExpenseTable()" style="width:160px">
           <button class="btn btn-primary btn-sm" onclick="openAddExpense()">+ Зарлага нэмэх</button>
-        </div>
-        <div class="flex gap-8 mb-16">
-          <input type="text" id="exp-subcat-filter" placeholder="Дэд ангилал хайх..." oninput="renderExpenseTable()" style="width:200px">
         </div>
         <div class="card">
           <div class="card-body" style="padding:0">
@@ -2607,14 +2602,12 @@ function switchAptView(view) {
 function renderIncomeTable() {
   const mf=document.getElementById('inc-month-filter')?.value;
   const yf=document.getElementById('inc-year-filter')?.value;
-  const aptQ=(document.getElementById('inc-apt-filter')?.value||'').toLowerCase();
-  const subcatQ=(document.getElementById('inc-subcat-filter')?.value||'').toLowerCase();
+  const q=(document.getElementById('inc-apt-filter')?.value||'').toLowerCase();
   const list=transactions.filter(t=>{
     if(!t||t.type!=='income') return false;
     if(mf&&t.month!=mf) return false;
     if(yf&&t.year!=yf) return false;
-    if(aptQ&&!(t.apt||'').toLowerCase().includes(aptQ)) return false;
-    if(subcatQ&&!(t.desc||'').toLowerCase().includes(subcatQ)&&!(t.subcat||'').toLowerCase().includes(subcatQ)) return false;
+    if(q&&!(t.apt||'').toLowerCase().includes(q)&&!(t.desc||'').toLowerCase().includes(q)&&!(t.subcat||'').toLowerCase().includes(q)) return false;
     return true;
   }).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('income-table-body');
