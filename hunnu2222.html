@@ -1965,7 +1965,7 @@ function editResident(id) {
   document.getElementById('res-oeubd-num').value=oeubd.length>1?oeubd.slice(1):'';
   document.getElementById('res-own-date').value=r.ownDate||'';
   document.getElementById('res-people').value=r.people;
-  document.getElementById('res-note').value=r.note||'';
+  // res-note хасагдсан учраас алгасна
   // Утас
   const phones=r.phones||[r.phone||''];
   document.getElementById('phone-rows').innerHTML='';
