@@ -349,6 +349,8 @@
       <strong style="color:#94A3B8;font-size:11px">Хүннү 2222 Резиденс</strong>
       <span style="display:block;margin-top:2px;color:#64748B;font-size:10px">18 байр · 1420 өрх</span>
       <span id="sidebar-residents-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Оршин суугч · 0</span>
+      <span id="sidebar-child1-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Хүүхэд 0-6 нас · 0</span>
+      <span id="sidebar-child2-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Хүүхэд 6-18 нас · 0</span>
       <span id="sidebar-storage-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Агуулах · 0</span>
       <span id="sidebar-parking-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Дулаан зогсоол · 0</span>
       <span id="sidebar-vehicle-count" style="display:block;margin-top:2px;color:#64748B;font-size:10px">Бүртгэлтэй машин · 0</span>
@@ -2991,6 +2993,14 @@ function updateSidebarCount() {
   const totalPeople = residents.reduce((s,r)=>s+(+r.people||0), 0);
   const el = document.getElementById('sidebar-residents-count');
   if(el) el.textContent = 'Оршин суугч · ' + totalPeople.toLocaleString();
+
+  const totalChild1 = residents.reduce((s,r)=>s+(+r.child1||0), 0);
+  const ec1 = document.getElementById('sidebar-child1-count');
+  if(ec1) ec1.textContent = 'Хүүхэд 0-6 нас · ' + totalChild1.toLocaleString();
+
+  const totalChild2 = residents.reduce((s,r)=>s+(+r.child2||0), 0);
+  const ec2 = document.getElementById('sidebar-child2-count');
+  if(ec2) ec2.textContent = 'Хүүхэд 6-18 нас · ' + totalChild2.toLocaleString();
 
   const totalStorage = residents.reduce((s,r)=>s+((r.storages||[]).length),0);
   const es = document.getElementById('sidebar-storage-count');
