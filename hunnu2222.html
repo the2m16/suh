@@ -2609,7 +2609,7 @@ function renderIncomeTable() {
     if(yf&&t.year!=yf) return false;
     if(q){
       const r=residents.find(x=>x.apt===t.apt);
-      const aptStr=(t.apt||'').toLowerCase();
+      const aptStr=String(t.apt||'').toLowerCase();
       const nameStr=r?((r.firstname||'')+(r.lastname||'')).toLowerCase():'';
       const fmtStr=r?fmtApt(r).toLowerCase():'';
       const descStr=(t.desc||'').toLowerCase();
