@@ -1732,7 +1732,7 @@ function renderOverdueList(overdueRes) {
   if(!overdueRes.length){body.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Хугацаа хэтэрсэн тоот байхгүй ✓</td></tr>';return;}
   body.innerHTML = overdueRes.map(r=>`<tr>
     <td><strong>${fmtApt(r)}</strong></td>
-    <td>${r.owner}</td>
+    <td>${(r.firstname||r.owner||"")+" "+(r.lastname||"")}</td>
     <td class="text-danger font-mono">${fmt(calcFee(residentSqm(r)))}</td>
   </tr>`).join('');
 }
@@ -2047,7 +2047,7 @@ async function saveResident() {
   const parkings=document.getElementById('res-has-parking').checked
     ? [...document.querySelectorAll('.parking-row')].map(r=>{const z=r.querySelector('.parking-zone').value;const n=r.querySelector('.parking-num').value.trim().padStart(3,'0');return z+n;}).filter(p=>p.length>1)
     : [];
-  const data={building,floor,door,apt:aptId,firstname,lastname,
+  const data={building,floor,door,apt:aptId,firstname,lastname,dbId:editingResidentId?residents.find(r=>r.id===editingResidentId)?.dbId:null,
     reg:document.getElementById('res-reg').value.trim(),
     oeubd,
     ownDate:document.getElementById('res-own-date').value,
@@ -2421,7 +2421,7 @@ function _payRow(r, bgColor, textColor, statusText, showBtn) {
   const fee = calcFee(residentSqm(r));
   return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
     <td><strong>${fmtApt(r)}</strong></td>
-    <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:${bgColor};color:${textColor}">${(r.owner||"?")[0]}</div>${r.owner}</div></td>
+    <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:${bgColor};color:${textColor}">${(r.firstname||r.owner||"?")[0]}</div>${(r.firstname||"")+" "+(r.lastname||"")}</div></td>
     <td style="font-variant-numeric:tabular-nums">${fmtMoney(fee)}</td>
     <td style="color:var(--text-dim)">${CUR_MONTH}-р сар</td>
     <td style="color:var(--text-muted)">${CUR_YEAR}/${CUR_MONTH_STR}/25</td>
@@ -2530,7 +2530,7 @@ function onPayBuildingChange() {
   if(!bId){aptSel.disabled=true;return;}
   const bldRes=residents.filter(r=>r.building===bId);
   if(bldRes.length){
-    bldRes.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=aptLabel(r.building,r.floor,r.door)+' — '+r.owner;aptSel.appendChild(o);});
+    bldRes.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=aptLabel(r.building,r.floor,r.door)+' — '+(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:'');aptSel.appendChild(o);});
     aptSel.disabled=false;
   } else {
     aptSel.innerHTML='<option value="">Бүртгэлтэй өмчлөгч байхгүй</option>';aptSel.disabled=true;
@@ -2742,7 +2742,7 @@ function renderAptGrid(buildingId) {
       cell.className='apt-unit '+cls;
       cell.style.width=unitW+'px';
       cell.innerHTML=`<span style="font-size:11px;font-weight:700">${label}</span><span style="font-size:8px;opacity:.8">${sqm}м²</span>`;
-      cell.title=`${buildingId}-р байр ${label} тоот${res?' · '+res.owner:' · Өмчлөгч бүртгэлгүй'}`;
+      cell.title=`${buildingId}-р байр ${label} тоот${res?' · '+(res.firstname||res.owner||'')+(res.lastname?' '+res.lastname:''):' · Өмчлөгч бүртгэлгүй'}`;
       cell.onclick=()=>showAptDetail(aptId, buildingId, f, d, res, paid, sqm);
       row.appendChild(cell);
     }
@@ -2769,9 +2769,9 @@ function _aptDetailResidentHTML(res, buildingId, floor, label, sqm, paid, histor
   const ownerSection = `
     <div class="flex-between mb-16">
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="avatar" style="width:40px;height:40px;font-size:16px;background:rgba(59,130,246,0.2);color:#60A5FA">${res.owner[0]}</div>
+        <div class="avatar" style="width:40px;height:40px;font-size:16px;background:rgba(59,130,246,0.2);color:#60A5FA">${(res.firstname||res.owner||"?")[0]}</div>
         <div>
-          <div style="font-size:17px;font-weight:800">${res.owner}</div>
+          <div style="font-size:17px;font-weight:800">${res.firstname||""} ${res.lastname||""}</div>
           <div style="color:var(--text-muted);font-size:12px">${phones.join(' · ')||'—'}</div>
         </div>
       </div>
@@ -2904,7 +2904,7 @@ function generateReport(type) {
         <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${residents.length}</span></div></div>
       </div>
       <table><thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
-      <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?r.owner:'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
+      <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:''):'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
     title.textContent='📉 Зарлагын тайлан — 2025';
     const exps = transactions.filter(t=>t.type==='expense');
@@ -2926,7 +2926,7 @@ function generateReport(type) {
       <div class="mb-16"><div class="summary-row"><span class="summary-key">Нийт өр авлага</span><span class="summary-val text-danger">${fmt(total)}</span></div>
       <div class="summary-row"><span class="summary-key">Хэтэрсэн тоот</span><span class="summary-val">${overdue.length}</span></div></div>
       <table><thead><tr><th>Байр/Тоот</th><th>Өмчлөгч</th><th>Утас</th><th>Хураамж</th><th>Торгууль (${feeSettings.penalty}%)</th><th>Нийт дүн</th></tr></thead>
-      <tbody>${overdue.map(r=>{const fee=calcFee(residentSqm(r));const penalty=Math.round(fee*feeSettings.penalty/100);return`<tr><td>${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}</td><td>${r.owner}</td><td>${r.phone}</td><td class="font-mono">${fmt(fee)}</td><td class="text-warning font-mono">${fmt(penalty)}</td><td class="text-danger font-mono font-bold">${fmt(fee+penalty)}</td></tr>`;}).join('')}</tbody></table>`;
+      <tbody>${overdue.map(r=>{const fee=calcFee(residentSqm(r));const penalty=Math.round(fee*feeSettings.penalty/100);return`<tr><td>${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}</td><td>${(r.firstname||r.owner||"")+" "+(r.lastname||"")}</td><td>${r.phone}</td><td class="font-mono">${fmt(fee)}</td><td class="text-warning font-mono">${fmt(penalty)}</td><td class="text-danger font-mono font-bold">${fmt(fee+penalty)}</td></tr>`;}).join('')}</tbody></table>`;
   }
 }
 
