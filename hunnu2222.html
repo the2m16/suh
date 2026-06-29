@@ -1901,7 +1901,7 @@ function renderResidents(filter='') {
       </div></td>
     </tr>`;
   }).join('');
-  const paid2=list.filter(r=>paidThisMonth.includes(r.apt)).length;
+  const paid2=list.filter(r=>paidThisMonth.includes(String(r.apt))).length;
   const e1=document.getElementById('res-stat-total');const e2=document.getElementById('res-stat-paid');const e3=document.getElementById('res-stat-unpaid');
   if(e1)e1.textContent='Нийт: '+list.length+' өмчлөгч';
   if(e2)e2.innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--success);margin-right:5px;vertical-align:middle"></span>Төлбөрийн үлдэгдэлгүй: '+paid2;
@@ -3123,8 +3123,8 @@ function renderAptGrid(buildingId) {
       const aptId = makeAptId(buildingId, f, d);
       const label = aptLabel(buildingId, f, d);
       const sqm = getSqmByBuildingAndDoor(buildingId, d);
-      const res = residents.find(r=>r.apt===aptId);
-      const paid = paidAptIds.includes(aptId);
+      const res = residents.find(r=>String(r.apt)===String(aptId));
+      const paid = paidAptIds.includes(String(aptId));
       let cls = res ? (paid?'paid':'overdue') : 'empty';
 
       // Орцны хооронд зай — зөвхөн 2 орцтой байруудад (105-114), 3-р хаалганы өмнө
