@@ -948,10 +948,11 @@
                 <tr>
                   <th style="width:60px">ID</th>
                   <th>Нэр (label)</th>
-                  <th style="width:80px">Давхар</th>
-                  <th style="width:100px">Хаалга/давхар</th>
-                  <th style="width:70px">Бүлэг</th>
-                  <th style="width:80px">Үйлдэл</th>
+                  <th style="width:70px">Давхар</th>
+                  <th style="width:120px">Бүтэц</th>
+                  <th style="width:130px">Дугаарлалт</th>
+                  <th style="width:60px">Бүлэг</th>
+                  <th style="width:100px">Үйлдэл</th>
                 </tr>
               </thead>
               <tbody id="admin-buildings-body"></tbody>
@@ -1455,43 +1456,110 @@
 
 <!-- Admin: Байр нэмэх/засах Modal -->
 <div class="modal-overlay" id="modal-admin-building">
-  <div class="modal" style="width:460px">
+  <div class="modal" style="width:560px">
     <div class="modal-header">
       <span class="modal-title" id="modal-admin-building-title">Байр нэмэх</span>
       <button class="modal-close" onclick="closeModal('modal-admin-building')">×</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+
+      <!-- Үндсэн мэдээлэл -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Үндсэн мэдээлэл</div>
       <div class="form-row">
         <div class="form-group">
           <label>Байрны ID дугаар</label>
           <input type="number" id="admin-bld-id" placeholder="ж: 101" min="1">
+          <div id="admin-bld-id-hint" style="display:none;font-size:11px;color:var(--warning);margin-top:4px">⚠️ ID өөрчлөхөд холбоотой өмчлөгч, гүйлгээний apt утга нөлөөлнө</div>
         </div>
         <div class="form-group">
           <label>Бүлэг (Group)</label>
           <select id="admin-bld-group">
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
+            <option value="A">A</option><option value="B">B</option>
+            <option value="C">C</option><option value="D">D</option>
+            <option value="E">E</option><option value="F">F</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label>Нэр (label)</label>
+        <label>Байрны нэр (label)</label>
         <input type="text" id="admin-bld-label" placeholder="ж: 101-р байр">
       </div>
-      <div class="form-row">
+
+      <hr class="divider">
+
+      <!-- Бүтэц -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Бүтцийн мэдээлэл</div>
+      <div class="form-row-3">
         <div class="form-group">
           <label>Давхарын тоо</label>
           <input type="number" id="admin-bld-floors" placeholder="ж: 19" min="1">
         </div>
         <div class="form-group">
-          <label>Хаалга/давхар</label>
-          <input type="number" id="admin-bld-apts" placeholder="ж: 6" min="1" max="20">
+          <label>Орцны тоо</label>
+          <input type="number" id="admin-bld-entrances" placeholder="ж: 1" min="1" max="10" value="1" oninput="onEntranceCountChange()">
+        </div>
+        <div class="form-group">
+          <label>Хаалга/орц/давхар</label>
+          <input type="number" id="admin-bld-apts" placeholder="ж: 2" min="1" max="20" oninput="updateBldPreview()">
         </div>
       </div>
+
+      <!-- Орцны тохиргоо -->
+      <div id="admin-entrance-config" style="display:none;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Орц тус бүрийн нэр (заавал биш)</div>
+        <div id="admin-entrance-rows"></div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Дугаарлалтын хэлбэр -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Тоотын дугаарлалтын хэлбэр</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+
+        <label style="display:grid;grid-template-columns:20px 1fr;align-items:start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s" id="scheme-opt-floor_door">
+          <input type="radio" name="bld-scheme" value="floor_door" onchange="onSchemeChange()" style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">Давхар + Хаалга</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5">Давхрын дугаар + хаалганы дугаар. Ж: 1-р давхар 2-р хаалга → <strong>102</strong>, 19-р давхар 1-р хаалга → <strong>1901</strong></div>
+          </div>
+        </label>
+
+        <label style="display:grid;grid-template-columns:20px 1fr;align-items:start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s" id="scheme-opt-sequential">
+          <input type="radio" name="bld-scheme" value="sequential" onchange="onSchemeChange()" style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">Дараалсан дугаарлалт</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5">1-р давхраас эхлэн дээш дараалан. Ж: 101, 102... 201, 202... гэх мэт</div>
+            <div style="margin-top:8px;display:none;max-width:180px" id="scheme-sequential-opts">
+              <label style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:4px;display:block">Эхлэх дугаар</label>
+              <input type="number" id="seq-start" value="101" min="1" oninput="updateBldPreview()">
+            </div>
+          </div>
+        </label>
+
+        <label style="display:grid;grid-template-columns:20px 1fr;align-items:start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s" id="scheme-opt-entrance_floor">
+          <input type="radio" name="bld-scheme" value="entrance_floor" onchange="onSchemeChange()" style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">Орц + Давхар + Хаалга</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5">Орцны дугаар + давхар + хаалга. Ж: 1-р орц 3-р давхар 2-р хаалга → <strong>1302</strong></div>
+          </div>
+        </label>
+
+        <label style="display:grid;grid-template-columns:20px 1fr;align-items:start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s" id="scheme-opt-floor_only">
+          <input type="radio" name="bld-scheme" value="floor_only" onchange="onSchemeChange()" style="width:16px;height:16px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">Зөвхөн давхар</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5">Давхрын дугаар + хаалга (2 оронтой). Ж: 1-р давхар 2-р хаалга → <strong>12</strong>, 10-р давхар 3-р хаалга → <strong>103</strong></div>
+          </div>
+        </label>
+
+      </div>
+
+      <!-- Preview -->
+      <div style="background:var(--bg-surface);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--text-dim)" id="bld-preview-box">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">Жишээ тоотууд:</span>
+        <div id="bld-preview-sample" style="margin-top:6px;color:var(--text);font-variant-numeric:tabular-nums"></div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-admin-building')">Болих</button>
@@ -1760,7 +1828,10 @@ async function db_loadBuildings() {
     floors: b.floors,
     aptsPerFloor: b.apts_per_floor,
     group: b.group_name || 'A',
-    label: b.label
+    label: b.label,
+    entrances: b.entrances || 1,
+    numbering_scheme: b.numbering_scheme || 'floor_door',
+    seq_start: b.seq_start || 101
   }));
   // buildings ачаалагдсаны дараа select-уудыг шинэчлэх
   populateBuildingSelects();
@@ -3215,12 +3286,6 @@ function renderBuildingTabs() {
   if(wrap.children.length > 0) { highlightActiveTab(); return; }
 
   BUILDINGS.forEach((b, i)=>{
-    // Бүлгийн хооронд нимгэн хуваагч
-    if(i>0 && b.group !== BUILDINGS[i-1].group) {
-      const div=document.createElement('div');
-      div.style.cssText='width:1px;background:var(--border);margin:0 2px;align-self:stretch;';
-      wrap.appendChild(div);
-    }
     const btn = document.createElement('button');
     btn.className='btn btn-outline btn-sm';
     btn.id='btab-'+b.id;
@@ -3281,12 +3346,7 @@ function renderAptGrid(buildingId) {
       const paid = paidAptIds.includes(String(aptId));
       let cls = res ? (paid?'paid':'overdue') : 'empty';
 
-      // Орцны хооронд зай — зөвхөн 2 орцтой байруудад (105-114), 3-р хаалганы өмнө
-      if(buildingId>=105 && buildingId<=114 && d===3) {
-        const spacer=document.createElement('div');
-        spacer.style.cssText='width:8px;flex-shrink:0;';
-        row.appendChild(spacer);
-      }
+
 
       const cell=document.createElement('div');
       cell.className='apt-unit '+cls;
@@ -3488,6 +3548,33 @@ function generateReport(type) {
 let editingBuildingId = null;
 let editingAptTypeId = null;
 
+// ============================================================
+// ДУГААРЛАЛТЫН ХЭЛБЭР — тоотын label үүсгэх
+// ============================================================
+// scheme: 'floor_door' | 'sequential' | 'entrance_floor' | 'floor_only'
+// entrances: орцны тоо
+// aptsPerEntrance: орц тус бүрт давхарт хэдэн айл
+// floors: давхарын тоо
+function getAptLabel(scheme, entrance, floor, door, aptsPerEntrance, seqStart) {
+  seqStart = seqStart || 101;
+  switch(scheme) {
+    case 'floor_door':
+      // давхар + хаалга (1-р давхар 2-р хаалга → 102)
+      return String(floor) + String(door).padStart(2,'0');
+    case 'sequential':
+      // доороос дээш дараалан: 1-р давхар 1-р хаалга = seqStart
+      return String(seqStart + (floor-1)*aptsPerEntrance + (door-1));
+    case 'entrance_floor':
+      // орц + давхар + хаалга (1-р орц 3-р давхар 2-р хаалга → 1302)
+      return String(entrance) + String(floor) + String(door).padStart(2,'0');
+    case 'floor_only':
+      // давхар + хаалга (2 оронтой) → 12, 103
+      return String(floor) + String(door);
+    default:
+      return String(floor) + String(door).padStart(2,'0');
+  }
+}
+
 function switchAdminTab(tab, el) {
   document.getElementById('admin-buildings').style.display = tab==='buildings' ? 'block' : 'none';
   document.getElementById('admin-apttypes').style.display = tab==='apttypes' ? 'block' : 'none';
@@ -3499,7 +3586,6 @@ function switchAdminTab(tab, el) {
 
 function renderAdminPage() {
   renderAdminBuildingsTable();
-  // filter select бөглөх
   const sel = document.getElementById('admin-apttype-building-filter');
   if(sel) {
     sel.innerHTML = '<option value="">Бүх байр</option>' +
@@ -3515,13 +3601,17 @@ function renderAdminBuildingsTable() {
     body.innerHTML = '<tr><td colspan="6" class="empty-state">Байр байхгүй</td></tr>';
     return;
   }
+  const schemeNames = {floor_door:'Давхар+Хаалга', sequential:'Дараалсан', entrance_floor:'Орц+Давхар+Хаалга', floor_only:'Зөвхөн давхар'};
   body.innerHTML = BUILDINGS.map(b => {
     const gc = GROUP_COLORS[b.group] || GROUP_COLORS['A'];
+    const entrances = b.entrances || 1;
+    const scheme = schemeNames[b.numbering_scheme] || 'Давхар+Хаалга';
     return `<tr>
       <td><strong>${b.id}</strong></td>
       <td>${b.label}</td>
       <td style="text-align:center">${b.floors}</td>
-      <td style="text-align:center">${b.aptsPerFloor}</td>
+      <td style="text-align:center">${entrances > 1 ? entrances+'орц · ' : ''}${b.aptsPerFloor}/давхар</td>
+      <td style="font-size:10px;color:var(--text-muted)">${scheme}</td>
       <td><span class="tag" style="background:${gc.bg};color:${gc.text};border:1px solid ${gc.border}">${b.group}</span></td>
       <td>
         <div class="flex gap-8">
@@ -3533,16 +3623,87 @@ function renderAdminBuildingsTable() {
   }).join('');
 }
 
+// Орцны тоо өөрчлөгдөхөд
+function onEntranceCountChange() {
+  const count = +document.getElementById('admin-bld-entrances').value || 1;
+  const wrap = document.getElementById('admin-entrance-rows');
+  const cfg = document.getElementById('admin-entrance-config');
+  cfg.style.display = count > 1 ? 'block' : 'none';
+  wrap.innerHTML = '';
+  if(count > 1) {
+    for(let i=1; i<=count; i++) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:center';
+      row.innerHTML = `<span style="font-size:12px;color:var(--text-dim);width:50px;flex-shrink:0">${i}-р орц</span>
+        <input type="text" id="entrance-name-${i}" placeholder="ж: А орц" style="flex:1">`;
+      wrap.appendChild(row);
+    }
+  }
+  updateBldPreview();
+}
+
+// Дугаарлалтын хэлбэр сонгоход
+function onSchemeChange() {
+  const scheme = document.querySelector('input[name="bld-scheme"]:checked')?.value || 'floor_door';
+  // Sequential-ийн нэмэлт тохиргоо харуулах
+  const seqOpts = document.getElementById('scheme-sequential-opts');
+  if(seqOpts) seqOpts.style.display = scheme==='sequential' ? 'flex' : 'none';
+  // Radio label-уудыг highlight хийх
+  document.querySelectorAll('[id^="scheme-opt-"]').forEach(el=>{
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'transparent';
+  });
+  const active = document.getElementById('scheme-opt-'+scheme);
+  if(active) {
+    active.style.borderColor = 'var(--accent)';
+    active.style.background = 'var(--accent-glow)';
+  }
+  updateBldPreview();
+}
+
+// Жишээ тоот харуулах preview
+function updateBldPreview() {
+  const floors = +document.getElementById('admin-bld-floors').value || 0;
+  const apts = +document.getElementById('admin-bld-apts').value || 0;
+  const entrances = +document.getElementById('admin-bld-entrances').value || 1;
+  const scheme = document.querySelector('input[name="bld-scheme"]:checked')?.value || 'floor_door';
+  const seqStart = +document.getElementById('seq-start')?.value || 101;
+  if(!floors || !apts) { document.getElementById('bld-preview-sample').textContent = '—'; return; }
+
+  const samples = [];
+  // 1-р давхар, 1-р хаалга
+  samples.push('1F-1хаалга: ' + getAptLabel(scheme, 1, 1, 1, apts, seqStart));
+  // 1-р давхар, сүүлийн хаалга
+  if(apts > 1) samples.push('1F-'+apts+'хаалга: ' + getAptLabel(scheme, 1, 1, apts, apts, seqStart));
+  // Дунд давхар
+  const midF = Math.ceil(floors/2);
+  samples.push(midF+'F-1хаалга: ' + getAptLabel(scheme, 1, midF, 1, apts, seqStart));
+  // Дээд давхар, сүүлийн хаалга
+  samples.push(floors+'F-'+apts+'хаалга: ' + getAptLabel(scheme, entrances, floors, apts, apts, seqStart));
+  // Олон орцтой бол 2-р орц
+  if(entrances > 1 && scheme==='entrance_floor') {
+    samples.push('2-р орц 1F-1хаалга: ' + getAptLabel(scheme, 2, 1, 1, apts, seqStart));
+  }
+  document.getElementById('bld-preview-sample').innerHTML = samples.map(s=>`<span style="margin-right:14px;font-variant-numeric:tabular-nums">${s}</span>`).join('');
+}
+
 function openAddBuilding() {
   editingBuildingId = null;
   document.getElementById('admin-bld-id').value = '';
+  document.getElementById('admin-bld-id').disabled = false;
   document.getElementById('admin-bld-label').value = '';
   document.getElementById('admin-bld-floors').value = '';
   document.getElementById('admin-bld-apts').value = '';
+  document.getElementById('admin-bld-entrances').value = '1';
   document.getElementById('admin-bld-group').value = 'A';
-  document.getElementById('admin-bld-id').disabled = false;
+  document.getElementById('admin-entrance-config').style.display = 'none';
+  document.getElementById('admin-entrance-rows').innerHTML = '';
+  // Default scheme
+  const radio = document.querySelector('input[name="bld-scheme"][value="floor_door"]');
+  if(radio) { radio.checked = true; onSchemeChange(); }
   document.getElementById('modal-admin-building-title').textContent = 'Байр нэмэх';
   openModal('modal-admin-building');
+  updateBldPreview();
 }
 
 function openEditBuilding(id) {
@@ -3550,13 +3711,24 @@ function openEditBuilding(id) {
   if(!b) return;
   editingBuildingId = id;
   document.getElementById('admin-bld-id').value = b.id;
+  document.getElementById('admin-bld-id').disabled = true;
   document.getElementById('admin-bld-label').value = b.label;
   document.getElementById('admin-bld-floors').value = b.floors;
   document.getElementById('admin-bld-apts').value = b.aptsPerFloor;
+  document.getElementById('admin-bld-entrances').value = b.entrances || 1;
   document.getElementById('admin-bld-group').value = b.group;
-  document.getElementById('admin-bld-id').disabled = true;
+  onEntranceCountChange();
+  // Scheme сонгох
+  const scheme = b.numbering_scheme || 'floor_door';
+  const radio = document.querySelector(`input[name="bld-scheme"][value="${scheme}"]`);
+  if(radio) { radio.checked = true; onSchemeChange(); }
+  if(scheme==='sequential' && b.seq_start) {
+    const si = document.getElementById('seq-start');
+    if(si) si.value = b.seq_start;
+  }
   document.getElementById('modal-admin-building-title').textContent = 'Байр засах';
   openModal('modal-admin-building');
+  updateBldPreview();
 }
 
 async function saveBuilding() {
@@ -3564,24 +3736,55 @@ async function saveBuilding() {
   const label = document.getElementById('admin-bld-label').value.trim();
   const floors = +document.getElementById('admin-bld-floors').value;
   const apts = +document.getElementById('admin-bld-apts').value;
+  const entrances = +document.getElementById('admin-bld-entrances').value || 1;
   const group = document.getElementById('admin-bld-group').value;
+  const scheme = document.querySelector('input[name="bld-scheme"]:checked')?.value || 'floor_door';
+  const seqStart = +document.getElementById('seq-start')?.value || 101;
 
   if(!id || !label || !floors || !apts) { toast('Бүх талбарыг бөглөнө үү','error'); return; }
 
-  const row = {id, label, floors, apts_per_floor: apts, group_name: group};
+  const totalApts = floors * apts * entrances;
+  const row = {
+    id, label, floors,
+    apts_per_floor: apts * entrances,  // нийт хаалга/давхар
+    group_name: group,
+    entrances,
+    numbering_scheme: scheme,
+    seq_start: scheme==='sequential' ? seqStart : null
+  };
+
+  const localRow = {
+    id, label, floors,
+    aptsPerFloor: apts * entrances,
+    group, entrances,
+    numbering_scheme: scheme,
+    seq_start: seqStart
+  };
 
   if(editingBuildingId) {
-    const {error} = await sb.from('buildings').update({label, floors, apts_per_floor:apts, group_name:group}).eq('id', editingBuildingId);
-    if(error){toast('Алдаа: '+error.message,'error');return;}
+    if(id !== editingBuildingId) {
+      // ID өөрчлөгдсөн — хуучин мөрийг устгаж шинэ ID-тайгаар оруулна
+      const {error: delErr} = await sb.from('buildings').delete().eq('id', editingBuildingId);
+      if(delErr){toast('Алдаа: '+delErr.message,'error');return;}
+      const {error: insErr} = await sb.from('buildings').insert(row);
+      if(insErr){toast('Алдаа: '+insErr.message,'error');return;}
+    } else {
+      const {error} = await sb.from('buildings').update({
+        label, floors, apts_per_floor: apts*entrances,
+        group_name: group, entrances, numbering_scheme: scheme,
+        seq_start: scheme==='sequential' ? seqStart : null
+      }).eq('id', editingBuildingId);
+      if(error){toast('Алдаа: '+error.message,'error');return;}
+    }
     const idx = BUILDINGS.findIndex(b=>b.id===editingBuildingId);
-    if(idx>=0) BUILDINGS[idx] = {id:editingBuildingId, label, floors, aptsPerFloor:apts, group};
+    if(idx>=0) BUILDINGS[idx] = localRow;
     toast('Байр шинэчлэгдлээ ✓','success');
   } else {
     const {error} = await sb.from('buildings').insert(row);
     if(error){toast('Алдаа: '+error.message,'error');return;}
-    BUILDINGS.push({id, label, floors, aptsPerFloor:apts, group});
+    BUILDINGS.push(localRow);
     BUILDINGS.sort((a,b)=>a.id-b.id);
-    toast('Байр нэмэгдлээ ✓','success');
+    toast(`Байр нэмэгдлээ ✓ (нийт ${totalApts} тоот)','success`);
   }
   closeModal('modal-admin-building');
   populateBuildingSelects();
