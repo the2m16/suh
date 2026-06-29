@@ -2607,7 +2607,15 @@ function renderIncomeTable() {
     if(!t||t.type!=='income') return false;
     if(mf&&t.month!=mf) return false;
     if(yf&&t.year!=yf) return false;
-    if(q&&!(t.apt||'').toLowerCase().includes(q)&&!(t.desc||'').toLowerCase().includes(q)&&!(t.subcat||'').toLowerCase().includes(q)) return false;
+    if(q){
+      const r=residents.find(x=>x.apt===t.apt);
+      const aptStr=(t.apt||'').toLowerCase();
+      const nameStr=r?((r.firstname||'')+(r.lastname||'')).toLowerCase():'';
+      const fmtStr=r?fmtApt(r).toLowerCase():'';
+      const descStr=(t.desc||'').toLowerCase();
+      const subcatStr=(t.subcat||'').toLowerCase();
+      if(!aptStr.includes(q)&&!nameStr.includes(q)&&!fmtStr.includes(q)&&!descStr.includes(q)&&!subcatStr.includes(q)) return false;
+    }
     return true;
   }).sort((a,b)=>b.id-a.id);
   const body=document.getElementById('income-table-body');
