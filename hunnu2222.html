@@ -1069,6 +1069,22 @@
   </div>
 </div>
 
+<!-- Business Detail Modal -->
+<div class="modal-overlay" id="modal-biz-detail">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <span class="modal-title" id="biz-detail-title">Байгууллагын мэдээлэл</span>
+      <button class="modal-close" onclick="closeModal('modal-biz-detail')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:78vh;overflow-y:auto" id="biz-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="bizDetailEdit()">Мэдээлэл засварлах</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-biz-detail')">Хаах</button>
+      <button class="btn btn-primary" onclick="bizDetailPay()">Төлбөр бүртгэх</button>
+    </div>
+  </div>
+</div>
+
 <!-- Business Modal -->
 <div class="modal-overlay" id="modal-business">
   <div class="modal" style="width:600px">
@@ -2248,7 +2264,7 @@ function renderBusinesses(filter='') {
       const cls = m > 1 ? 'future' : (wasPaid ? 'paid' : 'unpaid');
       return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
     }).join('');
-    return `<tr style="cursor:pointer" onclick="editBusiness(${b.id})">
+    return `<tr style="cursor:pointer" onclick="openBusinessDetail(${b.id})">
       <td><div class="avatar" style="width:24px;height:24px;font-size:10px;font-weight:700;background:rgba(59,130,246,0.18);color:#60A5FA">${i+1}</div></td>
       <td><strong style="font-size:12.5px;font-weight:600">${b.name}</strong></td>
       <td style="color:var(--text-dim);font-size:12px;font-variant-numeric:tabular-nums">${b.regno||'—'}</td>
@@ -2285,6 +2301,65 @@ function openAddBusiness() {
   document.getElementById('biz-start').value=todayStr();
   document.getElementById('biz-end').value='';
   openModal('modal-business');
+}
+
+
+// ============================================================
+// BUSINESS DETAIL MODAL
+// ============================================================
+let selectedBusinessForDetail = null;
+
+function openBusinessDetail(id) {
+  const b = businesses.find(x=>x.id===id); if(!b) return;
+  selectedBusinessForDetail = b;
+  document.getElementById('biz-detail-title').textContent = b.name;
+  const typeLabel = b.type==='owner'?'Өмчлөгч':'Түрээслэгч';
+  const typeColor = b.type==='owner'?'var(--accent)':'var(--success)';
+  const now = new Date();
+  const endDate = b.end ? new Date(b.end.replace(/\//g,'-')) : null;
+  const expired = endDate && endDate < now;
+  const expiring = !expired && endDate && (endDate - now) < 30*24*60*60*1000;
+  const contractStatus = expired
+    ? '<span style="color:var(--danger);font-weight:600">Дууссан</span>'
+    : expiring
+      ? '<span style="color:var(--warning);font-weight:600">Дуусахад ойрхон</span>'
+      : '<span style="color:var(--success);font-weight:600">Хүчинтэй</span>';
+
+  document.getElementById('biz-detail-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="avatar" style="width:44px;height:44px;font-size:18px;font-weight:700;background:rgba(59,130,246,0.2);color:#60A5FA;flex-shrink:0">${(b.name||'?')[0]}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700">${b.name}</div>
+        <div style="font-size:12px;margin-top:2px"><span style="color:${typeColor};font-weight:600">${typeLabel}</span></div>
+      </div>
+    </div>
+    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Байгууллагын мэдээлэл</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr><td style="padding:5px 0;color:var(--text-muted);width:45%">УБД/Регистр</td><td style="padding:5px 0;text-align:right;font-weight:500">${b.regno||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">Захирал</td><td style="padding:5px 0;text-align:right;font-weight:500">${b.ceo||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">Гар утас</td><td style="padding:5px 0;text-align:right">${b.mobile||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">Утас</td><td style="padding:5px 0;text-align:right">${b.phone||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">И-мэйл</td><td style="padding:5px 0;text-align:right">${b.email||'—'}</td></tr>
+    </table>
+    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Гэрээний мэдээлэл</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr><td style="padding:5px 0;color:var(--text-muted);width:45%">Гэрээний дугаар</td><td style="padding:5px 0;text-align:right;font-weight:500">${b.contract||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">Эхлэх огноо</td><td style="padding:5px 0;text-align:right">${b.start||'—'}</td></tr>
+      <tr><td style="padding:5px 0;color:var(--text-muted)">Дуусах огноо</td><td style="padding:5px 0;text-align:right">${b.end||'—'} ${contractStatus}</td></tr>
+      ${(b.vehicles||[]).length?`<tr><td style="padding:5px 0;color:var(--text-muted)">Машин</td><td style="padding:5px 0;text-align:right">${b.vehicles.join(', ')}</td></tr>`:''}
+      ${b.note?`<tr><td style="padding:5px 0;color:var(--text-muted)">Тэмдэглэл</td><td style="padding:5px 0;text-align:right;color:var(--text-dim)">${b.note}</td></tr>`:''}
+    </table>`;
+  openModal('modal-biz-detail');
+}
+
+function bizDetailEdit() {
+  closeModal('modal-biz-detail');
+  if(selectedBusinessForDetail) editBusiness(selectedBusinessForDetail.id);
+}
+
+function bizDetailPay() {
+  closeModal('modal-biz-detail');
+  openPayModal();
 }
 
 function editBusiness(id) {
