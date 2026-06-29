@@ -1869,7 +1869,8 @@ function renderResidents(filter='') {
     const parkings=r.parkings||[];const storages=r.storages||[];
     const monthBadges=MONTHS.map(m=>{
       const wasPaid=transactions.some(t=>t&&t.apt===aptId&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR);
-      const cls=m>1?'future':(wasPaid?'paid':'unpaid');
+      const isFuture=m>CUR_MONTH;
+      const cls=isFuture?'future':(wasPaid?'paid':'unpaid');
       return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
     }).join('');
     return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
@@ -2344,8 +2345,9 @@ function renderBusinesses(filter='') {
     const typeColor = b.type==='owner'?'var(--accent)':'var(--success)';
     // Гэрээний төлбөрийн 1-12 сарын badge
     const monthBadges = MONTHS.map(m=>{
-      const wasPaid = transactions.some(t=>t.apt===null&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR&&t.desc&&t.desc.includes(b.name));
-      const cls = m > 1 ? 'future' : (wasPaid ? 'paid' : 'unpaid');
+      const wasPaid = transactions.some(t=>t&&t.apt===null&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR&&t.desc&&t.desc.includes(b.name));
+      const isFuture = m > CUR_MONTH;
+      const cls = isFuture ? 'future' : (wasPaid ? 'paid' : 'unpaid');
       return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
     }).join('');
     return `<tr style="cursor:pointer" onclick="openBusinessDetail(${b.id})">
