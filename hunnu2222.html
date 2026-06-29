@@ -1736,10 +1736,10 @@ function refreshDashboard() {
   const thisMonth = CUR_MONTH, thisYear = CUR_YEAR;
   const monthTx = transactions.filter(t=>t&&t.month===thisMonth&&t.year===thisYear);
   const income = monthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>t.apt))];
+  const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>String(t.apt)))];
   const totalApts = residents.length;
   // Overdue: residents who haven't paid this month
-  const overdueRes = residents.filter(r=>r&&!paidApts.includes(r.apt));
+  const overdueRes = residents.filter(r=>r&&!paidApts.map(String).includes(String(r.apt)));
   const overdueAmt = overdueRes.reduce((s,r)=>s+calcFee(residentSqm(r)),0);
   document.getElementById('stat-income').textContent = fmt(income);
   document.getElementById('stat-income-pct').textContent = `${paidApts.length} / ${totalApts} тоот төлсөн`;
@@ -1825,7 +1825,7 @@ function renderRecentTx() {
   const body = document.getElementById('recent-tx-body');
   const recent = [...transactions].filter(t=>t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
   body.innerHTML = recent.map(t=>{
-    const r=residents.find(x=>x.apt===t.apt);
+    const r=residents.find(x=>String(x.apt)===String(t.apt));
     const lbl=r?fmtApt(r):String(t.apt);
     return `<tr>
     <td><strong>${lbl}</strong></td>
@@ -1867,14 +1867,14 @@ function renderResidents(filter='') {
       || (r.vehicles||[]).join(' ').toLowerCase().includes(q);
   }) : residents;
   if(!list.length){body.innerHTML='<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--text-muted)">Өмчлөгч олдсонгүй</td></tr>';return;}
-  const paidThisMonth=transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>t.apt);
+  const paidThisMonth=transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>String(t.apt));
   const MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12];
   body.innerHTML=list.map((r,idx)=>{
-    const sqm=residentSqm(r);const aptId=r.apt;const paid=paidThisMonth.includes(aptId);
+    const sqm=residentSqm(r);const aptId=r.apt;const paid=paidThisMonth.map(String).includes(String(aptId));
     const phones=r.phones||[r.phone||''];
     const parkings=r.parkings||[];const storages=r.storages||[];
     const monthBadges=MONTHS.map(m=>{
-      const wasPaid=transactions.some(t=>t&&t.apt===aptId&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR);
+      const wasPaid=transactions.some(t=>t&&String(t.apt)===String(aptId)&&t.type==='income'&&t.month===m&&t.year===CUR_YEAR);
       const isFuture=m>CUR_MONTH;
       const cls=isFuture?'future':(wasPaid?'paid':'unpaid');
       return `<span class="mbadge ${cls}" title="${m}-р сар">${m}</span>`;
@@ -2617,7 +2617,7 @@ function renderIncomeTable() {
     if(mf&&t.month!=mf) return false;
     if(yf&&t.year!=yf) return false;
     if(q){
-      const r=residents.find(x=>x.apt===t.apt);
+      const r=residents.find(x=>String(x.apt)===String(t.apt));
       const aptStr=String(t.apt||'').toLowerCase();
       const nameStr=r?((r.firstname||'')+(r.lastname||'')).toLowerCase():'';
       const fmtStr=r?fmtApt(r).toLowerCase():'';
@@ -2630,7 +2630,7 @@ function renderIncomeTable() {
   const body=document.getElementById('income-table-body');
   if(!body)return;
   body.innerHTML=list.map(t=>{
-    const r=residents.find(x=>x.apt===t.apt);
+    const r=residents.find(x=>String(x.apt)===String(t.apt));
     return `<tr>
       <td style="color:var(--text-muted)">${t.date}</td>
       <td><strong>${r?fmtApt(r):'—'}</strong></td>
@@ -2801,7 +2801,7 @@ function _payRow(r, bgColor, textColor, statusText, showBtn) {
 function _renderPayCompleted(body) {
   const paidTx = transactions.filter(t=>t&&t.type==='income').sort((a,b)=>b.id-a.id);
   body.innerHTML = paidTx.map(t=>{
-    const r = residents.find(x=>x.apt===t.apt);
+    const r = residents.find(x=>String(x.apt)===String(t.apt));
     return `<tr style="cursor:pointer" onclick="if(${r?r.id:0})openResidentDetail(${r?r.id:0})">
       <td><strong>${r?fmtApt(r):t.apt||'—'}</strong></td>
       <td>${r?`<div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(16,185,129,0.18);color:#10B981">${(r.firstname||"?")[0]}</div>${((r.firstname||"")+" "+(r.lastname||"")).trim()||"—"}</div>`:'—'}</td>
@@ -2816,13 +2816,13 @@ function _renderPayCompleted(body) {
 }
 
 function _renderPayPending(body, paidAptIds) {
-  const list = residents.filter(r=>r&&!paidAptIds.includes(r.apt));
+  const list = residents.filter(r=>r&&!paidAptIds.map(String).includes(String(r.apt)));
   body.innerHTML = list.map(r=>_payRow(r,'rgba(245,158,11,0.15)','var(--warning)','Хүлээлттэй',true))
     .join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Хүлээлттэй өмчлөгч байхгүй</td></tr>';
 }
 
 function _renderPayOverdue(body, paidAptIds) {
-  const list = residents.filter(r=>r&&!paidAptIds.includes(r.apt));
+  const list = residents.filter(r=>r&&!paidAptIds.map(String).includes(String(r.apt)));
   body.innerHTML = list.map(r=>_payRow(r,'rgba(239,68,68,0.15)','var(--danger)','Хэтэрсэн',true))
     .join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Хугацаа хэтэрсэн байхгүй</td></tr>';
 }
@@ -2838,7 +2838,7 @@ function _renderPayRisk(body) {
   });
   body.innerHTML = riskResidents.map(r=>{
     const fee = calcFee(residentSqm(r));
-    const lastPay = transactions.filter(t=>t&&t.apt===r.apt&&t.type==='income').sort((a,b)=>(b.year*100+b.month)-(a.year*100+a.month))[0];
+    const lastPay = transactions.filter(t=>t&&String(t.apt)===String(r.apt)&&t.type==='income').sort((a,b)=>(b.year*100+b.month)-(a.year*100+a.month))[0];
     const lastStr = lastPay ? `${lastPay.year}/${String(lastPay.month).padStart(2,'0')}` : 'Огт төлөөгүй';
     return `<tr style="cursor:pointer" onclick="openResidentDetail(${r.id})">
       <td><strong>${fmtApt(r)}</strong></td>
@@ -2855,7 +2855,7 @@ function _renderPayRisk(body) {
 
 function renderPaymentsTable(tab='completed') {
   const body = document.getElementById('payments-table-body');
-  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH).map(t=>t.apt);
+  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH).map(t=>String(t.apt));
   if(tab==='completed') _renderPayCompleted(body);
   else if(tab==='pending') _renderPayPending(body, paidAptIds);
   else if(tab==='overdue') _renderPayOverdue(body, paidAptIds);
@@ -2871,7 +2871,7 @@ function switchPayTab(tab,el){
 function openResidentDetail(resId) {
   const r=residents.find(x=>x.id===resId); if(!r) return;
   const sqm=residentSqm(r);
-  const paid=transactions.some(t=>t.apt===r.apt&&t.type==='income'&&t.month===CUR_MONTH);
+  const paid=transactions.some(t=>String(t.apt)===String(r.apt)&&t.type==='income'&&t.month===CUR_MONTH);
   showAptDetail(r.apt,r.building,r.floor,r.door,r,paid,sqm);
 }
 
@@ -2932,7 +2932,7 @@ function onPayAptChange() {
       <span class="summary-val text-accent" style="font-size:16px">${fmt(total)}</span></div>`;
   document.getElementById('pay-amount').value=total;
   document.getElementById('qpay-apt-hint').textContent=aptCode;
-  const hasPrev=transactions.some(t=>t.apt===r.apt&&t.type==='income'&&t.month===CUR_MONTH);
+  const hasPrev=transactions.some(t=>String(t.apt)===String(r.apt)&&t.type==='income'&&t.month===CUR_MONTH);
   const ow=document.getElementById('pay-overdue-warning');
   if(hasPrev){ow.style.display='block';ow.innerHTML='⚠️ Энэ айл 1-р сарын СӨХ-ийн төлбөрийг аль хэдийн төлсөн байна!';}
   else{ow.style.display='none';}
@@ -3099,7 +3099,7 @@ function renderAptGrid(buildingId) {
   const bld = BUILDINGS.find(b=>b.id===buildingId);
   if(!bld) return;
   const thisMonth = CUR_MONTH;
-  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
+  const paidAptIds = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>String(t.apt));
   const container = document.getElementById('apt-grid-container');
   container.innerHTML='';
 
@@ -3243,7 +3243,7 @@ function showAptDetail(aptId, buildingId, floor, door, res, paid, sqm) {
   _aptDetailDoor = door;
   const label = aptLabel(buildingId, floor, door);
   document.getElementById('apt-detail-title').textContent = `${buildingId}-р байр · ${label} тоот`;
-  const history = transactions.filter(t=>t&&t.apt===aptId&&t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
+  const history = transactions.filter(t=>t&&String(t.apt)===String(aptId)&&t.type==='income').sort((a,b)=>b.id-a.id).slice(0,6);
   document.getElementById('apt-detail-body').innerHTML = res
     ? _aptDetailResidentHTML(res, buildingId, floor, label, sqm, paid, history)
     : _aptDetailEmptyHTML(buildingId, label, sqm);
@@ -3300,7 +3300,7 @@ function generateReport(type) {
         <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${residents.length}</span></div></div>
       </div>
       <table><thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
-      <tbody>${monthTx.map(t=>{const r=residents.find(x=>x.apt===t.apt);return`<tr><td>${t.apt}</td><td>${r?(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:''):'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
+      <tbody>${monthTx.map(t=>{const r=residents.find(x=>String(x.apt)===String(t.apt));return`<tr><td>${t.apt}</td><td>${r?(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:''):'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
     title.textContent='📉 Зарлагын тайлан — 2025';
     const exps = transactions.filter(t=>t&&t.type==='expense');
@@ -3315,8 +3315,8 @@ function generateReport(type) {
       <tbody>${exps.map(t=>`<tr><td>${t.date}</td><td>${catNames[t.category]||'Бусад'}</td><td>${t.desc}</td><td class="text-danger font-mono">${fmt(t.amount)}</td></tr>`).join('')}</tbody></table>`;
   } else {
     title.textContent='⚠️ Өр авлагын тайлан — 2026 оны 1-р сар';
-    const paidApts = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>t.apt);
-    const overdue = residents.filter(r=>r&&!paidApts.includes(r.apt));
+    const paidApts = transactions.filter(t=>t&&t.type==='income'&&t.month===thisMonth).map(t=>String(t.apt));
+    const overdue = residents.filter(r=>r&&!paidApts.map(String).includes(String(r.apt)));
     const total = overdue.reduce((s,r)=>s+calcFee(residentSqm(r)),0);
     body.innerHTML=`
       <div class="mb-16"><div class="summary-row"><span class="summary-key">Нийт өр авлага</span><span class="summary-val text-danger">${fmt(total)}</span></div>
