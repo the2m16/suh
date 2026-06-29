@@ -2966,9 +2966,23 @@ async function savePayment() {
   const ref=document.getElementById('pay-ref').value;
   const month=+document.getElementById('pay-month').value;
   if(!amount){toast('Дүн оруулна уу','error');return;}
-  transactions.push({id:nextId++,aptId:r.id,apt:r.apt,desc:'СӨХ-ийн төлбөр',type:'income',amount,method,ref,month,year:CUR_YEAR,date:'2026/'+String(month).padStart(2,'0')+'/'+String(new Date().getDate()).padStart(2,'0'),status:'completed'});
-  toast(`${fmtApt(r)} СӨХ-ийн төлбөр бүртгэгдлээ ✓`,'success');
-  closeModal('modal-payment');renderPaymentsTable('pending');
+  const data={
+    apt:r.apt, aptId:r.id,
+    description:'СӨХ-ийн төлбөр', subcat:'Сарын хураамж',
+    type:'income', amount, method, ref,
+    month, year:CUR_YEAR,
+    date:todayStr(), status:'completed', category:'resident'
+  };
+  transactions.push({id:nextId++,...data});
+  await db_saveTransaction(data);
+  closeModal('modal-payment');
+  renderResidents();
+  renderPaymentsTable('completed');
+  if(document.getElementById('page-apartments')?.classList.contains('active')){
+    renderAptGrid(selectedBuilding);
+  }
+  saveToLocal();
+  toast(`${fmtApt(r)} ${month}-р сарын төлбөр бүртгэгдлээ ✓`,'success');
 }
 
 // ============================================================
