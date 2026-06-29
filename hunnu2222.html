@@ -1951,11 +1951,13 @@ function resetResidentModal() {
   const hv=document.getElementById('res-has-vehicle');
   if(hv){hv.checked=false;document.getElementById('vehicle-section').style.display='none';}
   // Бусад
-  ['res-building','res-floor','res-apt','res-firstname','res-lastname','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date'].forEach(id=>{
+  ['res-building','res-floor','res-apt','res-firstname','res-lastname','res-reg','res-oeubd-letter','res-oeubd-num','res-own-date','res-child1','res-child2'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('res-building').value='101';
   document.getElementById('res-people').value='2';
+  const c1=document.getElementById('res-child1'); if(c1) c1.value='0';
+  const c2=document.getElementById('res-child2'); if(c2) c2.value='0';
 }
 
 function openAddResident() {
