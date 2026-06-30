@@ -253,6 +253,7 @@
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
+    .poll-create-card { padding: 14px !important; }
     .sidebar { width: 48px; }
     .logo-text, .logo-sub, .nav-item span, .nav-section, .sidebar-bottom .building-info strong,
     .sidebar-bottom .building-info p { display: none; }
@@ -266,6 +267,12 @@
     /* Poll create - tablet responsive */
     .poll-col-divider { display: none; }
     #poll-election-wrap > div > div[style*="min-width:280px;padding-left"] { padding-left: 0; padding-top: 20px; border-top: 1px solid var(--border); }
+  }
+  @media (max-width: 768px) {
+    .poll-create-card { padding: 12px !important; }
+    #poll-election-wrap > div { flex-direction: column !important; }
+    #poll-election-wrap > div > .poll-col-divider { display: none; }
+    #poll-election-wrap > div > div[style*="padding-left:20px"] { padding-left: 0 !important; padding-top: 16px; border-top: 1px solid var(--border); }
   }
   @media (max-width: 600px) {
     .sidebar { display: none; }
@@ -1142,7 +1149,7 @@
           <button class="btn btn-outline btn-sm" onclick="closePollCreate()">← Буцах</button>
         </div>
 
-        <div class="card" style="padding:20px;margin-bottom:16px">
+        <div class="card poll-create-card" style="padding:20px;margin-bottom:16px">
           <div class="form-group">
             <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
               <label style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
@@ -1171,11 +1178,11 @@
             <textarea id="poll-description" rows="2" placeholder="Санал хураалт, Санал асуулгын зорилго, тайлбар"></textarea>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px">
-            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0">
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
               <label>Эхлэх огноо, цаг, минут</label>
               <input type="datetime-local" id="poll-starts-at" style="width:100%">
             </div>
-            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0">
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
               <label>Дуусах огноо, цаг, минут</label>
               <input type="datetime-local" id="poll-ends-at" style="width:100%">
             </div>
