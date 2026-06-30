@@ -4671,7 +4671,7 @@ function getResidentOptionsHTML(selectedId) {
     .map(r=>{
       const name = `${r.lastname||''} ${r.firstname||''}`.trim();
       const sel = (selectedId && String(selectedId)===String(r.id)) ? 'selected' : '';
-      return `<option value="${r.id}" ${sel}>${name} — ${r.building}-${r.apt}</option>`;
+      return `<option value="${r.id}" ${sel}>${name} — ${r.apt}</option>`;
     }).join('');
   return `<option value="">— Сууц өмчлөгч сонгох —</option>` + opts;
 }
@@ -4991,6 +4991,7 @@ async function openPollDetail(pollId) {
     html += `<div style="margin-bottom:16px;display:flex;gap:8px">
       <button class="btn btn-outline btn-sm" onclick="closePollDetail()">Болих</button>
       <button class="btn btn-outline btn-sm" onclick="openEditPoll(${pollId})">Засварлах</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="deleteDraftPoll(${pollId})">Устгах</button>
       <button class="btn btn-primary btn-sm" onclick="activatePoll(${pollId})">Санал хураалт эхлүүлэх</button>
     </div>`;
   }
@@ -5090,6 +5091,22 @@ async function closePoll(pollId) {
   if(error) { toast('Алдаа: '+error.message, 'error'); return; }
   toast('Санал хураалт хаагдлаа','success');
   openPollDetail(pollId);
+  renderPollsPage();
+}
+
+// Зөвхөн ноорог (draft) санал хураалтыг бүрэн устгана.
+// Нийтлэгдсэн (active/closed) санал хураалтыг устгах боломжгүй — архивлагдсан хэвээр үлдэнэ.
+async function deleteDraftPoll(pollId) {
+  const poll = pollsList.find(p=>p.id===pollId);
+  if(!poll || poll.status !== 'draft') {
+    toast('Зөвхөн ноорог санал хураалтыг устгах боломжтой', 'error');
+    return;
+  }
+  if(!confirm('Энэ ноорог санал хураалтыг бүрмөсөн устгах уу?')) return;
+  const {error} = await sb.from('polls').delete().eq('id', pollId);
+  if(error) { toast('Алдаа: '+error.message, 'error'); return; }
+  toast('Ноорог устгагдлаа', 'success');
+  closePollDetail();
   renderPollsPage();
 }
 
