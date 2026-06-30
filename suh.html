@@ -310,7 +310,7 @@
     <!-- Logo -->
     <div style="text-align:center;margin-bottom:32px">
       <div style="font-size:22px;font-weight:700;color:#E2E8F0;letter-spacing:.02em">suh</div>
-      <div style="font-size:12px;color:#64748B;margin-top:4px">Сууц Өмчлөгчдийн Холбоо</div>
+      <div style="font-size:12px;color:#64748B;margin-top:4px">Сууц өмчлөгчдийн Холбоо</div>
     </div>
     <!-- Form -->
     <form id="login-form" onsubmit="event.preventDefault();doLogin();" autocomplete="on">
@@ -352,7 +352,7 @@
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-top">suh</div>
-    <div class="logo-top">Сууц Өмчлөгчдийн Холбоо</div>
+    <div class="logo-top">Сууц өмчлөгчдийн Холбоо</div>
   </div>
   <nav>
     <div class="nav-section">Үндсэн</div>
@@ -360,7 +360,7 @@
       <span>Хянах самбар</span>
     </div>
     <div class="nav-item" onclick="showPage('residents')">
-      <span>Өмчлөгчид</span>
+      <span>Сууц өмчлөгчид</span>
     </div>
     <div class="nav-item" onclick="showPage('business')">
       <span>Аж ахуйн нэгж</span>
@@ -429,7 +429,7 @@
 <div class="mobile-nav">
   <div class="mobile-nav-items">
     <div class="mobile-nav-item active" onclick="showPage('dashboard')"><span>📊</span>Самбар</div>
-    <div class="mobile-nav-item" onclick="showPage('residents')"><span>👥</span>Өмчлөгч</div>
+    <div class="mobile-nav-item" onclick="showPage('residents')"><span>👥</span>Сууц өмчлөгч</div>
     <div class="mobile-nav-item" onclick="showPage('payments')"><span>💳</span>Төлбөр</div>
     <div class="mobile-nav-item" onclick="showPage('reports')"><span>📋</span>Тайлан</div>
     <div class="mobile-nav-item" onclick="showPage('communications')"><span>📢</span>Мэдэгдэл</div>
@@ -517,7 +517,7 @@
           <div class="card-header"><span class="card-title">Өр авлагатай тоотууд</span></div>
           <div class="card-body" style="padding:0">
             <table id="overdue-table">
-              <thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th></tr></thead>
+              <thead><tr><th>Тоот</th><th>Сууц өмчлөгч</th><th>Дүн</th></tr></thead>
               <tbody id="overdue-body"></tbody>
             </table>
           </div>
@@ -536,7 +536,7 @@
           <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV экспорт">Экспорт</button>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">Импорт</button>
           <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)">
-          <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Өмчлөгч нэмэх</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Сууц өмчлөгч нэмэх</button>
         </div>
       </div>
       <div class="card" style="overflow:hidden">
@@ -1123,7 +1123,7 @@
 <div class="modal-overlay" id="modal-resident">
   <div class="modal" style="width:600px">
     <div class="modal-header">
-      <span class="modal-title" id="modal-resident-title">Өмчлөгч нэмэх</span>
+      <span class="modal-title" id="modal-resident-title">Сууц өмчлөгч нэмэх</span>
       <button class="modal-close" onclick="closeModal('modal-resident')">×</button>
     </div>
     <div class="modal-body" style="max-height:75vh;overflow-y:auto">
@@ -1147,8 +1147,8 @@
         </div>
       </div>
 
-      <!-- Өмчлөгч -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">👤 Өмчлөгчийн мэдээлэл</div>
+      <!-- Сууц өмчлөгч -->
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">👤 Сууц өмчлөгчийн мэдээлэл</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div class="form-group" style="margin-bottom:0">
           <label>Нэр</label>
@@ -1297,7 +1297,7 @@
       <div class="form-group">
         <label>Төрөл</label>
         <select id="biz-type">
-          <option value="owner">Өмчлөгч</option>
+          <option value="owner">Сууц өмчлөгч</option>
           <option value="tenant">Түрээслэгч</option>
         </select>
       </div>
@@ -1372,7 +1372,7 @@
     <div class="modal-body">
       <!-- Quick pay горим: өмчлөгчийн мэдээлэл өөрчлөх боломжгүй харагдана -->
       <div id="pay-resident-info" style="display:none;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Өмчлөгч</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Сууц өмчлөгч</div>
         <div style="display:flex;gap:10px">
           <div style="flex:1">
             <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Байр / Тоот</div>
@@ -1396,7 +1396,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Тоот / Өмчлөгч</label>
+          <label>Тоот / Сууц өмчлөгч</label>
           <select id="pay-apt-select" onchange="onPayAptChange()" disabled>
             <option value="">— Эхлээд байр сонгох —</option>
           </select>
@@ -1746,7 +1746,7 @@
           <option value="gz">Гүйцэтгэх захирал</option>
           <option value="hz">Хяналтын зөвлөл</option>
           <option value="uz">Удирдах зөвлөл</option>
-          <option value="ot">Өмчлөгч/Түрээслэгч</option>
+          <option value="ot">Сууц өмчлөгч/Түрээслэгч</option>
           <option value="admin">Админ</option>
         </select>
       </div>
@@ -1779,7 +1779,7 @@
           <option value="gz">Гүйцэтгэх захирал</option>
           <option value="hz">Хяналтын зөвлөл</option>
           <option value="uz">Удирдах зөвлөл</option>
-          <option value="ot">Өмчлөгч/Түрээслэгч</option>
+          <option value="ot">Сууц өмчлөгч/Түрээслэгч</option>
           <option value="admin">Админ</option>
         </select>
       </div>
@@ -2138,7 +2138,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -2291,7 +2291,7 @@ function renderResidents(filter='') {
       || (r.storages||[]).map(s=>s.num).join(' ').toLowerCase().includes(q)
       || (r.vehicles||[]).join(' ').toLowerCase().includes(q);
   }) : residents;
-  if(!list.length){body.innerHTML='<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--text-muted)">Өмчлөгч олдсонгүй</td></tr>';return;}
+  if(!list.length){body.innerHTML='<tr><td colspan="17" style="text-align:center;padding:28px;color:var(--text-muted)">Сууц өмчлөгч олдсонгүй</td></tr>';return;}
   const paidThisMonth=transactions.filter(t=>t&&t.type==='income'&&t.month===CUR_MONTH&&t.year===CUR_YEAR).map(t=>String(t.apt));
   const MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12];
   body.innerHTML=list.map((r,idx)=>{
@@ -2586,7 +2586,7 @@ function resetResidentModal() {
 
 function openAddResident() {
   editingResidentId = null;
-  document.getElementById('modal-resident-title').textContent='Өмчлөгч нэмэх';
+  document.getElementById('modal-resident-title').textContent='Сууц өмчлөгч нэмэх';
   resetResidentModal();
   openModal('modal-resident');
 }
@@ -2594,7 +2594,7 @@ function openAddResident() {
 function editResident(id) {
   editingResidentId = id;
   const r = residents.find(x=>x.id===id); if(!r) return;
-  document.getElementById('modal-resident-title').textContent='Өмчлөгч засах';
+  document.getElementById('modal-resident-title').textContent='Сууц өмчлөгч засах';
   resetResidentModal();
   document.getElementById('res-building').value=r.building;
   document.getElementById('res-floor').value=r.floor;
@@ -2784,7 +2784,7 @@ function renderBusinesses(filter='') {
     const endDate = new Date(b.end.replace(/\//g,'-'));
     const expired = b.end && endDate < now;
     const expiring = !expired && b.end && (endDate - now) < 30*24*60*60*1000;
-    const typeLabel = b.type==='owner'?'Өмчлөгч':'Түрээслэгч';
+    const typeLabel = b.type==='owner'?'Сууц өмчлөгч':'Түрээслэгч';
     const typeColor = b.type==='owner'?'var(--accent)':'var(--success)';
     // Гэрээний төлбөрийн 1-12 сарын badge
     const monthBadges = MONTHS.map(m=>{
@@ -2814,7 +2814,7 @@ function renderBusinesses(filter='') {
     </tr>`;
   }).join('');
   const stat = document.getElementById('business-stat');
-  if(stat) stat.textContent = `Нийт: ${list.length} байгууллага · Өмчлөгч: ${list.filter(b=>b.type==='owner').length} · Түрээслэгч: ${list.filter(b=>b.type==='tenant').length}`;
+  if(stat) stat.textContent = `Нийт: ${list.length} байгууллага · Сууц өмчлөгч: ${list.filter(b=>b.type==='owner').length} · Түрээслэгч: ${list.filter(b=>b.type==='tenant').length}`;
 }
 
 function filterBusinesses(){const q=(document.getElementById('business-search')?.value||'').toLowerCase();renderBusinesses(q);}
@@ -2842,7 +2842,7 @@ function openBusinessDetail(id) {
   const b = businesses.find(x=>x.id===id); if(!b) return;
   selectedBusinessForDetail = b;
   document.getElementById('biz-detail-title').textContent = b.name;
-  const typeLabel = b.type==='owner'?'Өмчлөгч':'Түрээслэгч';
+  const typeLabel = b.type==='owner'?'Сууц өмчлөгч':'Түрээслэгч';
   const typeColor = b.type==='owner'?'var(--accent)':'var(--success)';
   const now = new Date();
   const endDate = b.end ? new Date(b.end.replace(/\//g,'-')) : null;
@@ -3000,7 +3000,7 @@ async function deleteBusiness(id) {
 
 function exportBusinessCSV() {
   const headers=['Нэр','Гэрчилгээ','Төрөл','ГУ овог нэр','Гар утас','Утас','И-мэйл','Гэрээний №','Эхлэх','Дуусах','Тэмдэглэл'];
-  const rows=businesses.map(b=>[b.name,b.regno,b.type==='owner'?'Өмчлөгч':'Түрээслэгч',b.ceo,b.mobile,b.phone,b.email,b.contract,b.start,b.end,b.note]);
+  const rows=businesses.map(b=>[b.name,b.regno,b.type==='owner'?'Сууц өмчлөгч':'Түрээслэгч',b.ceo,b.mobile,b.phone,b.email,b.contract,b.start,b.end,b.note]);
   const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
   a.download='aaj_ahuiin_negj_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
@@ -3382,7 +3382,7 @@ function onPayAptChange() {
 function quickPayForApt(resId) {
   const r=residents.find(x=>x.id===resId);if(!r)return;
   openPayModal();
-  // Өмчлөгчийн мэдээлэл харуулах горим
+  // Сууц өмчлөгчийн мэдээлэл харуулах горим
   document.getElementById('pay-resident-info').style.display='block';
   document.getElementById('pay-select-section').style.display='none';
   document.getElementById('pay-res-apt').textContent=fmtApt(r);
@@ -3409,7 +3409,7 @@ async function savePayment() {
     : +selectEl.value;
   if(!resId){toast('Тоот сонгоно уу','error');return;}
   const r=residents.find(x=>x.id===resId);
-  if(!r){toast('Өмчлөгч олдсонгүй','error');return;}
+  if(!r){toast('Сууц өмчлөгч олдсонгүй','error');return;}
   const amount=+document.getElementById('pay-amount').value;
   const method=document.getElementById('pay-method').value;
   const ref=document.getElementById('pay-ref').value;
@@ -3568,7 +3568,7 @@ function renderAptGrid(buildingId) {
       cell.className='apt-unit '+cls;
       cell.style.width=unitW+'px';
       cell.innerHTML=`<span style="font-size:11px;font-weight:700">${label}</span><span style="font-size:8px;opacity:.8">${sqm}м²</span>`;
-      cell.title=`${buildingId}-р байр ${label} тоот${res?' · '+(res.firstname||res.owner||'')+(res.lastname?' '+res.lastname:''):' · Өмчлөгч бүртгэлгүй'}`;
+      cell.title=`${buildingId}-р байр ${label} тоот${res?' · '+(res.firstname||res.owner||'')+(res.lastname?' '+res.lastname:''):' · Сууц өмчлөгч бүртгэлгүй'}`;
       cell.onclick=()=>showAptDetail(aptId, buildingId, f, d, res, paid, sqm);
       row.appendChild(cell);
     }
@@ -3614,7 +3614,7 @@ function _aptDetailResidentHTML(res, buildingId, floor, label, sqm, paid, histor
     ${vehicles.length?`<div class="summary-row"><span class="summary-key">Машин</span><span class="summary-val">${vehicles.join(', ')}</span></div>`:''}`;
 
   const ownerInfoSection = `
-    <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin:12px 0 6px">Өмчлөгчийн мэдээлэл</div>
+    <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin:12px 0 6px">Сууц өмчлөгчийн мэдээлэл</div>
     <div class="summary-row"><span class="summary-key">Регистр</span><span class="summary-val" style="font-size:12px">${res.reg||'—'}</span></div>
     ${res.oeubd?`<div class="summary-row"><span class="summary-key">ӨЭУБД</span><span class="summary-val" style="font-size:12px;font-variant-numeric:tabular-nums">${res.oeubd}</span></div>`:''}
     ${res.ownDate?`<div class="summary-row"><span class="summary-key">Өмчилсөн огноо</span><span class="summary-val">${res.ownDate}</span></div>`:''}
@@ -3648,7 +3648,7 @@ function _aptDetailEmptyHTML(buildingId, label, sqm) {
   return `<div class="empty-state">
     <div style="margin-bottom:6px;font-size:14px">${buildingId}-р байр ${label} тоот</div>
     <div style="font-size:12px;color:var(--text-muted)">Талбай: ${sqm} м²</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Өмчлөгч бүртгэлгүй</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Сууц өмчлөгч бүртгэлгүй</div>
   </div>`;
 }
 
@@ -3660,7 +3660,7 @@ function _aptDetailSetButtons(res) {
     editBtn.style.display = '';
     payBtn.style.display = '';
   } else {
-    editBtn.textContent = 'Өмчлөгч бүртгэх';
+    editBtn.textContent = 'Сууц өмчлөгч бүртгэх';
     editBtn.style.display = '';
     payBtn.style.display = 'none';
   }
@@ -3729,7 +3729,7 @@ function generateReport(type) {
         <div><div class="summary-row"><span class="summary-key">Төлсөн тоот</span><span class="summary-val">${monthTx.length}</span></div>
         <div class="summary-row"><span class="summary-key">Нийт тоот</span><span class="summary-val">${residents.length}</span></div></div>
       </div>
-      <table><thead><tr><th>Тоот</th><th>Өмчлөгч</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
+      <table><thead><tr><th>Тоот</th><th>Сууц өмчлөгч</th><th>Дүн</th><th>Төлбөрийн хэлбэр</th><th>Огноо</th></tr></thead>
       <tbody>${monthTx.map(t=>{const r=residents.find(x=>String(x.apt)===String(t.apt));return`<tr><td>${t.apt}</td><td>${r?(r.firstname||r.owner||'')+(r.lastname?' '+r.lastname:''):'—'}</td><td class="text-success font-mono">${fmt(t.amount)}</td><td>${methodName(t.method)}</td><td>${t.date}</td></tr>`;}).join('')}</tbody></table>`;
   } else if(type==='expense') {
     title.textContent='📉 Зарлагын тайлан — 2025';
@@ -3751,7 +3751,7 @@ function generateReport(type) {
     body.innerHTML=`
       <div class="mb-16"><div class="summary-row"><span class="summary-key">Нийт өр авлага</span><span class="summary-val text-danger">${fmt(total)}</span></div>
       <div class="summary-row"><span class="summary-key">Хэтэрсэн тоот</span><span class="summary-val">${overdue.length}</span></div></div>
-      <table><thead><tr><th>Байр/Тоот</th><th>Өмчлөгч</th><th>Утас</th><th>Хураамж</th><th>Торгууль (${feeSettings.penalty}%)</th><th>Нийт дүн</th></tr></thead>
+      <table><thead><tr><th>Байр/Тоот</th><th>Сууц өмчлөгч</th><th>Утас</th><th>Хураамж</th><th>Торгууль (${feeSettings.penalty}%)</th><th>Нийт дүн</th></tr></thead>
       <tbody>${overdue.map(r=>{const fee=calcFee(residentSqm(r));const penalty=Math.round(fee*feeSettings.penalty/100);return`<tr><td>${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}</td><td>${(r.firstname||r.owner||"")+" "+(r.lastname||"")}</td><td>${r.phone}</td><td class="font-mono">${fmt(fee)}</td><td class="text-warning font-mono">${fmt(penalty)}</td><td class="text-danger font-mono font-bold">${fmt(fee+penalty)}</td></tr>`;}).join('')}</tbody></table>`;
   }
 }
@@ -4117,7 +4117,7 @@ const AUTH_ROLES = [
   {key:'nb',           label:'Нягтлан бодогч'},
   {key:'mn',           label:'Менежер'},
   {key:'vw',           label:'Viewer'},
-  {key:'ot',           label:'Өмчлөгч/Түрээслэгч'},
+  {key:'ot',           label:'Сууц өмчлөгч/Түрээслэгч'},
 ];
 
 const AUTH_ACTIONS = [
@@ -4247,7 +4247,7 @@ function applyAdminNav(role) {
 const ROLE_LABELS = {
   admin:'Админ', uz:'Удирдах зөвлөл', hz:'Хяналтын зөвлөл',
   gz:'Гүйцэтгэх захирал', nb:'Нягтлан бодогч',
-  mn:'Менежер', vw:'Viewer', ot:'Өмчлөгч/Түрээслэгч'
+  mn:'Менежер', vw:'Viewer', ot:'Сууц өмчлөгч/Түрээслэгч'
 };
 
 // Зөвхөн admin-д харагдах nav items
