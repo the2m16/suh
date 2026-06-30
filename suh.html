@@ -4333,8 +4333,11 @@ async function doLogout() {
   currentProfile = null;
   document.getElementById('login-overlay').style.display = 'flex';
   document.getElementById('current-user-info').style.display = 'none';
-  document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
+  // Login form-ийг анхны төлөвт буцаах
+  document.getElementById('login-btn').style.display = 'block';
+  document.getElementById('login-loading').style.display = 'none';
+  document.getElementById('login-error').style.display = 'none';
 }
 
 // Profile ачаалах
