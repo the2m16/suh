@@ -263,6 +263,9 @@
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .form-row, .form-row-3 { grid-template-columns: 1fr; }
     .pay-method-grid { grid-template-columns: 1fr 1fr; }
+    /* Poll create - tablet responsive */
+    .poll-col-divider { display: none; }
+    #poll-election-wrap > div > div[style*="min-width:280px;padding-left"] { padding-left: 0; padding-top: 20px; border-top: 1px solid var(--border); }
   }
   @media (max-width: 600px) {
     .sidebar { display: none; }
@@ -1141,15 +1144,15 @@
 
         <div class="card" style="padding:20px;margin-bottom:16px">
           <div class="form-group">
-            <div style="display:flex;gap:10px;margin-top:6px">
-              <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+              <label style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
                 <input type="radio" name="poll-type" value="issue" checked onchange="onPollTypeChange()">
                 <div>
                   <div style="font-weight:600;font-size:13px">Санал асуулга</div>
                   <div style="font-size:11px;color:var(--text-muted)">Санал бодлоо илэрхийлэх</div>
                 </div>
               </label>
-              <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
+              <label style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
                 <input type="radio" name="poll-type" value="election" onchange="onPollTypeChange()">
                 <div>
                   <div style="font-weight:600;font-size:13px">Ээлжит сонгууль</div>
@@ -1167,22 +1170,22 @@
             <label>Тайлбар (заавал биш)</label>
             <textarea id="poll-description" rows="2" placeholder="Санал хураалт, Санал асуулгын зорилго, тайлбар"></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-group">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0">
               <label>Эхлэх огноо, цаг, минут</label>
-              <input type="datetime-local" id="poll-starts-at">
+              <input type="datetime-local" id="poll-starts-at" style="width:100%">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0">
               <label>Дуусах огноо, цаг, минут</label>
-              <input type="datetime-local" id="poll-ends-at">
+              <input type="datetime-local" id="poll-ends-at" style="width:100%">
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:20px">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:8px">
+            <div style="display:flex;align-items:center;gap:8px">
               <input type="checkbox" id="poll-anonymous" checked style="width:16px;height:16px">
               <label for="poll-anonymous" style="margin:0;cursor:pointer">Нууц санал хураалт</label>
             </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:20px">
+            <div style="display:flex;align-items:center;gap:8px">
               <input type="checkbox" id="poll-show-live" checked style="width:16px;height:16px">
               <label for="poll-show-live" style="margin:0;cursor:pointer">Үр дүнг Live харуулах</label>
             </div>
@@ -1200,9 +1203,9 @@
 
         <!-- ELECTION нэр дэвшигчид: 2 багана (УЗ, ХЗ) -->
         <div id="poll-election-wrap" class="card" style="padding:20px;margin-bottom:16px;display:none">
-          <div style="display:flex;gap:0">
+          <div style="display:flex;flex-wrap:wrap;gap:0">
             <!-- УЗ багана -->
-            <div style="flex:1;padding-right:20px">
+            <div style="flex:1;min-width:280px;padding-right:20px">
               <div style="font-weight:600;font-size:14px;margin-bottom:14px">Удирдах зөвлөлийн гишүүдийн сонгууль</div>
               <input type="hidden" id="poll-election-title-uz" value="Удирдах зөвлөлийн гишүүдийн сонгууль">
               <div class="form-group">
@@ -1216,9 +1219,9 @@
               <div id="poll-candidates-list-uz"></div>
             </div>
             <!-- Divider -->
-            <div style="width:1px;background:var(--border)"></div>
+            <div class="poll-col-divider" style="width:1px;background:var(--border)"></div>
             <!-- ХЗ багана -->
-            <div style="flex:1;padding-left:20px">
+            <div style="flex:1;min-width:280px;padding-left:20px">
               <div style="font-weight:600;font-size:14px;margin-bottom:14px">Хяналтын зөвлөлийн гишүүдийн сонгууль</div>
               <input type="hidden" id="poll-election-title-hz" value="Хяналтын зөвлөлийн гишүүдийн сонгууль">
               <div class="form-group">
