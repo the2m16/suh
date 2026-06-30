@@ -380,6 +380,9 @@
     <div class="nav-item" id="nav-auth-levels" onclick="showPage('auth_levels')">
       <span>🔐 Auth Level Settings</span>
     </div>
+    <div class="nav-item" id="nav-users" onclick="showPage('users')">
+      <span>👤 Хэрэглэгч удирдлага</span>
+    </div>
   </nav>
   <div class="sidebar-bottom">
     <!-- Нэвтэрсэн хэрэглэгч -->
@@ -1067,6 +1070,33 @@
       </div>
     </div>
 
+
+    <!-- ХЭРЭГЛЭГЧ УДИРДЛАГА -->
+    <div class="page" id="page-users">
+      <div class="flex-between mb-16">
+        <div class="section-title" style="margin:0">Хэрэглэгч удирдлага</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Хэрэглэгч нэмэх</button>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Нэр</th>
+                <th>И-мэйл</th>
+                <th style="width:140px">Роль</th>
+                <th style="width:90px">Төлөв</th>
+                <th style="width:100px">Үйлдэл</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr><td colspan="5" class="empty-state">Ачаалж байна...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div><!-- content -->
 
   <div style="text-align:center;padding:12px 0;font-size:11px;color:#1E3A5F;background:transparent;">
@@ -1674,6 +1704,81 @@
     </div>
   </div>
 </div>
+
+<!-- Хэрэглэгч нэмэх Modal -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <span class="modal-title">Хэрэглэгч нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Бүтэн нэр</label>
+        <input type="text" id="new-user-name" placeholder="Овог Нэр">
+      </div>
+      <div class="form-group">
+        <label>И-мэйл</label>
+        <input type="email" id="new-user-email" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Нууц үг</label>
+        <input type="password" id="new-user-password" placeholder="Хамгийн багадаа 6 тэмдэгт">
+      </div>
+      <div class="form-group">
+        <label>Роль</label>
+        <select id="new-user-role">
+          <option value="vw">Viewer</option>
+          <option value="mn">Менежер</option>
+          <option value="nb">Нягтлан бодогч</option>
+          <option value="gz">Гүйцэтгэх захирал</option>
+          <option value="hz">Хяналтын зөвлөл</option>
+          <option value="uz">Удирдах зөвлөл</option>
+          <option value="ot">Өмчлөгч/Түрээслэгч</option>
+          <option value="admin">Админ</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Болих</button>
+      <button class="btn btn-primary" onclick="createUser()">Үүсгэх</button>
+    </div>
+  </div>
+</div>
+
+<!-- Роль өөрчлөх Modal -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <span class="modal-title">Роль өөрчлөх</span>
+      <button class="modal-close" onclick="closeModal('modal-edit-user')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Хэрэглэгч</label>
+        <input type="text" id="edit-user-name" disabled>
+      </div>
+      <div class="form-group">
+        <label>Роль</label>
+        <select id="edit-user-role">
+          <option value="vw">Viewer</option>
+          <option value="mn">Менежер</option>
+          <option value="nb">Нягтлан бодогч</option>
+          <option value="gz">Гүйцэтгэх захирал</option>
+          <option value="hz">Хяналтын зөвлөл</option>
+          <option value="uz">Удирдах зөвлөл</option>
+          <option value="ot">Өмчлөгч/Түрээслэгч</option>
+          <option value="admin">Админ</option>
+        </select>
+      </div>
+      <input type="hidden" id="edit-user-id">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-user')">Болих</button>
+      <button class="btn btn-primary" onclick="updateUserRole()">Хадгалах</button>
+    </div>
+  </div>
+</div>
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -2020,7 +2125,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -2033,6 +2138,7 @@ function showPage(name) {
   if(name==='communications') renderNotifications();
   if(name==='admin') renderAdminPage();
   if(name==='auth_levels') renderAuthLevelsPage();
+  if(name==='users') renderUsersPage();
 }
 
 // ============================================================
@@ -4116,7 +4222,7 @@ const ROLE_LABELS = {
 };
 
 // Зөвхөн admin-д харагдах nav items
-const ADMIN_ONLY_PAGES = ['admin', 'auth_levels'];
+const ADMIN_ONLY_PAGES = ['admin', 'auth_levels', 'users'];
 // Нэвтрэх шаардлагагүй хуудас байхгүй — бүгд нэвтэрсэн байх ёстой
 
 let currentUser = null;      // Supabase auth user
@@ -4235,6 +4341,114 @@ async function checkExistingSession() {
     await onLoginSuccess();
   }
   // Session байхгүй бол login overlay харагдаж байна
+}
+
+
+// ============================================================
+// ХЭРЭГЛЭГЧ УДИРДЛАГА
+// ============================================================
+
+const USER_MGT_URL = 'https://vkkhwemfefgpbximudev.supabase.co/functions/v1/user-management';
+
+let usersList = [];
+
+async function callUserMgt(body) {
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session) { toast('Нэвтрээгүй байна','error'); return null; }
+  const res = await fetch(USER_MGT_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + session.access_token
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(!res.ok) { toast('Алдаа: ' + (data.error||'Unknown'), 'error'); return null; }
+  return data;
+}
+
+async function renderUsersPage() {
+  const body = document.getElementById('users-table-body');
+  if(!body) return;
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Ачаалж байна...</td></tr>';
+
+  const data = await callUserMgt({action:'list'});
+  if(!data) return;
+  usersList = data.users || [];
+
+  if(!usersList.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state">Хэрэглэгч байхгүй</td></tr>';
+    return;
+  }
+
+  body.innerHTML = usersList.map(u => {
+    const roleLabel = ROLE_LABELS[u.role] || u.role;
+    const activeTag = u.active
+      ? '<span class="tag" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981">Идэвхтэй</span>'
+      : '<span class="tag" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Идэвхгүй</span>';
+    return `<tr>
+      <td><strong>${u.full_name||'—'}</strong></td>
+      <td style="color:var(--text-muted);font-size:12px">${u.id}</td>
+      <td><span class="tag">${roleLabel}</span></td>
+      <td>${activeTag}</td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="openEditUser('${u.id}')">Роль</button>
+          <button class="btn btn-sm" style="background:var(--${u.active?'danger-bg':'success-bg'});color:var(--${u.active?'danger':'success'})"
+            onclick="toggleUserActive('${u.id}',${!u.active})">${u.active?'Зогсоох':'Идэвхжүүлэх'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddUser() {
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-role').value = 'vw';
+  openModal('modal-add-user');
+}
+
+async function createUser() {
+  const full_name = document.getElementById('new-user-name').value.trim();
+  const email = document.getElementById('new-user-email').value.trim();
+  const password = document.getElementById('new-user-password').value;
+  const role = document.getElementById('new-user-role').value;
+  if(!email||!password||!full_name){toast('Бүх талбарыг бөглөнө үү','error');return;}
+  if(password.length < 6){toast('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой','error');return;}
+  const data = await callUserMgt({action:'create', email, password, role, full_name});
+  if(!data) return;
+  toast('Хэрэглэгч амжилттай үүсгэгдлээ ✓','success');
+  closeModal('modal-add-user');
+  renderUsersPage();
+}
+
+function openEditUser(userId) {
+  const u = usersList.find(x=>x.id===userId);
+  if(!u) return;
+  document.getElementById('edit-user-id').value = userId;
+  document.getElementById('edit-user-name').value = u.full_name||u.id;
+  document.getElementById('edit-user-role').value = u.role;
+  openModal('modal-edit-user');
+}
+
+async function updateUserRole() {
+  const userId = document.getElementById('edit-user-id').value;
+  const role = document.getElementById('edit-user-role').value;
+  const data = await callUserMgt({action:'update_role', userId, role});
+  if(!data) return;
+  toast('Роль шинэчлэгдлээ ✓','success');
+  closeModal('modal-edit-user');
+  renderUsersPage();
+}
+
+async function toggleUserActive(userId, active) {
+  const data = await callUserMgt({action:'toggle_active', userId, active});
+  if(!data) return;
+  toast(active ? 'Хэрэглэгч идэвхжүүллээ ✓' : 'Хэрэглэгч зогсооллоо','success');
+  renderUsersPage();
 }
 
 function printReport() { window.print(); }
