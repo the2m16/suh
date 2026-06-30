@@ -313,24 +313,32 @@
       <div style="font-size:12px;color:#64748B;margin-top:4px">Сууц Өмчлөгчдийн Холбоо</div>
     </div>
     <!-- Form -->
+    <form id="login-form" onsubmit="event.preventDefault();doLogin();" autocomplete="on">
     <div style="margin-bottom:16px">
       <label style="display:block;font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">И-мэйл</label>
-      <input type="email" id="login-email" placeholder="email@example.com"
-        style="width:100%;padding:10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none"
-        onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="email" id="login-email" name="email" placeholder="email@example.com" autocomplete="username" required
+        style="width:100%;padding:10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none">
     </div>
-    <div style="margin-bottom:24px">
+    <div style="margin-bottom:14px">
       <label style="display:block;font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Нууц үг</label>
-      <input type="password" id="login-password" placeholder="••••••••"
-        style="width:100%;padding:10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none"
-        onkeydown="if(event.key==='Enter')doLogin()">
+      <div style="position:relative">
+        <input type="password" id="login-password" name="password" placeholder="••••••••" autocomplete="current-password" required
+          style="width:100%;padding:10px 40px 10px 14px;background:#162032;border:1px solid rgba(59,130,246,0.2);border-radius:6px;color:#E2E8F0;font-size:14px;outline:none">
+        <button type="button" onclick="togglePasswordVisibility()" id="toggle-pw-btn"
+          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#64748B;font-size:16px;padding:4px;line-height:1">👁</button>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="login-remember" style="width:14px;height:14px;accent-color:#2563EB;cursor:pointer">
+      <label for="login-remember" style="font-size:12px;color:#94A3B8;cursor:pointer;user-select:none">Намайг сана</label>
     </div>
     <div id="login-error" style="display:none;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:10px 14px;font-size:12px;color:#EF4444;margin-bottom:16px"></div>
-    <button onclick="doLogin()" id="login-btn"
+    <button type="submit" id="login-btn"
       style="width:100%;padding:12px;background:#2563EB;border:none;border-radius:6px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em">
       Нэвтрэх
     </button>
     <div id="login-loading" style="display:none;text-align:center;margin-top:12px;font-size:12px;color:#64748B">Нэвтэрч байна...</div>
+    </form>
   </div>
 </div>
 
@@ -1865,7 +1873,7 @@ async function db_saveBusiness(b) {
 
 async function db_deleteBusiness(id) {
   const {error} = await sb.from('businesses').delete().eq('id',id);
-  if(error) console.error('business delete error:',error);
+  if(error) { console.error('business delete error:',error); throw error; }
 }
 
 // --- TRANSACTIONS ---
@@ -2682,6 +2690,13 @@ async function saveResident() {
 
 async function deleteResident(id) {
   if(!confirm('Устгах уу?')) return;
+  const r = residents.find(x=>x&&x.id===id);
+  const dbId = r ? (r.dbId || r.id) : id;
+  const {error} = await sb.from('residents').delete().eq('id', dbId);
+  if(error) {
+    toast('Устгахад эрхгүй байна эсвэл алдаа гарлаа: ' + error.message, 'error');
+    return;
+  }
   residents = residents.filter(r=>r&&r.id!==id);
   renderResidents();updateSidebarCount();
   toast('Устгагдлаа','success');
@@ -2962,7 +2977,12 @@ async function saveBusiness() {
 
 async function deleteBusiness(id) {
   if(!confirm('Устгах уу?')) return;
-  await db_deleteBusiness(id);
+  try {
+    await db_deleteBusiness(id);
+  } catch(e) {
+    toast('Устгахад эрхгүй байна эсвэл алдаа гарлаа: ' + e.message, 'error');
+    return;
+  }
   businesses = businesses.filter(b=>b.id!==id);
   renderBusinesses();
   saveToLocal();
@@ -4229,18 +4249,48 @@ let currentUser = null;      // Supabase auth user
 let currentProfile = null;   // user_profiles row
 
 // Нэвтрэх
+function togglePasswordVisibility() {
+  const pwInput = document.getElementById('login-password');
+  const btn = document.getElementById('toggle-pw-btn');
+  if(pwInput.type === 'password') {
+    pwInput.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    pwInput.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// "Намайг сана" — and хадгалсан и-мэйлийг ачаалах
+function loadRememberedEmail() {
+  try {
+    const saved = localStorage.getItem('suh_remember_email');
+    if(saved) {
+      document.getElementById('login-email').value = saved;
+      document.getElementById('login-remember').checked = true;
+    }
+  } catch(e) {}
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
   const loadEl = document.getElementById('login-loading');
   const btn = document.getElementById('login-btn');
+  const remember = document.getElementById('login-remember').checked;
 
   if(!email || !password) {
     errEl.textContent = 'И-мэйл болон нууц үгийг оруулна уу';
     errEl.style.display = 'block';
     return;
   }
+
+  // Намайг сана — и-мэйл хадгалах/арилгах
+  try {
+    if(remember) localStorage.setItem('suh_remember_email', email);
+    else localStorage.removeItem('suh_remember_email');
+  } catch(e) {}
 
   errEl.style.display = 'none';
   btn.style.display = 'none';
@@ -4602,6 +4652,7 @@ function clearLocalStorage() {
 
 document.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('exp-date').value = todayStr();
+  loadRememberedEmail();
   // Session шалгах — нэвтэрсэн байвал шууд ачаална
   await checkExistingSession();
 });
