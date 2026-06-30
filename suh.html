@@ -1137,8 +1137,8 @@
               <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
                 <input type="radio" name="poll-type" value="issue" checked onchange="onPollTypeChange()">
                 <div>
-                  <div style="font-weight:600;font-size:13px">Тулгамдсан асуудал</div>
-                  <div style="font-size:11px;color:var(--text-muted)">Зөвшөөрч/Татгалзах санал</div>
+                  <div style="font-weight:600;font-size:13px">Санал асуулга</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Санал бодлоо илэрхийлэх</div>
                 </div>
               </label>
               <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
@@ -1224,7 +1224,7 @@
               <div id="poll-candidates-list-hz"></div>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">"Аль нь ч биш / Татгалзах" сонголт автоматаар нэмэгдэнэ. Нэр дэвшигчдийн тоо баганад тэнцүү байх албагүй.</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">"Аль нь ч биш" сонголт автоматаар нэмэгдэнэ. Нэр дэвшигчдийн тоо баганад тэнцүү байх албагүй.</div>
         </div>
 
         <input type="hidden" id="poll-editing-id" value="">
@@ -4701,7 +4701,7 @@ async function renderPollsPage() {
       active: '<span class="tag" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981">Идэвхтэй</span>',
       closed: '<span class="tag" style="background:var(--danger-bg);color:var(--danger)">Хаагдсан</span>'
     }[p.status] || '';
-    const typeLabel = p.poll_type === 'issue' ? 'Тулгамдсан асуудал' : 'Ээлжит сонгууль';
+    const typeLabel = p.poll_type === 'issue' ? 'Санал асуулга' : 'Ээлжит сонгууль';
     const dates = (p.starts_at && p.ends_at) ? `${p.starts_at.slice(0,10)} — ${p.ends_at.slice(0,10)}` : '';
     return `<div class="card" style="padding:16px 18px;cursor:pointer" onclick="openPollDetail(${p.id})">
       <div class="flex-between">
@@ -4817,7 +4817,9 @@ function renderIssuesList() {
       <span style="font-size:12px;color:var(--text-muted);width:24px">${i+1}.</span>
       <input type="text" value="${q.text}" placeholder="ж: Зогсоолын хураамж нэмэгдүүлэх"
         oninput="updateIssueText(${q.id}, this.value)" style="flex:1">
-      <button class="btn btn-ghost btn-sm" onclick="removeIssueQuestion(${q.id})" style="color:var(--danger)">🗑</button>
+      <button class="btn btn-ghost btn-sm" onclick="removeIssueQuestion(${q.id})" style="color:var(--danger);display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </button>
     </div>`).join('');
 }
 
@@ -4858,7 +4860,9 @@ function renderCandidatesList(col) {
       <select onchange="updateCandidateResident('${col}', '${c.id}', this.value)" style="flex:1">
         ${getResidentOptionsHTML(c.residentId)}
       </select>
-      <button class="btn btn-ghost btn-sm" onclick="removeCandidate('${col}', '${c.id}')" style="color:var(--danger)">🗑</button>
+      <button class="btn btn-ghost btn-sm" onclick="removeCandidate('${col}', '${c.id}')" style="color:var(--danger);display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </button>
     </div>`).join('');
 }
 
@@ -4950,7 +4954,7 @@ async function savePoll() {
         question_id: question.id, option_text: c.name, order_num: i, is_abstain: false,
         resident_id: c.residentId || null
       }));
-      candidateOptions.push({question_id: question.id, option_text: 'Аль нь ч биш / Татгалзах', order_num: 999, is_abstain: true});
+      candidateOptions.push({question_id: question.id, option_text: 'Аль нь ч биш', order_num: 999, is_abstain: true});
 
       await sb.from('poll_options').insert(candidateOptions);
     }
