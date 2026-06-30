@@ -4389,7 +4389,7 @@ async function renderUsersPage() {
       : '<span class="tag" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Идэвхгүй</span>';
     return `<tr>
       <td><strong>${u.full_name||'—'}</strong></td>
-      <td style="color:var(--text-muted);font-size:12px">${u.id}</td>
+      <td style="color:var(--text-muted);font-size:12px">${u.email||u.id}</td>
       <td><span class="tag">${roleLabel}</span></td>
       <td>${activeTag}</td>
       <td>
