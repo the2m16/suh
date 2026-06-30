@@ -1872,8 +1872,9 @@ async function db_saveBusiness(b) {
 }
 
 async function db_deleteBusiness(id) {
-  const {error} = await sb.from('businesses').delete().eq('id',id);
+  const {data, error} = await sb.from('businesses').delete().eq('id',id).select();
   if(error) { console.error('business delete error:',error); throw error; }
+  if(!data || data.length === 0) { throw new Error('Устгах эрхгүй байна — таны рольд энэ үйлдэл хориотой'); }
 }
 
 // --- TRANSACTIONS ---
@@ -2692,9 +2693,13 @@ async function deleteResident(id) {
   if(!confirm('Устгах уу?')) return;
   const r = residents.find(x=>x&&x.id===id);
   const dbId = r ? (r.dbId || r.id) : id;
-  const {error} = await sb.from('residents').delete().eq('id', dbId);
+  const {data, error, count} = await sb.from('residents').delete({count:'exact'}).eq('id', dbId).select();
   if(error) {
-    toast('Устгахад эрхгүй байна эсвэл алдаа гарлаа: ' + error.message, 'error');
+    toast('Устгахад алдаа гарлаа: ' + error.message, 'error');
+    return;
+  }
+  if(!data || data.length === 0) {
+    toast('Устгах эрхгүй байна — таны рольд энэ үйлдэл хориотой', 'error');
     return;
   }
   residents = residents.filter(r=>r&&r.id!==id);
