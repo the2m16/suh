@@ -96,6 +96,11 @@
   #admin-buildings-table td, #admin-apttypes-table td { padding:7px 10px; font-size:12px; border-bottom:1px solid rgba(30,58,95,0.25); vertical-align:middle; }
   #admin-buildings-table tr:hover td, #admin-apttypes-table tr:hover td { background:rgba(30,58,95,0.2); }
   #admin-buildings-table tr:last-child td, #admin-apttypes-table tr:last-child td { border-bottom:none; }
+  /* POLL RESULTS TABLE — residents-тэй адил стиль */
+  .poll-result-table th { font-size:9px !important; font-weight:700 !important; color:#475569 !important; letter-spacing:.07em !important; padding:7px 10px !important; border-bottom:1px solid var(--border) !important; white-space:nowrap; background:#0B1A2E !important; text-transform:uppercase; }
+  .poll-result-table td { padding:7px 10px !important; font-size:12px !important; border-bottom:1px solid rgba(30,58,95,0.25) !important; vertical-align:middle !important; }
+  .poll-result-table tr:hover td { background:rgba(30,58,95,0.2); }
+  .poll-result-table tr:last-child td { border-bottom:none !important; }
   .res-bldg-badge { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; background:rgba(59,130,246,0.12); color:#60A5FA; border:1px solid rgba(59,130,246,0.2); }
 
   /* TOPBAR */
@@ -5037,7 +5042,7 @@ async function openPollDetail(pollId) {
     const totalVotes = (allVotes||[]).length || 1;
 
     html += `<div style="overflow:hidden;margin-bottom:16px">
-      <table style="width:100%;border-collapse:collapse">
+      <table class="poll-result-table" style="width:100%;border-collapse:collapse">
         <thead>
           <tr style="background:#0B1A2E">
             <th style="font-size:9px;font-weight:700;color:#475569;letter-spacing:.07em;padding:7px 10px;border-bottom:1px solid var(--border);text-align:left">${q.question_text}</th>
