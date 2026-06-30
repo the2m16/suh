@@ -5013,44 +5013,64 @@ async function openPollDetail(pollId) {
     const myVoteIds = (myVotes||[]).map(v=>v.option_id);
     const hasVoted = myVoteIds.length > 0;
 
-    html += `<div class="card" style="padding:16px 18px;margin-bottom:12px">
-      <div style="font-weight:600;font-size:13px;margin-bottom:10px">${q.question_text}</div>`;
-
+    // Санал өгөх UI (active + owner + санал өгөөгүй)
     if(poll.status === 'active' && isOwner && !hasVoted) {
-      // Санал өгөх UI
       const inputType = q.max_selections > 1 ? 'checkbox' : 'radio';
+      html += `<div class="card" style="padding:16px 18px;margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px">${q.question_text}</div>`;
       html += (options||[]).map(o=>`
         <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer">
           <input type="${inputType}" name="q${q.id}" value="${o.id}">
           <span style="font-size:13px">${o.option_text}</span>
         </label>`).join('');
-      html += `<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitVote(${q.id}, ${poll.id}, '${poll.poll_type}')">Санал өгөх</button>`;
-    } else if(hasVoted) {
-      html += `<div style="font-size:12px;color:var(--success)">✓ Та энэ асуултад санал өгсөн байна</div>`;
+      html += `<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitVote(${q.id}, ${poll.id}, '${poll.poll_type}')">Санал өгөх</button>
+      </div>`;
+      continue;
     }
 
-    if(poll.show_results_live || poll.status === 'closed' || canManage) {
-      const {data: allVotes} = await sb.from('votes').select('option_id').eq('question_id', q.id);
-      const counts = {};
-      (allVotes||[]).forEach(v => counts[v.option_id] = (counts[v.option_id]||0)+1);
-      const total = (allVotes||[]).length || 1;
+    // Үр дүн — residents table-тэй адил дизайн
+    let {data: allVotes} = (poll.show_results_live || poll.status === 'closed' || canManage)
+      ? await sb.from('votes').select('option_id').eq('question_id', q.id)
+      : {data: []};
+    const counts = {};
+    (allVotes||[]).forEach(v => counts[v.option_id] = (counts[v.option_id]||0)+1);
+    const totalVotes = (allVotes||[]).length || 1;
 
-      html += `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">`;
-      (options||[]).forEach(o => {
-        const cnt = counts[o.id] || 0;
-        const pct = Math.round(cnt/total*100);
-        html += `<div style="margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-            <span>${o.option_text}</span><span style="color:var(--text-muted)">${cnt} (${pct}%)</span>
-          </div>
+    html += `<div style="overflow:hidden;margin-bottom:16px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#0B1A2E">
+            <th style="font-size:9px;font-weight:700;color:#475569;letter-spacing:.07em;padding:7px 10px;border-bottom:1px solid var(--border);text-align:left">${q.question_text}</th>
+            <th style="font-size:9px;font-weight:700;color:#475569;letter-spacing:.07em;padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;width:80px">САНАЛ</th>
+            <th style="font-size:9px;font-weight:700;color:#475569;letter-spacing:.07em;padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;width:60px">%</th>
+            <th style="font-size:9px;font-weight:700;color:#475569;letter-spacing:.07em;padding:7px 10px;border-bottom:1px solid var(--border);width:180px"></th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    (options||[]).forEach(o => {
+      const cnt = counts[o.id] || 0;
+      const pct = Math.round(cnt/totalVotes*100);
+      const isMyVote = myVoteIds.includes(o.id);
+      const rowBg = isMyVote ? 'background:rgba(59,130,246,0.08)' : '';
+      html += `<tr style="${rowBg}">
+        <td style="padding:7px 10px;font-size:12px;border-bottom:1px solid rgba(30,58,95,0.25);vertical-align:middle">
+          ${isMyVote ? '<span style="color:var(--accent);font-size:10px;margin-right:4px">✓</span>' : ''}${o.option_text}
+        </td>
+        <td style="padding:7px 10px;font-size:12px;border-bottom:1px solid rgba(30,58,95,0.25);text-align:right;font-variant-numeric:tabular-nums">${cnt}</td>
+        <td style="padding:7px 10px;font-size:12px;border-bottom:1px solid rgba(30,58,95,0.25);text-align:right;color:var(--text-muted);font-variant-numeric:tabular-nums">${pct}%</td>
+        <td style="padding:7px 10px;border-bottom:1px solid rgba(30,58,95,0.25);vertical-align:middle">
           <div style="height:6px;background:var(--bg-surface);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:var(--accent)"></div>
+            <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px"></div>
           </div>
-        </div>`;
-      });
-      html += `</div>`;
-    }
+        </td>
+      </tr>`;
+    });
 
+    html += `</tbody></table>`;
+    if(hasVoted) {
+      html += `<div style="font-size:11px;color:var(--success);padding:6px 10px">✓ Та санал өгсөн байна</div>`;
+    }
     html += `</div>`;
   }
 
