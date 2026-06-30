@@ -91,6 +91,11 @@
   #residents-main-table td, #business-main-table td { padding:7px 10px; font-size:12px; border-bottom:1px solid rgba(30,58,95,0.25); vertical-align:middle; }
   #residents-main-table tr:hover td, #business-main-table tr:hover td { background:rgba(30,58,95,0.2); }
   #residents-main-table tr:last-child td, #business-main-table tr:last-child td { border-bottom:none; }
+  /* BUILDINGS TABLE — residents-тэй адил стиль */
+  #admin-buildings-table th, #admin-apttypes-table th { font-size:9px; font-weight:700; color:#475569; letter-spacing:.07em; padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; background:#0B1A2E; }
+  #admin-buildings-table td, #admin-apttypes-table td { padding:7px 10px; font-size:12px; border-bottom:1px solid rgba(30,58,95,0.25); vertical-align:middle; }
+  #admin-buildings-table tr:hover td, #admin-apttypes-table tr:hover td { background:rgba(30,58,95,0.2); }
+  #admin-buildings-table tr:last-child td, #admin-apttypes-table tr:last-child td { border-bottom:none; }
   .res-bldg-badge { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; background:rgba(59,130,246,0.12); color:#60A5FA; border:1px solid rgba(59,130,246,0.2); }
 
   /* TOPBAR */
@@ -445,7 +450,6 @@
     <div class="page-title" id="page-title">Хянах самбар</div>
     <div class="topbar-actions">
       <button class="btn btn-outline btn-sm" onclick="showPage('payments');openPayModal()">+ Төлбөр бүртгэх</button>
-      <div class="avatar" title="Администратор">А</div>
     </div>
   </div>
 
@@ -551,7 +555,7 @@
                 <th style="width:60px">БАЙР</th>
                 <th style="width:54px">ТООТ</th>
                 <th style="width:80px">ТАЛБАЙ</th>
-                <th style="min-width:90px">СУУЦ ӨМЧЛӨГЧ</th><th style="min-width:90px">НЭР</th>
+                <th style="min-width:90px">НЭР</th><th style="min-width:90px">ОВОГ</th>
                 <th style="width:105px">УТАС</th>
                 <th style="width:160px">ИМЭЙЛ</th>
                 <th style="width:110px">ӨМЧИЛСӨН ОГНОО</th>
@@ -1006,14 +1010,14 @@
           <div class="table-wrap">
             <table id="admin-buildings-table">
               <thead>
-                <tr>
+                <tr style="background:rgba(11,26,46,0.8)">
                   <th style="width:60px">ID</th>
-                  <th>Нэр (label)</th>
-                  <th style="width:70px">Давхар</th>
-                  <th style="width:120px">Бүтэц</th>
-                  <th style="width:130px">Дугаарлалт</th>
-                  <th style="width:60px">Бүлэг</th>
-                  <th style="width:100px">Үйлдэл</th>
+                  <th>НЭР</th>
+                  <th style="width:70px">ДАВХАР</th>
+                  <th style="width:120px">БҮТЭЦ</th>
+                  <th style="width:130px">ДУГААРЛАЛТ</th>
+                  <th style="width:60px">БҮЛЭГ</th>
+                  <th style="width:80px">ҮЙЛДЭЛ</th>
                 </tr>
               </thead>
               <tbody id="admin-buildings-body"></tbody>
@@ -1037,11 +1041,11 @@
           <div class="table-wrap">
             <table id="admin-apttypes-table">
               <thead>
-                <tr>
-                  <th style="width:100px">Байр</th>
-                  <th>Хаалга дугаарууд</th>
-                  <th style="width:100px">Талбай (м²)</th>
-                  <th style="width:80px">Үйлдэл</th>
+                <tr style="background:rgba(11,26,46,0.8)">
+                  <th style="width:100px">БАЙР</th>
+                  <th>ХААЛГА ДУГААРУУД</th>
+                  <th style="width:100px">ТАЛБАЙ (М²)</th>
+                  <th style="width:80px">ҮЙЛДЭЛ</th>
                 </tr>
               </thead>
               <tbody id="admin-apttypes-body"></tbody>
