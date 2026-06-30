@@ -383,6 +383,9 @@
     <div class="nav-item" onclick="showPage('communications')">
       <span>Мэдэгдэл</span>
     </div>
+    <div class="nav-item" onclick="showPage('polls')">
+      <span>🗳️ Санал хураалт</span>
+    </div>
     <div class="nav-section">Тохиргоо</div>
     <div class="nav-item" id="nav-admin-building" onclick="showPage('admin')">
       <span>⚙️ Байрны тохиргоо</span>
@@ -1106,6 +1109,118 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+
+    <!-- САНАЛ ХУРААЛТ -->
+    <div class="page" id="page-polls">
+      <div id="polls-list-view">
+        <div class="flex-between mb-16">
+          <div class="section-title" style="margin:0">Санал хураалтын жагсаалт</div>
+          <button class="btn btn-primary btn-sm" id="btn-create-poll" onclick="openCreatePoll()" style="display:none">+ Санал хураалт үүсгэх</button>
+        </div>
+        <div id="polls-cards-wrap" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+      <!-- Санал хураалт үүсгэх Wizard -->
+      <div id="poll-create-view" style="display:none">
+        <div class="flex-between mb-16">
+          <div class="section-title" style="margin:0">Шинэ санал хураалт үүсгэх</div>
+          <button class="btn btn-outline btn-sm" onclick="closePollCreate()">← Буцах</button>
+        </div>
+
+        <div class="card" style="padding:20px;margin-bottom:16px">
+          <div class="form-group">
+            <label>Санал хураалтын төрөл</label>
+            <div style="display:flex;gap:10px;margin-top:6px">
+              <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
+                <input type="radio" name="poll-type" value="issue" checked onchange="onPollTypeChange()">
+                <div>
+                  <div style="font-weight:600;font-size:13px">Тулгамдсан асуудал</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Зөвшөөрч/Татгалзах санал</div>
+                </div>
+              </label>
+              <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
+                <input type="radio" name="poll-type" value="election" onchange="onPollTypeChange()">
+                <div>
+                  <div style="font-weight:600;font-size:13px">Ээлжит сонгууль</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Нэр дэвшигч сонгох</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Гарчиг</label>
+            <input type="text" id="poll-title" placeholder="ж: 2026 оны хаврын тулгамдсан асуудлууд">
+          </div>
+          <div class="form-group">
+            <label>Тайлбар (заавал биш)</label>
+            <textarea id="poll-description" rows="2" placeholder="Санал хураалтын зорилго, тайлбар"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Эхлэх огноо</label>
+              <input type="date" id="poll-starts-at">
+            </div>
+            <div class="form-group">
+              <label>Дуусах огноо</label>
+              <input type="date" id="poll-ends-at">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:20px">
+              <input type="checkbox" id="poll-anonymous" checked style="width:16px;height:16px">
+              <label for="poll-anonymous" style="margin:0;cursor:pointer">Нэр нуун санал хураалт</label>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:20px">
+              <input type="checkbox" id="poll-show-live" checked style="width:16px;height:16px">
+              <label for="poll-show-live" style="margin:0;cursor:pointer">Бодит цагийн үр дүн харуулах</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ISSUE асуудлууд -->
+        <div id="poll-issues-wrap" class="card" style="padding:20px;margin-bottom:16px">
+          <div class="flex-between mb-16">
+            <div style="font-weight:600;font-size:13px">Асуудлуудын жагсаалт</div>
+            <button class="btn btn-outline btn-sm" onclick="addIssueQuestion()">+ Асуудал нэмэх</button>
+          </div>
+          <div id="poll-issues-list"></div>
+        </div>
+
+        <!-- ELECTION нэр дэвшигчид -->
+        <div id="poll-election-wrap" class="card" style="padding:20px;margin-bottom:16px;display:none">
+          <div class="form-group">
+            <label>Сонгуулийн нэр (ж: Удирдах зөвлөлийн гишүүд)</label>
+            <input type="text" id="poll-election-title" placeholder="ж: Удирдах зөвлөлийн гишүүдийг сонгох">
+          </div>
+          <div class="form-group">
+            <label>Хэдэн хүн сонгож болох вэ?</label>
+            <input type="number" id="poll-election-max" value="1" min="1" style="width:120px">
+          </div>
+          <div class="flex-between mb-16">
+            <div style="font-weight:600;font-size:13px">Нэр дэвшигчдийн жагсаалт</div>
+            <button class="btn btn-outline btn-sm" onclick="addCandidate()">+ Нэр дэвшигч нэмэх</button>
+          </div>
+          <div id="poll-candidates-list"></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">"Аль нь ч биш / Татгалзах" сонголт автоматаар нэмэгдэнэ</div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-outline" onclick="closePollCreate()">Болих</button>
+          <button class="btn btn-primary" onclick="savePoll()">Хадгалах (ноорог)</button>
+        </div>
+      </div>
+
+      <!-- Санал өгөх / Үр дүн харах дэлгэрэнгүй -->
+      <div id="poll-detail-view" style="display:none">
+        <div class="flex-between mb-16">
+          <div class="section-title" id="poll-detail-title" style="margin:0"></div>
+          <button class="btn btn-outline btn-sm" onclick="closePollDetail()">← Буцах</button>
+        </div>
+        <div id="poll-detail-body"></div>
       </div>
     </div>
 
@@ -2138,7 +2253,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчид',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Санал хураалт'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -2152,6 +2267,7 @@ function showPage(name) {
   if(name==='admin') renderAdminPage();
   if(name==='auth_levels') renderAuthLevelsPage();
   if(name==='users') renderUsersPage();
+  if(name==='polls') renderPollsPage();
 }
 
 // ============================================================
@@ -4515,6 +4631,337 @@ async function toggleUserActive(userId, active) {
   toast(active ? 'Хэрэглэгч идэвхжүүллээ ✓' : 'Хэрэглэгч зогсооллоо','success');
   renderUsersPage();
 }
+
+
+// ============================================================
+// САНАЛ ХУРААЛТ
+// ============================================================
+
+let pollsList = [];
+let currentPollQuestions = [];  // wizard-д ашиглах түр массив
+let currentPollCandidates = [];
+let viewingPollId = null;
+
+// --- ЖАГСААЛТ ---
+async function renderPollsPage() {
+  document.getElementById('poll-create-view').style.display = 'none';
+  document.getElementById('poll-detail-view').style.display = 'none';
+  document.getElementById('polls-list-view').style.display = 'block';
+
+  const canManage = ['admin','gz'].includes(currentProfile?.role);
+  document.getElementById('btn-create-poll').style.display = canManage ? 'inline-flex' : 'none';
+
+  const {data: polls, error} = await sb.from('polls').select('*').order('created_at', {ascending:false});
+  if(error) { toast('Санал хураалт ачаалахад алдаа: '+error.message, 'error'); return; }
+  pollsList = polls || [];
+
+  const wrap = document.getElementById('polls-cards-wrap');
+  if(!pollsList.length) {
+    wrap.innerHTML = '<div class="empty-state">Санал хураалт байхгүй байна</div>';
+    return;
+  }
+
+  wrap.innerHTML = pollsList.map(p => {
+    const statusTag = {
+      draft: '<span class="tag" style="background:var(--text-muted);color:#fff">Ноорог</span>',
+      active: '<span class="tag" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981">Идэвхтэй</span>',
+      closed: '<span class="tag" style="background:var(--danger-bg);color:var(--danger)">Хаагдсан</span>'
+    }[p.status] || '';
+    const typeLabel = p.poll_type === 'issue' ? 'Тулгамдсан асуудал' : 'Ээлжит сонгууль';
+    const dates = (p.starts_at && p.ends_at) ? `${p.starts_at.slice(0,10)} — ${p.ends_at.slice(0,10)}` : '';
+    return `<div class="card" style="padding:16px 18px;cursor:pointer" onclick="openPollDetail(${p.id})">
+      <div class="flex-between">
+        <div>
+          <div style="font-weight:600;font-size:14px">${p.title}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${typeLabel} ${dates?'· '+dates:''}</div>
+        </div>
+        <div>${statusTag}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// --- ҮҮСГЭХ WIZARD ---
+function openCreatePoll() {
+  document.getElementById('polls-list-view').style.display = 'none';
+  document.getElementById('poll-create-view').style.display = 'block';
+  document.getElementById('poll-title').value = '';
+  document.getElementById('poll-description').value = '';
+  document.getElementById('poll-starts-at').value = '';
+  document.getElementById('poll-ends-at').value = '';
+  document.getElementById('poll-anonymous').checked = true;
+  document.getElementById('poll-show-live').checked = true;
+  document.querySelector('input[name="poll-type"][value="issue"]').checked = true;
+  currentPollQuestions = [];
+  currentPollCandidates = [];
+  onPollTypeChange();
+  renderIssuesList();
+  renderCandidatesList();
+}
+
+function closePollCreate() {
+  document.getElementById('poll-create-view').style.display = 'none';
+  document.getElementById('polls-list-view').style.display = 'block';
+}
+
+function onPollTypeChange() {
+  const type = document.querySelector('input[name="poll-type"]:checked').value;
+  document.getElementById('poll-issues-wrap').style.display = type==='issue' ? 'block' : 'none';
+  document.getElementById('poll-election-wrap').style.display = type==='election' ? 'block' : 'none';
+}
+
+function addIssueQuestion() {
+  currentPollQuestions.push({id: Date.now(), text: ''});
+  renderIssuesList();
+}
+
+function removeIssueQuestion(id) {
+  currentPollQuestions = currentPollQuestions.filter(q=>q.id!==id);
+  renderIssuesList();
+}
+
+function renderIssuesList() {
+  const wrap = document.getElementById('poll-issues-list');
+  if(!currentPollQuestions.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Асуудал нэмээгүй байна</div>';
+    return;
+  }
+  wrap.innerHTML = currentPollQuestions.map((q,i)=>`
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+      <span style="font-size:12px;color:var(--text-muted);width:24px">${i+1}.</span>
+      <input type="text" value="${q.text}" placeholder="ж: Зогсоолын хураамж нэмэгдүүлэх"
+        oninput="updateIssueText(${q.id}, this.value)" style="flex:1">
+      <button class="btn btn-ghost btn-sm" onclick="removeIssueQuestion(${q.id})" style="color:var(--danger)">🗑</button>
+    </div>`).join('');
+}
+
+function updateIssueText(id, val) {
+  const q = currentPollQuestions.find(x=>x.id===id);
+  if(q) q.text = val;
+}
+
+function addCandidate() {
+  currentPollCandidates.push({id: Date.now(), name: ''});
+  renderCandidatesList();
+}
+
+function removeCandidate(id) {
+  currentPollCandidates = currentPollCandidates.filter(c=>c.id!==id);
+  renderCandidatesList();
+}
+
+function renderCandidatesList() {
+  const wrap = document.getElementById('poll-candidates-list');
+  if(!currentPollCandidates.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Нэр дэвшигч нэмээгүй байна</div>';
+    return;
+  }
+  wrap.innerHTML = currentPollCandidates.map((c,i)=>`
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+      <span style="font-size:12px;color:var(--text-muted);width:24px">${i+1}.</span>
+      <input type="text" value="${c.name}" placeholder="ж: Бат-Эрдэнэ Дорж"
+        oninput="updateCandidateName(${c.id}, this.value)" style="flex:1">
+      <button class="btn btn-ghost btn-sm" onclick="removeCandidate(${c.id})" style="color:var(--danger)">🗑</button>
+    </div>`).join('');
+}
+
+function updateCandidateName(id, val) {
+  const c = currentPollCandidates.find(x=>x.id===id);
+  if(c) c.name = val;
+}
+
+async function savePoll() {
+  const title = document.getElementById('poll-title').value.trim();
+  const description = document.getElementById('poll-description').value.trim();
+  const pollType = document.querySelector('input[name="poll-type"]:checked').value;
+  const startsAt = document.getElementById('poll-starts-at').value;
+  const endsAt = document.getElementById('poll-ends-at').value;
+  const anonymous = document.getElementById('poll-anonymous').checked;
+  const showLive = document.getElementById('poll-show-live').checked;
+
+  if(!title) { toast('Гарчиг оруулна уу', 'error'); return; }
+
+  if(pollType === 'issue' && currentPollQuestions.filter(q=>q.text.trim()).length === 0) {
+    toast('Дор хаяж нэг асуудал нэмнэ үү', 'error'); return;
+  }
+  if(pollType === 'election' && currentPollCandidates.filter(c=>c.name.trim()).length === 0) {
+    toast('Дор хаяж нэг нэр дэвшигч нэмнэ үү', 'error'); return;
+  }
+
+  // 1. Poll үүсгэх
+  const {data: poll, error: pollErr} = await sb.from('polls').insert({
+    title, description, poll_type: pollType, status: 'draft',
+    starts_at: startsAt || null, ends_at: endsAt || null,
+    anonymous, show_results_live: showLive
+  }).select().single();
+
+  if(pollErr) { toast('Алдаа: '+pollErr.message, 'error'); return; }
+
+  if(pollType === 'issue') {
+    // Асуудал бүрт question + 3 fixed options үүсгэх
+    for(let i=0; i<currentPollQuestions.length; i++) {
+      const q = currentPollQuestions[i];
+      if(!q.text.trim()) continue;
+      const {data: question, error: qErr} = await sb.from('poll_questions').insert({
+        poll_id: poll.id, question_text: q.text, order_num: i, max_selections: 1
+      }).select().single();
+      if(qErr) { toast('Асуудал хадгалахад алдаа: '+qErr.message,'error'); continue; }
+
+      await sb.from('poll_options').insert([
+        {question_id: question.id, option_text: 'Зөвшөөрч байна', order_num: 0},
+        {question_id: question.id, option_text: 'Зөвшөөрөхгүй', order_num: 1},
+        {question_id: question.id, option_text: 'Мэдэхгүй байна', order_num: 2}
+      ]);
+    }
+  } else {
+    // Election: нэг question, нэр дэвшигч бүрт нэг option + abstain
+    const electionTitle = document.getElementById('poll-election-title').value.trim() || title;
+    const maxSel = +document.getElementById('poll-election-max').value || 1;
+    const {data: question, error: qErr} = await sb.from('poll_questions').insert({
+      poll_id: poll.id, question_text: electionTitle, order_num: 0, max_selections: maxSel
+    }).select().single();
+    if(qErr) { toast('Алдаа: '+qErr.message,'error'); return; }
+
+    const candidateOptions = currentPollCandidates
+      .filter(c=>c.name.trim())
+      .map((c,i)=>({question_id: question.id, option_text: c.name, order_num: i, is_abstain: false}));
+    candidateOptions.push({question_id: question.id, option_text: 'Аль нь ч биш / Татгалзах', order_num: 999, is_abstain: true});
+
+    await sb.from('poll_options').insert(candidateOptions);
+  }
+
+  toast('Санал хураалт ноорог хэлбэрээр хадгалагдлаа ✓', 'success');
+  closePollCreate();
+  renderPollsPage();
+}
+
+// --- ДЭЛГЭРЭНГҮЙ / САНАЛ ӨГӨХ / ҮР ДҮН ---
+async function openPollDetail(pollId) {
+  viewingPollId = pollId;
+  document.getElementById('polls-list-view').style.display = 'none';
+  document.getElementById('poll-detail-view').style.display = 'block';
+
+  const poll = pollsList.find(p=>p.id===pollId);
+  if(!poll) return;
+  document.getElementById('poll-detail-title').textContent = poll.title;
+
+  const {data: questions} = await sb.from('poll_questions').select('*').eq('poll_id', pollId).order('order_num');
+  const body = document.getElementById('poll-detail-body');
+
+  const canManage = ['admin','gz'].includes(currentProfile?.role);
+  const isOwner = currentProfile?.role === 'ot';
+
+  let html = `<div class="card" style="padding:16px 18px;margin-bottom:16px">
+    <div style="font-size:13px;color:var(--text-dim)">${poll.description || ''}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px">
+      Төлөв: <strong>${poll.status === 'draft'?'Ноорог':poll.status==='active'?'Идэвхтэй':'Хаагдсан'}</strong>
+      ${poll.starts_at?` · Эхэлсэн: ${poll.starts_at.slice(0,10)}`:''}
+      ${poll.ends_at?` · Дуусах: ${poll.ends_at.slice(0,10)}`:''}
+    </div>
+  </div>`;
+
+  if(canManage && poll.status === 'draft') {
+    html += `<div style="margin-bottom:16px"><button class="btn btn-primary btn-sm" onclick="activatePoll(${pollId})">▶ Санал хураалт эхлүүлэх</button></div>`;
+  }
+  if(canManage && poll.status === 'active') {
+    html += `<div style="margin-bottom:16px"><button class="btn btn-outline btn-sm" style="color:var(--danger)" onclick="closePoll(${pollId})">⏹ Санал хураалт хаах</button></div>`;
+  }
+
+  for(const q of (questions||[])) {
+    const {data: options} = await sb.from('poll_options').select('*').eq('question_id', q.id).order('order_num');
+    const {data: myVotes} = await sb.from('votes').select('option_id').eq('question_id', q.id).eq('resident_id', currentProfile?.apt || -1);
+    const myVoteIds = (myVotes||[]).map(v=>v.option_id);
+    const hasVoted = myVoteIds.length > 0;
+
+    html += `<div class="card" style="padding:16px 18px;margin-bottom:12px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px">${q.question_text}</div>`;
+
+    if(poll.status === 'active' && isOwner && !hasVoted) {
+      // Санал өгөх UI
+      const inputType = q.max_selections > 1 ? 'checkbox' : 'radio';
+      html += (options||[]).map(o=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer">
+          <input type="${inputType}" name="q${q.id}" value="${o.id}">
+          <span style="font-size:13px">${o.option_text}</span>
+        </label>`).join('');
+      html += `<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitVote(${q.id}, ${poll.id}, '${poll.poll_type}')">Санал өгөх</button>`;
+    } else if(hasVoted) {
+      html += `<div style="font-size:12px;color:var(--success)">✓ Та энэ асуултад санал өгсөн байна</div>`;
+    }
+
+    if(poll.show_results_live || poll.status === 'closed' || canManage) {
+      const {data: allVotes} = await sb.from('votes').select('option_id').eq('question_id', q.id);
+      const counts = {};
+      (allVotes||[]).forEach(v => counts[v.option_id] = (counts[v.option_id]||0)+1);
+      const total = (allVotes||[]).length || 1;
+
+      html += `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">`;
+      (options||[]).forEach(o => {
+        const cnt = counts[o.id] || 0;
+        const pct = Math.round(cnt/total*100);
+        html += `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span>${o.option_text}</span><span style="color:var(--text-muted)">${cnt} (${pct}%)</span>
+          </div>
+          <div style="height:6px;background:var(--bg-surface);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:var(--accent)"></div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function closePollDetail() {
+  document.getElementById('poll-detail-view').style.display = 'none';
+  document.getElementById('polls-list-view').style.display = 'block';
+}
+
+async function submitVote(questionId, pollId, pollType) {
+  const selected = [...document.querySelectorAll(`input[name="q${questionId}"]:checked`)].map(el=>+el.value);
+  if(!selected.length) { toast('Сонголт хийнэ үү', 'error'); return; }
+
+  const residentApt = currentProfile?.apt;
+  if(!residentApt) { toast('Таны профайлд тоот холбогдоогүй байна', 'error'); return; }
+
+  const rows = selected.map(optionId => ({
+    poll_id: pollId, question_id: questionId, option_id: optionId,
+    resident_id: residentApt, apt: residentApt, poll_type: pollType
+  }));
+
+  const {error} = await sb.from('votes').insert(rows);
+  if(error) {
+    if(error.code === '23505') toast('Та аль хэдийн санал өгсөн байна', 'error');
+    else toast('Алдаа: '+error.message, 'error');
+    return;
+  }
+  toast('Санал амжилттай бүртгэгдлээ ✓', 'success');
+  openPollDetail(pollId);
+}
+
+async function activatePoll(pollId) {
+  if(!confirm('Санал хураалтыг идэвхжүүлэх үү? Идэвхжсэний дараа Сууц өмчлөгчид санал өгөх боломжтой болно.')) return;
+  const {error} = await sb.from('polls').update({status:'active'}).eq('id', pollId);
+  if(error) { toast('Алдаа: '+error.message, 'error'); return; }
+  toast('Санал хураалт идэвхжлээ ✓', 'success');
+  openPollDetail(pollId);
+  renderPollsPage();
+}
+
+async function closePoll(pollId) {
+  if(!confirm('Санал хураалтыг хаах уу? Хаасны дараа сэргээх боломжгүй.')) return;
+  const {error} = await sb.from('polls').update({status:'closed'}).eq('id', pollId);
+  if(error) { toast('Алдаа: '+error.message, 'error'); return; }
+  toast('Санал хураалт хаагдлаа','success');
+  openPollDetail(pollId);
+  renderPollsPage();
+}
+
 
 function printReport() { window.print(); }
 
