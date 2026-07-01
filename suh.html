@@ -33,11 +33,12 @@
 
   /* SIDEBAR */
   .sidebar {
-    width: 200px; min-height: 100vh;
+    width: 200px; height: 100vh;
     background: #0B1A2E;
     border-right: 1px solid rgba(30,58,95,0.6);
     display: flex; flex-direction: column;
     position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+    overflow: hidden;
   }
   .logo {
     padding: 10px 14px 8px;
@@ -71,7 +72,7 @@
     font-size: 10px; font-weight: 700; padding: 1px 5px;
     border-radius: 8px; min-width: 18px; text-align:center;
   }
-  .sidebar-bottom { padding: 10px 10px 14px; border-top: 1px solid rgba(30,58,95,0.5); }
+  .sidebar-bottom { padding: 10px 10px 14px; border-top: 1px solid rgba(30,58,95,0.5); flex-shrink: 0; overflow-y: auto; }
   .building-info {
     background: rgba(30,58,95,0.3); border-radius: 6px;
     padding: 8px 10px; font-size: 10.5px; color: #64748B;
@@ -417,7 +418,7 @@
       <span>Хэрэглэгч удирдлага</span>
     </div>
   </nav>
-  <div class="sidebar-bottom">
+  <div class="sidebar-bottom" style="overflow-y:auto;max-height:320px">
     <!-- Нэвтэрсэн хэрэглэгч -->
     <div id="current-user-info" style="padding:8px 10px;margin-bottom:6px;background:rgba(37,99,235,0.1);border-radius:6px;border:1px solid rgba(37,99,235,0.2);display:none">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1175,7 +1176,7 @@
             <label>Тайлбар (заавал биш)</label>
             <textarea id="poll-description" rows="2" placeholder="Санал хураалт, Санал асуулгын зорилго, тайлбар"></textarea>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
             <div class="form-group" style="margin-bottom:0">
               <label>Эхлэх огноо, цаг, минут</label>
               <input type="datetime-local" id="poll-starts-at" style="width:100%">
