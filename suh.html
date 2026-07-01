@@ -1151,22 +1151,20 @@
 
         <div class="card poll-create-card" style="padding:20px;margin-bottom:16px">
           <div class="form-group">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
-              <label style="display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
-                <input type="radio" name="poll-type" value="issue" checked onchange="onPollTypeChange()">
-                <div>
-                  <div style="font-weight:600;font-size:13px">Санал асуулга</div>
-                  <div style="font-size:11px;color:var(--text-muted)">Санал бодлоо илэрхийлэх</div>
-                </div>
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
-                <input type="radio" name="poll-type" value="election" onchange="onPollTypeChange()">
-                <div>
-                  <div style="font-weight:600;font-size:13px">Ээлжит сонгууль</div>
-                  <div style="font-size:11px;color:var(--text-muted)">Нэр дэвшигч сонгох</div>
-                </div>
-              </label>
+            <label>Санал хураалтын төрөл</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+              <button type="button" id="poll-type-btn-issue" onclick="setPollType('issue')"
+                style="padding:12px 14px;border:2px solid var(--accent);border-radius:8px;background:var(--accent-glow);cursor:pointer;text-align:left">
+                <div style="font-weight:600;font-size:13px;color:var(--text)">Санал асуулга</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Санал бодлоо илэрхийлэх</div>
+              </button>
+              <button type="button" id="poll-type-btn-election" onclick="setPollType('election')"
+                style="padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;text-align:left">
+                <div style="font-weight:600;font-size:13px;color:var(--text)">Ээлжит сонгууль</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Нэр дэвшигч сонгох</div>
+              </button>
             </div>
+            <input type="hidden" id="poll-type-hidden" value="issue">
           </div>
 
           <div class="form-group">
@@ -4771,8 +4769,7 @@ async function openEditPoll(pollId) {
   document.getElementById('poll-ends-at').value = poll.ends_at ? poll.ends_at.slice(0,16) : '';
   document.getElementById('poll-anonymous').checked = !!poll.anonymous;
   document.getElementById('poll-show-live').checked = !!poll.show_results_live;
-  document.querySelector(`input[name="poll-type"][value="${poll.poll_type}"]`).checked = true;
-  onPollTypeChange();
+  setPollType(poll.poll_type);
 
   const {data: questions} = await sb.from('poll_questions').select('*').eq('poll_id', pollId).order('order_num');
 
@@ -4808,11 +4805,23 @@ function closePollCreate() {
   document.getElementById('polls-list-view').style.display = 'block';
 }
 
-function onPollTypeChange() {
-  const type = document.querySelector('input[name="poll-type"]:checked').value;
+function setPollType(type) {
+  document.getElementById('poll-type-hidden').value = type;
+  const issueBtn = document.getElementById('poll-type-btn-issue');
+  const electionBtn = document.getElementById('poll-type-btn-election');
+  if(issueBtn) {
+    issueBtn.style.border = type==='issue' ? '2px solid var(--accent)' : '1px solid var(--border)';
+    issueBtn.style.background = type==='issue' ? 'var(--accent-glow)' : 'transparent';
+  }
+  if(electionBtn) {
+    electionBtn.style.border = type==='election' ? '2px solid var(--accent)' : '1px solid var(--border)';
+    electionBtn.style.background = type==='election' ? 'var(--accent-glow)' : 'transparent';
+  }
   document.getElementById('poll-issues-wrap').style.display = type==='issue' ? 'block' : 'none';
   document.getElementById('poll-election-wrap').style.display = type==='election' ? 'block' : 'none';
 }
+
+function onPollTypeChange() {}
 
 function addIssueQuestion() {
   currentPollQuestions.push({id: Date.now(), text: ''});
@@ -4896,7 +4905,7 @@ function updateCandidateResident(col, id, residentId) {
 async function savePoll() {
   const title = document.getElementById('poll-title').value.trim();
   const description = document.getElementById('poll-description').value.trim();
-  const pollType = document.querySelector('input[name="poll-type"]:checked').value;
+  const pollType = document.getElementById('poll-type-hidden').value || 'issue';
   const startsAt = document.getElementById('poll-starts-at').value;
   const endsAt = document.getElementById('poll-ends-at').value;
   const anonymous = document.getElementById('poll-anonymous').checked;
