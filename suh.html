@@ -1101,20 +1101,27 @@
         <div class="section-title" style="margin:0">Хэрэглэгч удирдлага</div>
         <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Хэрэглэгч нэмэх</button>
       </div>
+      <div class="flex-between mb-16">
+        <div class="search-wrap" style="width:220px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="user-search" placeholder="Хайх..." oninput="filterUsers()">
+        </div>
+      </div>
       <div class="card" style="overflow:hidden">
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Нэр</th>
-                <th>И-мэйл</th>
                 <th style="width:140px">Роль</th>
+                <th>Нэр</th>
+                <th>Мэйл</th>
+                <th style="width:110px">Хаяг</th>
                 <th style="width:90px">Төлөв</th>
                 <th style="width:100px">Үйлдэл</th>
               </tr>
             </thead>
             <tbody id="users-table-body">
-              <tr><td colspan="5" class="empty-state">Ачаалж байна...</td></tr>
+              <tr><td colspan="6" class="empty-state">Ачаалж байна...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1875,7 +1882,7 @@
           <option value="gz">Гүйцэтгэх захирал</option>
           <option value="hz">Хяналтын зөвлөл</option>
           <option value="uz">Удирдах зөвлөл</option>
-          <option value="ot">Сууц өмчлөгч/Түрээслэгч</option>
+          <option value="ot">Сууц өмчлөгч</option>
           <option value="admin">Админ</option>
         </select>
       </div>
@@ -1892,6 +1899,7 @@
         <label>Нууц үг</label>
         <input type="password" id="new-user-password" placeholder="Хамгийн багадаа 6 тэмдэгт">
       </div>
+      <input type="hidden" id="new-user-apt">
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Болих</button>
@@ -1909,27 +1917,33 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Бүтэн нэр</label>
-        <input type="text" id="edit-user-name" placeholder="Овог Нэр">
-      </div>
-      <div class="form-group">
-        <label>И-мэйл</label>
-        <input type="email" id="edit-user-email" placeholder="email@example.com">
-      </div>
-      <div class="form-group">
         <label>Роль</label>
-        <select id="edit-user-role">
+        <select id="edit-user-role" onchange="onEditUserRoleChange()">
           <option value="vw">Viewer</option>
           <option value="mn">Менежер</option>
           <option value="nb">Нягтлан бодогч</option>
           <option value="gz">Гүйцэтгэх захирал</option>
           <option value="hz">Хяналтын зөвлөл</option>
           <option value="uz">Удирдах зөвлөл</option>
-          <option value="ot">Сууц өмчлөгч/Түрээслэгч</option>
+          <option value="ot">Сууц өмчлөгч</option>
           <option value="admin">Админ</option>
         </select>
       </div>
+      <div class="form-group" style="position:relative">
+        <label>Бүтэн нэр</label>
+        <input type="text" id="edit-user-name" placeholder="Овог Нэр" autocomplete="off" oninput="onEditUserNameInput()" onfocus="onEditUserNameInput()" onblur="setTimeout(hideEditResidentSuggestions,150)">
+        <div id="edit-user-resident-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.35)"></div>
+      </div>
+      <div class="form-group" id="edit-user-address-group" style="display:none">
+        <label>Хаяг</label>
+        <input type="text" id="edit-user-address" placeholder="Тоот сонгоогүй" disabled style="color:var(--text-muted)">
+      </div>
+      <div class="form-group">
+        <label>И-мэйл</label>
+        <input type="email" id="edit-user-email" placeholder="email@example.com">
+      </div>
       <input type="hidden" id="edit-user-id">
+      <input type="hidden" id="edit-user-apt">
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-user')">Болих</button>
@@ -4286,7 +4300,7 @@ const AUTH_ROLES = [
   {key:'nb',           label:'Нягтлан бодогч'},
   {key:'mn',           label:'Менежер'},
   {key:'vw',           label:'Viewer'},
-  {key:'ot',           label:'Сууц өмчлөгч/Түрээслэгч'},
+  {key:'ot',           label:'Сууц өмчлөгч'},
 ];
 
 const AUTH_MODULES = [
@@ -4433,7 +4447,7 @@ function applyAdminNav(role) {
 const ROLE_LABELS = {
   admin:'Админ', uz:'Удирдах зөвлөл', hz:'Хяналтын зөвлөл',
   gz:'Гүйцэтгэх захирал', nb:'Нягтлан бодогч',
-  mn:'Менежер', vw:'Viewer', ot:'Сууц өмчлөгч/Түрээслэгч'
+  mn:'Менежер', vw:'Viewer', ot:'Сууц өмчлөгч'
 };
 
 // Зөвхөн admin-д харагдах nav items
@@ -4672,52 +4686,84 @@ async function callUserMgt(body) {
   return data;
 }
 
+function getUserAddress(u) {
+  if(u.role !== 'ot' || !u.apt) return '—';
+  const r = residents.find(x=>x && String(x.apt)===String(u.apt));
+  if(!r) return '—';
+  return `${r.building}-${aptLabel(r.building,r.floor,r.door)}`;
+}
+
 async function renderUsersPage() {
   const body = document.getElementById('users-table-body');
   if(!body) return;
-  body.innerHTML = '<tr><td colspan="5" class="empty-state">Ачаалж байна...</td></tr>';
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Ачаалж байна...</td></tr>';
 
   const data = await callUserMgt({action:'list'});
   if(!data) return;
   usersList = data.users || [];
+  renderUsersTable(document.getElementById('user-search')?.value || '');
+}
+
+function renderUsersTable(filter='') {
+  const body = document.getElementById('users-table-body');
+  if(!body) return;
 
   if(!usersList.length) {
-    body.innerHTML = '<tr><td colspan="5" class="empty-state">Хэрэглэгч байхгүй</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">Хэрэглэгч байхгүй</td></tr>';
     return;
   }
 
-  body.innerHTML = usersList.map(u => {
+  const q = filter.toLowerCase();
+  const list = q ? usersList.filter(u=>{
+    const roleLabel = (ROLE_LABELS[u.role]||u.role||'').toLowerCase();
+    const addr = getUserAddress(u).toLowerCase();
+    return (u.full_name||'').toLowerCase().includes(q)
+      || (u.email||'').toLowerCase().includes(q)
+      || roleLabel.includes(q)
+      || addr.includes(q);
+  }) : usersList;
+
+  if(!list.length){ body.innerHTML = '<tr><td colspan="6" class="empty-state">Хэрэглэгч олдсонгүй</td></tr>'; return; }
+
+  body.innerHTML = list.map(u => {
     const roleLabel = ROLE_LABELS[u.role] || u.role;
+    const address = getUserAddress(u);
     const activeTag = u.active
       ? '<span class="tag" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981">Идэвхтэй</span>'
       : '<span class="tag" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Идэвхгүй</span>';
     return `<tr>
+      <td><span class="tag">${roleLabel}</span></td>
       <td><strong>${u.full_name||'—'}</strong></td>
       <td style="color:var(--text-muted);font-size:12px">${u.email||u.id}</td>
-      <td><span class="tag">${roleLabel}</span></td>
+      <td style="font-variant-numeric:tabular-nums">${address}</td>
       <td>${activeTag}</td>
       <td>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="openEditUser('${u.id}')">Засах</button>
           <button class="btn btn-sm" style="background:var(--${u.active?'danger-bg':'success-bg'});color:var(--${u.active?'danger':'success'})"
             onclick="toggleUserActive('${u.id}',${!u.active})">${u.active?'Зогсоох':'Идэвхжүүлэх'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditUser('${u.id}')" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          ${u.role!=='admin'?`<button class="btn btn-ghost btn-sm" onclick="deleteUser('${u.id}')" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`:''}
         </div>
       </td>
     </tr>`;
   }).join('');
 }
 
+function filterUsers(){ renderUsersTable(document.getElementById('user-search').value); }
+
 function openAddUser() {
   document.getElementById('new-user-name').value = '';
   document.getElementById('new-user-email').value = '';
   document.getElementById('new-user-password').value = '';
   document.getElementById('new-user-role').value = 'vw';
+  document.getElementById('new-user-apt').value = '';
   hideResidentSuggestions();
   openModal('modal-add-user');
 }
 
 function onNewUserRoleChange() {
-  // Роль солигдоход нэрийн талбарыг цэвэрлэж, харгалзах горимд шилжинэ
+  // Роль солигдоход нэрийн талбар болон холбогдсон тоотыг цэвэрлэнэ
+  document.getElementById('new-user-apt').value = '';
   hideResidentSuggestions();
 }
 
@@ -4726,7 +4772,7 @@ function hideResidentSuggestions() {
   if(box) { box.style.display = 'none'; box.innerHTML = ''; }
 }
 
-// "Сууц өмчлөгч/Түрээслэгч" ролийг сонгосон үед нэрээр Сууц өмчлөгчийн бүртгэлээс шүүж санал болгоно
+// "Сууц өмчлөгч" ролийг сонгосон үед нэрээр Сууц өмчлөгчийн бүртгэлээс шүүж санал болгоно
 function onNewUserNameInput() {
   const role = document.getElementById('new-user-role').value;
   const box = document.getElementById('new-user-resident-suggestions');
@@ -4758,6 +4804,7 @@ function selectResidentForNewUser(residentId) {
   const email = (r.emails||[r.email||''])[0]||'';
   document.getElementById('new-user-name').value = name;
   document.getElementById('new-user-email').value = email;
+  document.getElementById('new-user-apt').value = r.apt;
   if(!email) toast('Энэ сууц өмчлөгчид бүртгэлтэй и-мэйл алга — гараар оруулна уу','error');
   hideResidentSuggestions();
 }
@@ -4767,13 +4814,30 @@ async function createUser() {
   const email = document.getElementById('new-user-email').value.trim();
   const password = document.getElementById('new-user-password').value;
   const role = document.getElementById('new-user-role').value;
+  const aptVal = document.getElementById('new-user-apt').value;
+  const apt = (role === 'ot' && aptVal) ? +aptVal : null;
   if(!email||!password||!full_name){toast('Бүх талбарыг бөглөнө үү','error');return;}
   if(password.length < 6){toast('Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой','error');return;}
-  const data = await callUserMgt({action:'create', email, password, role, full_name});
+  const data = await callUserMgt({action:'create', email, password, role, full_name, apt});
   if(!data) return;
   toast('Хэрэглэгч амжилттай үүсгэгдлээ ✓','success');
   closeModal('modal-add-user');
   renderUsersPage();
+}
+
+function updateEditAddressDisplay() {
+  const group = document.getElementById('edit-user-address-group');
+  const addrInput = document.getElementById('edit-user-address');
+  const role = document.getElementById('edit-user-role').value;
+  const aptVal = document.getElementById('edit-user-apt').value;
+  if(role !== 'ot') { group.style.display = 'none'; return; }
+  group.style.display = 'block';
+  if(aptVal) {
+    const r = residents.find(x=>x && String(x.apt)===String(aptVal));
+    addrInput.value = r ? `${r.building}-${aptLabel(r.building,r.floor,r.door)}` : '—';
+  } else {
+    addrInput.value = '';
+  }
 }
 
 function openEditUser(userId) {
@@ -4783,7 +4847,57 @@ function openEditUser(userId) {
   document.getElementById('edit-user-name').value = u.full_name||'';
   document.getElementById('edit-user-email').value = u.email||'';
   document.getElementById('edit-user-role').value = u.role;
+  document.getElementById('edit-user-apt').value = u.apt||'';
+  hideEditResidentSuggestions();
+  updateEditAddressDisplay();
   openModal('modal-edit-user');
+}
+
+function onEditUserRoleChange() {
+  // Роль 'Сууц өмчлөгч'-оос өөр болвол холбогдсон тоотыг цэвэрлэнэ
+  const role = document.getElementById('edit-user-role').value;
+  if(role !== 'ot') document.getElementById('edit-user-apt').value = '';
+  hideEditResidentSuggestions();
+  updateEditAddressDisplay();
+}
+
+function hideEditResidentSuggestions() {
+  const box = document.getElementById('edit-user-resident-suggestions');
+  if(box) { box.style.display = 'none'; box.innerHTML = ''; }
+}
+
+// Засах цонхонд "Сууц өмчлөгч" ролийн хэрэглэгчид тоот/хаяг холбох автокомплит
+function onEditUserNameInput() {
+  const role = document.getElementById('edit-user-role').value;
+  const box = document.getElementById('edit-user-resident-suggestions');
+  if(role !== 'ot') { hideEditResidentSuggestions(); return; }
+  const q = document.getElementById('edit-user-name').value.trim().toLowerCase();
+  if(!q) { hideEditResidentSuggestions(); return; }
+  const matches = residents.filter(r=>{
+    if(!r) return false;
+    const full = ((r.firstname||'')+' '+(r.lastname||'')+' '+(r.owner||'')).toLowerCase();
+    return full.includes(q);
+  }).slice(0, 8);
+  if(!matches.length) { hideEditResidentSuggestions(); return; }
+  box.innerHTML = matches.map(r=>{
+    const name = ((r.firstname||r.owner||'')+' '+(r.lastname||'')).trim();
+    const aptTxt = `${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}`;
+    return `<div class="resident-suggestion-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border-light)" onmousedown="selectResidentForEditUser(${r.id})">
+      <div style="font-size:13px;font-weight:600">${name||'—'}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${aptTxt}</div>
+    </div>`;
+  }).join('');
+  box.style.display = 'block';
+}
+
+function selectResidentForEditUser(residentId) {
+  const r = residents.find(x=>x&&x.id===residentId);
+  if(!r) return;
+  const name = ((r.firstname||r.owner||'')+' '+(r.lastname||'')).trim();
+  document.getElementById('edit-user-name').value = name;
+  document.getElementById('edit-user-apt').value = r.apt;
+  updateEditAddressDisplay();
+  hideEditResidentSuggestions();
 }
 
 async function saveUserEdit() {
@@ -4791,9 +4905,11 @@ async function saveUserEdit() {
   const full_name = document.getElementById('edit-user-name').value.trim();
   const email = document.getElementById('edit-user-email').value.trim();
   const role = document.getElementById('edit-user-role').value;
+  const aptVal = document.getElementById('edit-user-apt').value;
+  const apt = (role === 'ot' && aptVal) ? +aptVal : null;
   if(!full_name){toast('Нэрийг оруулна уу','error');return;}
   if(!email){toast('И-мэйлийг оруулна уу','error');return;}
-  const data = await callUserMgt({action:'update_profile', userId, full_name, email, role});
+  const data = await callUserMgt({action:'update_profile', userId, full_name, email, role, apt});
   if(!data) return;
   toast('Хэрэглэгчийн мэдээлэл шинэчлэгдлээ ✓','success');
   closeModal('modal-edit-user');
@@ -4804,6 +4920,15 @@ async function toggleUserActive(userId, active) {
   const data = await callUserMgt({action:'toggle_active', userId, active});
   if(!data) return;
   toast(active ? 'Хэрэглэгч идэвхжүүллээ ✓' : 'Хэрэглэгч зогсооллоо','success');
+  renderUsersPage();
+}
+
+async function deleteUser(userId) {
+  const u = usersList.find(x=>x.id===userId);
+  if(!confirm(`"${u?.full_name||'энэ хэрэглэгч'}"-ийг бүрмөсөн устгах уу? Энэ үйлдлийг буцаах боломжгүй.`)) return;
+  const data = await callUserMgt({action:'delete', userId});
+  if(!data) return;
+  toast('Хэрэглэгч устгагдлаа','success');
   renderUsersPage();
 }
 
