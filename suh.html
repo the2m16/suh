@@ -465,7 +465,7 @@
   <div class="topbar">
     <div class="page-title" id="page-title">Хянах самбар</div>
     <div class="topbar-actions">
-      <button class="btn btn-outline btn-sm" onclick="showPage('payments');openPayModal()">+ Төлбөр бүртгэх</button>
+      <button class="btn btn-outline btn-sm" id="dash-pay-btn" onclick="showPage('payments');openPayModal()">+ Төлбөр бүртгэх</button>
     </div>
   </div>
 
@@ -559,7 +559,7 @@
           <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV экспорт">Экспорт</button>
           <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">Импорт</button>
           <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)">
-          <button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Сууц өмчлөгч нэмэх</button>
+          <button class="btn btn-primary btn-sm" id="add-resident-btn" onclick="openAddResident()">+ Сууц өмчлөгч нэмэх</button>
         </div>
       </div>
       <div class="card" style="overflow:hidden">
@@ -605,7 +605,7 @@
         </div>
         <div class="flex gap-8">
           <button class="btn btn-outline btn-sm" onclick="exportBusinessCSV()">Татах</button>
-          <button class="btn btn-primary btn-sm" onclick="openAddBusiness()">+ Аж ахуйн нэгж нэмэх</button>
+          <button class="btn btn-primary btn-sm" id="add-business-btn" onclick="openAddBusiness()">+ Аж ахуйн нэгж нэмэх</button>
         </div>
       </div>
       <div class="card" style="overflow:hidden">
@@ -846,7 +846,7 @@
           <div class="tab" onclick="switchPayTab('overdue',this)">Хугацаа хэтэрсэн</div>
           <div class="tab" onclick="switchPayTab('risk',this)">Эрсдэлтэй</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openPayModal()">+ Төлбөр бүртгэх</button>
+        <button class="btn btn-primary btn-sm" id="payments-page-pay-btn" onclick="openPayModal()">+ Төлбөр бүртгэх</button>
       </div>
       <div class="card">
         <div class="card-body" style="padding:0">
@@ -1396,7 +1396,7 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="bizDetailEdit()">Мэдээлэл засварлах</button>
       <button class="btn btn-outline" onclick="closeModal('modal-biz-detail')">Хаах</button>
-      <button class="btn btn-primary" onclick="bizDetailPay()">Төлбөр бүртгэх</button>
+      <button class="btn btn-primary" id="biz-detail-pay-btn" onclick="bizDetailPay()">Төлбөр бүртгэх</button>
     </div>
   </div>
 </div>
@@ -1957,14 +1957,17 @@ async function db_saveResident(r) {
     parkings:r.parkings, storages:r.storages, vehicles:r.vehicles
   };
   if(r.dbId) {
-    // Байгаа мөрийг id-аар UPDATE
-    const {error} = await sb.from('residents').update(row).eq('id', r.dbId);
-    if(error) console.error('resident update error:', error.message);
+    // Байгаа мөрийг id-аар UPDATE — .select() ашиглаж RLS-ээс болж 0 мөр өөрчлөгдсөнийг илрүүлнэ
+    const {data, error} = await sb.from('residents').update(row).eq('id', r.dbId).select();
+    if(error) { console.error('resident update error:', error.message); return false; }
+    if(!data || data.length === 0) { console.warn('resident update: 0 мөр — эрхгүй байж болзошгүй'); return false; }
+    return true;
   } else {
     // Шинэ мөр INSERT
     const {data, error} = await sb.from('residents').insert(row).select().single();
-    if(error){console.error('resident insert error:', error.message); return;}
+    if(error){console.error('resident insert error:', error.message); return false;}
     if(data) r.dbId = data.id;
+    return true;
   }
 }
 
@@ -1988,13 +1991,16 @@ async function db_saveBusiness(b) {
     start_date:b.start, end_date:b.end, note:b.note, vehicles:b.vehicles
   };
   if(b.id && b.dbId) {
-    // DB-д байгаа бол update
-    const {error} = await sb.from('businesses').update(row).eq('id',b.dbId);
-    if(error) console.error('business update error:',error.message);
+    // DB-д байгаа бол update — .select() ашиглаж RLS-ээс болж 0 мөр өөрчлөгдсөнийг илрүүлнэ
+    const {data, error} = await sb.from('businesses').update(row).eq('id',b.dbId).select();
+    if(error) { console.error('business update error:',error.message); return false; }
+    if(!data || data.length === 0) { console.warn('business update: 0 мөр — эрхгүй байж болзошгүй'); return false; }
+    return true;
   } else {
     const {data,error} = await sb.from('businesses').insert(row).select().single();
-    if(error){console.error('business insert error:',error.message);return;}
+    if(error){console.error('business insert error:',error.message); return false;}
     if(data) b.dbId = data.id;
+    return true;
   }
 }
 
@@ -2027,8 +2033,9 @@ async function db_saveTransaction(t) {
     status:t.status, category:t.category
   };
   const {data,error} = await sb.from('transactions').insert(row).select().single();
-  if(error){console.error('transaction insert error:',error);return;}
+  if(error){console.error('transaction insert error:',error); return false;}
   t.id = data.id;
+  return true;
 }
 
 // --- SETTINGS ---
@@ -2423,6 +2430,7 @@ function renderResidents(filter='') {
   const body = document.getElementById('residents-table-body');
   if(!body) return;
   if(!Array.isArray(residents)) return;
+  const canEditRes = canWrite('residents'), canDelRes = canDelete('residents');
   const list = filter ? residents.filter(r=>{
     if(!r) return false;
     const q = filter;
@@ -2464,8 +2472,9 @@ function renderResidents(filter='') {
       <td style="font-size:11px;color:var(--text-dim)">${(r.vehicles||[]).length?r.vehicles.join(", "):"—"}</td>
       <td><div class="month-badges">${monthBadges}</div></td>
       <td><div class="flex gap-8">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editResident(${r.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteResident(${r.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        ${canEditRes?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editResident(${r.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
+        ${canDelRes?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteResident(${r.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`:''}
+        ${!canEditRes&&!canDelRes?'<span style="color:var(--text-muted);font-size:11px">—</span>':''}
       </div></td>
     </tr>`;
   }).join('');
@@ -2821,16 +2830,17 @@ async function saveResident() {
     child1:+(document.getElementById('res-child1')?.value||0),
     child2:+(document.getElementById('res-child2')?.value||0),
     storages,parkings};
+  if(!editingResidentId && residents.some(r=>r.apt===aptId)){toast('Тоот аль хэдийн бүртгэлтэй байна','error');return;}
+  const ok = await db_saveResident(data);
+  if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
   if(editingResidentId) {
     const idx=residents.findIndex(r=>r.id===editingResidentId);
     if(idx>=0) residents[idx]={...residents[idx],...data};
     toast('Мэдээлэл шинэчлэгдлээ ✓','success');
   } else {
-    if(residents.some(r=>r.apt===aptId)){toast('Тоот аль хэдийн бүртгэлтэй байна','error');return;}
     residents.push({id:nextId++,...data});
     toast(`${building}-р байр ${aptLabel(building,floor,door)} тоот өмчлөгч нэмэгдлээ ✓`,'success');
   }
-  await db_saveResident(data);
   closeModal('modal-resident');
   renderResidents();
 }
@@ -2910,6 +2920,7 @@ let businesses = [
 function renderBusinesses(filter='') {
   const body = document.getElementById('business-table-body');
   if(!body) return;
+  const canEditBiz = canWrite('businesses'), canDelBiz = canDelete('businesses');
   const list = filter ? businesses.filter(b=>{
     const q=filter;
     return b.name.toLowerCase().includes(q)
@@ -2950,8 +2961,9 @@ function renderBusinesses(filter='') {
       <td style="font-size:11px;color:var(--text-dim)">${(b.vehicles||[]).length?b.vehicles.join(", "):"—"}</td>
       <td><div class="month-badges">${monthBadges}</div></td>
       <td><div class="flex gap-8">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editBusiness(${b.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteBusiness(${b.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        ${canEditBiz?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editBusiness(${b.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
+        ${canDelBiz?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteBusiness(${b.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`:''}
+        ${!canEditBiz&&!canDelBiz?'<span style="color:var(--text-muted);font-size:11px">—</span>':''}
       </div></td>
     </tr>`;
   }).join('');
@@ -3063,8 +3075,9 @@ async function saveBizPayment() {
     month, year: CUR_YEAR, date: todayStr(),
     desc: b.name + ' гэрээний төлбөр', status:'completed', category:'business'
   };
-  transactions.push({id:nextId++,...data});
-  await db_saveTransaction(data);
+  const ok = await db_saveTransaction(data);
+  if(!ok) { toast('Бүртгэхэд алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
+  transactions.push({id:nextId++,dbId:data.id,...data});
   closeModal('modal-biz-payment');
   toast(b.name+' '+month+'-р сарын төлбөр бүртгэгдлээ ✓','success');
 }
@@ -3111,6 +3124,8 @@ async function saveBusiness() {
     note:document.getElementById('biz-note').value.trim(),
     vehicles: getVehicles('biz-vehicle-rows')
   };
+  const ok = await db_saveBusiness(data);
+  if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
   if(editingBusinessId) {
     const idx=businesses.findIndex(b=>b.id===editingBusinessId);
     if(idx>=0) businesses[idx]={...businesses[idx],...data};
@@ -3119,7 +3134,6 @@ async function saveBusiness() {
     businesses.push({id:nextId++,...data});
     toast(name+' нэмэгдлээ','success');
   }
-  await db_saveBusiness(data);
   closeModal('modal-business');
   renderBusinesses();
 }
@@ -3560,8 +3574,9 @@ async function savePayment() {
     month, year:CUR_YEAR,
     date:todayStr(), status:'completed', category:'resident'
   };
-  transactions.push({id:nextId++,...data});
-  await db_saveTransaction(data);
+  const ok = await db_saveTransaction(data);
+  if(!ok) { toast('Бүртгэхэд алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
+  transactions.push({id:nextId++,dbId:data.id,...data});
   closeModal('modal-payment');
   renderResidents();
   renderPaymentsTable('completed');
@@ -3619,8 +3634,10 @@ async function saveExpense(){
   const parts=dateRaw.replace(/\//g,'-').split('-');
   const month=+parts[1]||1; const year=+parts[0]||2026;
   const dateOut=parts[0]+'/'+String(parts[1]||'01').padStart(2,'0')+'/'+String(parts[2]||'01').padStart(2,'0');
-  transactions.push({id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type});
-  await db_saveTransaction(transactions[transactions.length-1]);
+  const newTx = {id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type};
+  const ok = await db_saveTransaction(newTx);
+  if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
+  transactions.push(newTx);
   closeModal('modal-expense');
   if(type==='expense')renderExpenseTable();else renderIncomeTable();
   toast((type==='expense'?'Зарлага':'Орлого')+' нэмэгдлээ ✓','success');
@@ -4514,6 +4531,8 @@ async function onLoginSuccess() {
 
   // Admin-д л харагдах nav items
   applyNavByRole(role);
+  // Нэмэх/Төлбөр бүртгэх товчнуудыг эрхээр нуух
+  applyWritePermissionsToUI();
 
   // Өгөгдөл ачаалах
   await db_init();
@@ -4537,6 +4556,35 @@ function canAccessPage(pageName) {
   if(role === 'admin') return true;
   if(ADMIN_ONLY_PAGES.includes(pageName)) return false;
   return true;
+}
+
+// Хүснэгт бичих/устгах эрх — Supabase RLS policy-той яг тохирсон байх ёстой
+// (зөвхөн UI-г нуухад ашиглана, бодит хамгаалалт нь Supabase RLS дээр байгаа)
+const TABLE_WRITE_ROLES = {
+  residents: ['admin','mn'], businesses: ['admin','mn'],
+  transactions: ['admin','mn','nb'], notifications: ['admin','mn','gz']
+};
+const TABLE_DELETE_ROLES = {
+  residents: ['admin'], businesses: ['admin'], transactions: ['admin'], notifications: ['admin']
+};
+function canWrite(table) {
+  const role = currentProfile?.role || 'vw';
+  return (TABLE_WRITE_ROLES[table]||[]).includes(role);
+}
+function canDelete(table) {
+  const role = currentProfile?.role || 'vw';
+  return (TABLE_DELETE_ROLES[table]||[]).includes(role);
+}
+
+// Нэмэх/Төлбөр бүртгэх зэрэг статик товчнуудыг эрхээр нуух
+function applyWritePermissionsToUI() {
+  const setVis = (id, visible) => { const el = document.getElementById(id); if(el) el.style.display = visible ? '' : 'none'; };
+  setVis('add-resident-btn', canWrite('residents'));
+  setVis('add-business-btn', canWrite('businesses'));
+  setVis('dash-pay-btn', canWrite('transactions'));
+  setVis('payments-page-pay-btn', canWrite('transactions'));
+  setVis('biz-detail-pay-btn', canWrite('transactions'));
+  setVis('apt-detail-pay-btn', canWrite('transactions'));
 }
 
 // Session шалгах — хуудас дахин ачаалахад
