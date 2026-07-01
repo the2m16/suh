@@ -1064,6 +1064,15 @@
           </div>
         </div>
 
+        <!-- Модуль сонгох таб -->
+        <div class="card" style="padding:8px;margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm auth-module-tab btn-primary" data-module="residents" onclick="switchAuthModule('residents')">Сууц өмчлөгчдийн бүртгэл</button>
+          <button class="btn btn-sm auth-module-tab btn-outline" data-module="businesses" onclick="switchAuthModule('businesses')">Аж ахуйн нэгж</button>
+          <button class="btn btn-sm auth-module-tab btn-outline" data-module="transactions" onclick="switchAuthModule('transactions')">Санхүүгийн бүртгэл</button>
+          <button class="btn btn-sm auth-module-tab btn-outline" data-module="notifications" onclick="switchAuthModule('notifications')">Мэдэгдэл</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin:-8px 0 14px 2px">Роль олгох болон нууц үг тохируулах эрх үргэлж зөвхөн Админ-д хамаарна — серверийн Edge Function дээр хатуу шалгагддаг тул энд тохируулах боломжгүй.</div>
+
         <!-- Хүснэгт -->
         <div class="card" style="overflow:hidden;padding:0">
           <div style="overflow-x:auto">
@@ -2043,13 +2052,10 @@ async function db_loadSettings() {
   const {data,error} = await sb.from('settings').select('*');
   if(error){console.error('settings load error:', JSON.stringify(error), error.message);return;}
   if(!data){console.error('settings: data null');return;}
-  const settingsMap = {};
   data.forEach(s=>{
-    settingsMap[s.key] = s.value;
     if(s.key==='fee') Object.assign(feeSettings, s.value);
     if(s.key==='rent') Object.assign(rentSettings, s.value);
   });
-  applyAuthLevelsFromSettings(settingsMap);
 }
 
 async function db_saveSettings(key, value) {
@@ -4273,31 +4279,16 @@ const AUTH_ROLES = [
   {key:'ot',           label:'Сууц өмчлөгч/Түрээслэгч'},
 ];
 
-const AUTH_ACTIONS = [
-  {key:'view',     label:'Харах'},
-  {key:'edit',     label:'Нэмэх ба засах'},
-  {key:'delete',   label:'Устгах'},
-  {key:'print',    label:'Хэвлэх'},
-  {key:'export',   label:'Экспортлох'},
-  {key:'copy',     label:'Copy'},
-  {key:'send',     label:'Илгээх'},
-  {key:'role',     label:'Роль олгох'},
-  {key:'password', label:'Нууц үг олгох'},
+const AUTH_MODULES = [
+  {key:'residents',     label:'Сууц өмчлөгчдийн бүртгэл', actions:['view','edit','delete','print','export','copy']},
+  {key:'businesses',    label:'Аж ахуйн нэгж',            actions:['view','edit','delete','print','export','copy']},
+  {key:'transactions',  label:'Санхүүгийн бүртгэл',       actions:['view','edit','delete','print','export','copy']},
+  {key:'notifications', label:'Мэдэгдэл',                 actions:['view','edit','delete','send']},
 ];
-
-// Default утгууд
-const AUTH_LEVELS_DEFAULT = {
-  admin:  {view:1,edit:1,delete:1,print:1,export:1,copy:1,send:1,role:1,password:1},
-  uz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
-  hz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
-  gz:     {view:3,edit:6,delete:6,print:3,export:3,copy:3,send:2,role:6,password:6},
-  nb:     {view:3,edit:2,delete:6,print:3,export:3,copy:3,send:6,role:6,password:6},
-  mn:     {view:3,edit:2,delete:6,print:4,export:6,copy:3,send:2,role:6,password:6},
-  vw:     {view:3,edit:6,delete:6,print:6,export:6,copy:3,send:6,role:6,password:6},
-  ot:     {view:5,edit:6,delete:6,print:5,export:6,copy:5,send:6,role:6,password:6},
+const AUTH_ACTION_LABELS = {
+  view:'Харах', edit:'Нэмэх ба засах', delete:'Устгах',
+  print:'Хэвлэх', export:'Экспортлох', copy:'Copy', send:'Илгээх'
 };
-
-let authLevels = JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT));
 
 const LEVEL_COLORS = {
   1:'rgba(16,185,129,0.18)',
@@ -4312,27 +4303,64 @@ const LEVEL_TEXT = {
   4:'#F59E0B', 5:'#EAB308', 6:'#EF4444'
 };
 
+// Модуль тус бүрийн (role -> action -> level) кэш — Auth Level Settings хуудсанд ашиглана.
+// role_permissions хүснэгтээс шууд ачаалж, тэндээ шууд бичдэг тул энэ бол зөвхөн UI кэш.
+let rolePermissions = {};
+let currentAuthModule = 'residents';
+
+async function loadRolePermissions() {
+  const {data, error} = await sb.from('role_permissions').select('role,resource,action,level');
+  if(error){ console.error('role_permissions load error:', error.message); return; }
+  rolePermissions = {};
+  (data||[]).forEach(r=>{
+    if(!rolePermissions[r.resource]) rolePermissions[r.resource] = {};
+    if(!rolePermissions[r.resource][r.role]) rolePermissions[r.resource][r.role] = {};
+    rolePermissions[r.resource][r.role][r.action] = r.level;
+  });
+}
+
+function switchAuthModule(key) {
+  currentAuthModule = key;
+  document.querySelectorAll('.auth-module-tab').forEach(b=>{
+    const active = b.dataset.module === key;
+    b.classList.toggle('btn-primary', active);
+    b.classList.toggle('btn-outline', !active);
+  });
+  renderAuthLevelsPage();
+}
+
 function renderAuthLevelsPage() {
   const thead = document.getElementById('auth-levels-thead');
   const tbody = document.getElementById('auth-levels-tbody');
   if(!thead || !tbody) return;
+  if(!Object.keys(rolePermissions).length) {
+    // Анх удаа хуудас нээгдэхэд DB-ээс ачаалаад дараа нь дахин render хийнэ
+    loadRolePermissions().then(renderAuthLevelsPage);
+    tbody.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--text-muted)">Ачаалж байна...</td></tr>';
+    return;
+  }
+  document.querySelectorAll('.auth-module-tab').forEach(b=>{
+    const active = b.dataset.module === currentAuthModule;
+    b.classList.toggle('btn-primary', active);
+    b.classList.toggle('btn-outline', !active);
+  });
+  const moduleData = rolePermissions[currentAuthModule] || {};
+  const actions = (AUTH_MODULES.find(m=>m.key===currentAuthModule)?.actions) || [];
 
-  // Header
   thead.innerHTML = `<tr>
     <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-surface);white-space:nowrap;border-bottom:1px solid var(--border);min-width:140px">Үйлдэл</th>
     ${AUTH_ROLES.map(r=>`<th style="padding:10px 8px;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-surface);border-bottom:1px solid var(--border);text-align:center;min-width:110px">${r.label}</th>`).join('')}
   </tr>`;
 
-  // Body
-  tbody.innerHTML = AUTH_ACTIONS.map(action => `
+  tbody.innerHTML = actions.map(actionKey => `
     <tr style="border-bottom:0.5px solid var(--border-light)">
-      <td style="padding:8px 14px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap">${action.label}</td>
+      <td style="padding:8px 14px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap">${AUTH_ACTION_LABELS[actionKey]}</td>
       ${AUTH_ROLES.map(role => {
-        const val = (authLevels[role.key]?.[action.key]) || 6;
+        const val = (moduleData[role.key]?.[actionKey]) || 6;
         return `<td style="padding:6px 8px;text-align:center">
           <select
-            id="al-${role.key}-${action.key}"
-            onchange="onAuthLevelChange('${role.key}','${action.key}',this)"
+            id="al-${role.key}-${actionKey}"
+            onchange="onAuthLevelChange('${role.key}','${actionKey}',this)"
             style="width:64px;padding:4px 2px;text-align:center;font-weight:700;font-size:13px;border-radius:5px;border:1.5px solid var(--border);background:${LEVEL_COLORS[val]};color:${LEVEL_TEXT[val]};cursor:pointer;appearance:auto">
             ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===val?'selected':''}>${n}</option>`).join('')}
           </select>
@@ -4344,46 +4372,45 @@ function renderAuthLevelsPage() {
 
 function onAuthLevelChange(roleKey, actionKey, sel) {
   const val = +sel.value;
-  if(!authLevels[roleKey]) authLevels[roleKey] = {};
-  authLevels[roleKey][actionKey] = val;
+  if(!rolePermissions[currentAuthModule]) rolePermissions[currentAuthModule] = {};
+  if(!rolePermissions[currentAuthModule][roleKey]) rolePermissions[currentAuthModule][roleKey] = {};
+  rolePermissions[currentAuthModule][roleKey][actionKey] = val;
   sel.style.background = LEVEL_COLORS[val];
   sel.style.color = LEVEL_TEXT[val];
-  // Admin-ийг 1-ээс дээш болгохоос хамгаалах
+  // Админ-ийг 1-ээс дээш болгохоос хамгаалах
   if(roleKey === 'admin' && val !== 1) {
     toast('Админ бүрэн эрхтэй байх ёстой', 'error');
     sel.value = 1;
-    authLevels[roleKey][actionKey] = 1;
+    rolePermissions[currentAuthModule][roleKey][actionKey] = 1;
     sel.style.background = LEVEL_COLORS[1];
     sel.style.color = LEVEL_TEXT[1];
   }
 }
 
 async function saveAuthLevels() {
-  const {error} = await sb.from('settings')
-    .upsert({key:'auth_levels', value: authLevels, updated_at: new Date().toISOString()}, {onConflict:'key'});
+  const moduleData = rolePermissions[currentAuthModule] || {};
+  const actions = (AUTH_MODULES.find(m=>m.key===currentAuthModule)?.actions) || [];
+  const rows = [];
+  AUTH_ROLES.forEach(role=>{
+    actions.forEach(actionKey=>{
+      rows.push({
+        role: role.key, resource: currentAuthModule, action: actionKey,
+        level: moduleData[role.key]?.[actionKey] || 6,
+        updated_at: new Date().toISOString()
+      });
+    });
+  });
+  const {error} = await sb.from('role_permissions').upsert(rows, {onConflict:'role,resource,action'});
   if(error){toast('Хадгалахад алдаа: '+error.message,'error');return;}
-  toast('Auth Level тохиргоо хадгалагдлаа ✓','success');
-  // Локал state шинэчлэх
-  if(window.appSettings) window.appSettings.auth_levels = authLevels;
+  toast('Эрхийн тохиргоо хадгалагдлаа ✓ (шууд хэрэгжинэ)','success');
+  // Өөрийн эрхийг шинэчлэх (одоо нэвтэрсэн хэрэглэгчийн UI-д шууд тусгагдана)
+  await loadMyPermissions();
+  applyWritePermissionsToUI();
 }
 
 function resetAuthLevels() {
-  if(!confirm('Анхны утгад буцаах уу?')) return;
-  authLevels = JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT));
-  renderAuthLevelsPage();
-  toast('Анхны утгад буцлаа','success');
-}
-
-// Auth levels-ийг settings-аас ачаалах
-function applyAuthLevelsFromSettings(settingsData) {
-  const al = settingsData?.auth_levels;
-  if(al && typeof al === 'object') {
-    authLevels = {...JSON.parse(JSON.stringify(AUTH_LEVELS_DEFAULT)), ...al};
-    // Role-уудыг нэгтгэх
-    AUTH_ROLES.forEach(r=>{
-      if(al[r.key]) authLevels[r.key] = {...AUTH_LEVELS_DEFAULT[r.key], ...al[r.key]};
-    });
-  }
+  if(!confirm('Хадгалаагүй өөрчлөлтийг хаяж, DB дэх сүүлд хадгалсан утгыг дахин ачаалах уу?')) return;
+  loadRolePermissions().then(()=>{ renderAuthLevelsPage(); toast('DB-ээс дахин ачааллаа','success'); });
 }
 
 // Admin-д nav харуулах (currentUser тодорхойлогдсоны дараа дуудна)
@@ -4531,7 +4558,8 @@ async function onLoginSuccess() {
 
   // Admin-д л харагдах nav items
   applyNavByRole(role);
-  // Нэмэх/Төлбөр бүртгэх товчнуудыг эрхээр нуух
+  // Өөрийн эрхийг role_permissions хүснэгтээс ачаалж, товчнуудад тусгах
+  await loadMyPermissions();
   applyWritePermissionsToUI();
 
   // Өгөгдөл ачаалах
@@ -4558,22 +4586,31 @@ function canAccessPage(pageName) {
   return true;
 }
 
-// Хүснэгт бичих/устгах эрх — Supabase RLS policy-той яг тохирсон байх ёстой
-// (зөвхөн UI-г нуухад ашиглана, бодит хамгаалалт нь Supabase RLS дээр байгаа)
-const TABLE_WRITE_ROLES = {
-  residents: ['admin','mn'], businesses: ['admin','mn'],
-  transactions: ['admin','mn','nb'], notifications: ['admin','mn','gz']
-};
-const TABLE_DELETE_ROLES = {
-  residents: ['admin'], businesses: ['admin'], transactions: ['admin'], notifications: ['admin']
-};
+// Одоо нэвтэрсэн хэрэглэгчийн ЭРХИЙН МЭДЭЭЛЭЛ — role_permissions хүснэгтээс шууд ачаална.
+// Auth Level Settings хуудсан дээр хийсэн өөрчлөлт кодыг дахин deploy хийхгүйгээр шууд энд тусгагдана.
+let myPermissions = {}; // {residents:{view:3,edit:6,delete:6,...}, businesses:{...}, transactions:{...}, notifications:{...}}
+
+async function loadMyPermissions() {
+  const {data, error} = await sb.rpc('get_my_permissions');
+  if(error) { console.error('get_my_permissions error:', error.message); myPermissions = {}; return; }
+  myPermissions = {};
+  (data||[]).forEach(r=>{
+    if(!myPermissions[r.resource]) myPermissions[r.resource] = {};
+    myPermissions[r.resource][r.action] = r.level;
+  });
+}
+
+// level: 1=Бүрэн эрх, 2=Харах ба засах, 3=Зөвхөн харах, 4=Хэсэгчлэн харах, 5=Өөрийнхийг харах, 6=Харах эрхгүй
 function canWrite(table) {
-  const role = currentProfile?.role || 'vw';
-  return (TABLE_WRITE_ROLES[table]||[]).includes(role);
+  const lvl = myPermissions[table]?.edit;
+  return lvl === 1 || lvl === 2;
 }
 function canDelete(table) {
-  const role = currentProfile?.role || 'vw';
-  return (TABLE_DELETE_ROLES[table]||[]).includes(role);
+  return myPermissions[table]?.delete === 1;
+}
+function canView(table) {
+  const lvl = myPermissions[table]?.view;
+  return lvl >= 1 && lvl <= 5; // 6 = харах эрхгүй
 }
 
 // Нэмэх/Төлбөр бүртгэх зэрэг статик товчнуудыг эрхээр нуух
