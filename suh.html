@@ -1151,15 +1151,15 @@
 
         <div class="card poll-create-card" style="padding:20px;margin-bottom:16px">
           <div class="form-group">
-            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
-              <label style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
+              <label style="display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-issue-label">
                 <input type="radio" name="poll-type" value="issue" checked onchange="onPollTypeChange()">
                 <div>
                   <div style="font-weight:600;font-size:13px">Санал асуулга</div>
                   <div style="font-size:11px;color:var(--text-muted)">Санал бодлоо илэрхийлэх</div>
                 </div>
               </label>
-              <label style="flex:1;min-width:200px;display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
+              <label style="display:flex;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer" id="poll-type-election-label">
                 <input type="radio" name="poll-type" value="election" onchange="onPollTypeChange()">
                 <div>
                   <div style="font-weight:600;font-size:13px">Ээлжит сонгууль</div>
@@ -1177,12 +1177,12 @@
             <label>Тайлбар (заавал биш)</label>
             <textarea id="poll-description" rows="2" placeholder="Санал хураалт, Санал асуулгын зорилго, тайлбар"></textarea>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px">
-            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+            <div class="form-group" style="margin-bottom:0">
               <label>Эхлэх огноо, цаг, минут</label>
               <input type="datetime-local" id="poll-starts-at" style="width:100%">
             </div>
-            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
+            <div class="form-group" style="margin-bottom:0">
               <label>Дуусах огноо, цаг, минут</label>
               <input type="datetime-local" id="poll-ends-at" style="width:100%">
             </div>
