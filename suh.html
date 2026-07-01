@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>suh3</title>
+<title>suh</title>
 <style>
   :root {
     --bg-base: #0A1628;
@@ -405,7 +405,7 @@
       <span>Мэдэгдэл</span>
     </div>
     <div class="nav-item" onclick="showPage('polls')">
-      <span>Санал хураалт</span>
+      <span>Сонгууль, Судалгаа</span>
     </div>
     <div class="nav-section">Тохиргоо</div>
     <div class="nav-item" id="nav-admin-building" onclick="showPage('admin')">
@@ -1113,8 +1113,8 @@
     <div class="page" id="page-polls">
       <div id="polls-list-view">
         <div class="flex-between mb-16">
-          <div class="section-title" style="margin:0">Санал хураалтын жагсаалт</div>
-          <button class="btn btn-primary btn-sm" id="btn-create-poll" onclick="openCreatePoll()" style="display:none">+ Санал хураалт үүсгэх</button>
+          <div class="section-title" style="margin:0">Сонгууль, санал асуулгын жагсаалт</div>
+          <button class="btn btn-primary btn-sm" id="btn-create-poll" onclick="openCreatePoll()" style="display:none">+ Шинээр үүсгэх</button>
         </div>
         <div id="polls-cards-wrap" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
@@ -1122,7 +1122,6 @@
       <!-- Санал хураалт үүсгэх Wizard -->
       <div id="poll-create-view" style="display:none">
         <div class="flex-between mb-16">
-          <div class="section-title" style="margin:0">Шинэ санал хураалт үүсгэх</div>
           <button class="btn btn-outline btn-sm" onclick="closePollCreate()">← Буцах</button>
         </div>
 
@@ -1133,7 +1132,7 @@
               <button type="button" id="poll-type-btn-issue" onclick="setPollType('issue')"
                 style="padding:12px 14px;border:2px solid var(--accent);border-radius:8px;background:var(--accent-glow);cursor:pointer;text-align:left">
                 <div style="font-weight:600;font-size:13px;color:var(--text)">Санал асуулга</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Санал бодлоо илэрхийлэх</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Саналаа өгөх</div>
               </button>
               <button type="button" id="poll-type-btn-election" onclick="setPollType('election')"
                 style="padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;text-align:left">
