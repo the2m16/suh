@@ -381,7 +381,7 @@
       <span>Хянах самбар</span>
     </div>
     <div class="nav-item" onclick="showPage('residents')">
-      <span>Сууц өмчлөгчдийн бүртгэл</span>
+      <span>Сууц өмчлөгчийн бүртгэл</span>
     </div>
     <div class="nav-item" onclick="showPage('business')">
       <span>Аж ахуйн нэгж</span>
@@ -1066,12 +1066,14 @@
 
         <!-- Модуль сонгох таб -->
         <div class="card" style="padding:8px;margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm auth-module-tab btn-primary" data-module="residents" onclick="switchAuthModule('residents')">Сууц өмчлөгчдийн бүртгэл</button>
-          <button class="btn btn-sm auth-module-tab btn-outline" data-module="businesses" onclick="switchAuthModule('businesses')">Аж ахуйн нэгж</button>
+          <button class="btn btn-sm auth-module-tab btn-primary" data-module="residents" onclick="switchAuthModule('residents')">Сууц өмчлөгчийн бүртгэл</button>
+          <button class="btn btn-sm auth-module-tab btn-outline" data-module="businesses" onclick="switchAuthModule('businesses')">Аж ахуйн нэгжийн бүртгэл</button>
+          <button class="btn btn-sm auth-module-tab btn-outline" data-module="contacts" onclick="switchAuthModule('contacts')">Харилцагчийн бүртгэл</button>
           <button class="btn btn-sm auth-module-tab btn-outline" data-module="transactions" onclick="switchAuthModule('transactions')">Санхүүгийн бүртгэл</button>
           <button class="btn btn-sm auth-module-tab btn-outline" data-module="notifications" onclick="switchAuthModule('notifications')">Мэдэгдэл</button>
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin:-8px 0 14px 2px">Роль олгох болон нууц үг тохируулах эрх үргэлж зөвхөн Админ-д хамаарна — серверийн Edge Function дээр хатуу шалгагддаг тул энд тохируулах боломжгүй.</div>
+        <div id="auth-module-warning" style="display:none;font-size:11px;color:var(--warning);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:8px 12px;margin:-4px 0 14px 0">⚠️ "Харилцагчийн бүртгэл" функц системд хараахан хэрэгжээгүй тул энд хийсэн тохиргоо одоогоор бодит хамгаалалтад нөлөөгүй — функц хэрэгжсэний дараа шууд хэрэгжинэ.</div>
 
         <!-- Хүснэгт -->
         <div class="card" style="overflow:hidden;padding:0">
@@ -2286,7 +2288,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчдийн бүртгэл',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -4268,8 +4270,9 @@ async function deleteAptType(id) {
 // AUTH LEVEL SETTINGS
 // ============================================================
 
+// Admin-ийг энд оруулаагvй — Admin үргэлж бүрэн эрхтэй (get_permission_level() дотор баталгаажсан),
+// иймд Auth Level Settings матрицад тохируулах шаардлагагvй.
 const AUTH_ROLES = [
-  {key:'admin',        label:'Админ'},
   {key:'uz',           label:'Удирдах зөвлөл'},
   {key:'hz',           label:'Хяналтын зөвлөл'},
   {key:'gz',           label:'Гүйцэтгэх захирал'},
@@ -4280,10 +4283,11 @@ const AUTH_ROLES = [
 ];
 
 const AUTH_MODULES = [
-  {key:'residents',     label:'Сууц өмчлөгчдийн бүртгэл', actions:['view','edit','delete','print','export','copy']},
-  {key:'businesses',    label:'Аж ахуйн нэгж',            actions:['view','edit','delete','print','export','copy']},
-  {key:'transactions',  label:'Санхүүгийн бүртгэл',       actions:['view','edit','delete','print','export','copy']},
-  {key:'notifications', label:'Мэдэгдэл',                 actions:['view','edit','delete','send']},
+  {key:'residents',     label:'Сууц өмчлөгчийн бүртгэл',   actions:['view','edit','delete','print','export','copy']},
+  {key:'businesses',    label:'Аж ахуйн нэгжийн бүртгэл',  actions:['view','edit','delete','print','export','copy']},
+  {key:'contacts',      label:'Харилцагчийн бүртгэл',      actions:['view','edit','delete'], placeholder:true},
+  {key:'transactions',  label:'Санхүүгийн бүртгэл',        actions:['view','edit','delete','print','export','copy']},
+  {key:'notifications', label:'Мэдэгдэл',                  actions:['view','edit','delete','send']},
 ];
 const AUTH_ACTION_LABELS = {
   view:'Харах', edit:'Нэмэх ба засах', delete:'Устгах',
@@ -4344,8 +4348,11 @@ function renderAuthLevelsPage() {
     b.classList.toggle('btn-primary', active);
     b.classList.toggle('btn-outline', !active);
   });
+  const moduleDef = AUTH_MODULES.find(m=>m.key===currentAuthModule);
+  const warnEl = document.getElementById('auth-module-warning');
+  if(warnEl) warnEl.style.display = moduleDef?.placeholder ? 'block' : 'none';
   const moduleData = rolePermissions[currentAuthModule] || {};
-  const actions = (AUTH_MODULES.find(m=>m.key===currentAuthModule)?.actions) || [];
+  const actions = moduleDef?.actions || [];
 
   thead.innerHTML = `<tr>
     <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-surface);white-space:nowrap;border-bottom:1px solid var(--border);min-width:140px">Үйлдэл</th>
@@ -4377,14 +4384,6 @@ function onAuthLevelChange(roleKey, actionKey, sel) {
   rolePermissions[currentAuthModule][roleKey][actionKey] = val;
   sel.style.background = LEVEL_COLORS[val];
   sel.style.color = LEVEL_TEXT[val];
-  // Админ-ийг 1-ээс дээш болгохоос хамгаалах
-  if(roleKey === 'admin' && val !== 1) {
-    toast('Админ бүрэн эрхтэй байх ёстой', 'error');
-    sel.value = 1;
-    rolePermissions[currentAuthModule][roleKey][actionKey] = 1;
-    sel.style.background = LEVEL_COLORS[1];
-    sel.style.color = LEVEL_TEXT[1];
-  }
 }
 
 async function saveAuthLevels() {
