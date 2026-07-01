@@ -319,6 +319,8 @@
   .text-accent { color: var(--accent); }
   .font-bold { font-weight: 700; }
   .font-mono { font-variant-numeric: tabular-nums; }
+  .resident-suggestion-item:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); }
+  .resident-suggestion-item:last-child { border-bottom: none !important; }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -384,7 +386,7 @@
       <span>Сууц өмчлөгчийн бүртгэл</span>
     </div>
     <div class="nav-item" onclick="showPage('business')">
-      <span>Аж ахуйн нэгж</span>
+      <span>Аж ахуйн нэгжийн бүртгэл</span>
     </div>
     <div class="nav-item" onclick="showPage('finance')">
       <span>Санхүүгийн бүртгэл</span>
@@ -1865,20 +1867,8 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Бүтэн нэр</label>
-        <input type="text" id="new-user-name" placeholder="Овог Нэр">
-      </div>
-      <div class="form-group">
-        <label>И-мэйл</label>
-        <input type="email" id="new-user-email" placeholder="email@example.com">
-      </div>
-      <div class="form-group">
-        <label>Нууц үг</label>
-        <input type="password" id="new-user-password" placeholder="Хамгийн багадаа 6 тэмдэгт">
-      </div>
-      <div class="form-group">
         <label>Роль</label>
-        <select id="new-user-role">
+        <select id="new-user-role" onchange="onNewUserRoleChange()">
           <option value="vw">Viewer</option>
           <option value="mn">Менежер</option>
           <option value="nb">Нягтлан бодогч</option>
@@ -1889,6 +1879,19 @@
           <option value="admin">Админ</option>
         </select>
       </div>
+      <div class="form-group" style="position:relative">
+        <label>Бүтэн нэр</label>
+        <input type="text" id="new-user-name" placeholder="Овог Нэр" autocomplete="off" oninput="onNewUserNameInput()" onfocus="onNewUserNameInput()" onblur="setTimeout(hideResidentSuggestions,150)">
+        <div id="new-user-resident-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.35)"></div>
+      </div>
+      <div class="form-group">
+        <label>И-мэйл</label>
+        <input type="email" id="new-user-email" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Нууц үг</label>
+        <input type="password" id="new-user-password" placeholder="Хамгийн багадаа 6 тэмдэгт">
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Болих</button>
@@ -1897,17 +1900,21 @@
   </div>
 </div>
 
-<!-- Роль өөрчлөх Modal -->
+<!-- Хэрэглэгч засах Modal -->
 <div class="modal-overlay" id="modal-edit-user">
-  <div class="modal" style="width:400px">
+  <div class="modal" style="width:420px">
     <div class="modal-header">
-      <span class="modal-title">Роль өөрчлөх</span>
+      <span class="modal-title">Хэрэглэгч засах</span>
       <button class="modal-close" onclick="closeModal('modal-edit-user')">×</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Хэрэглэгч</label>
-        <input type="text" id="edit-user-name" disabled>
+        <label>Бүтэн нэр</label>
+        <input type="text" id="edit-user-name" placeholder="Овог Нэр">
+      </div>
+      <div class="form-group">
+        <label>И-мэйл</label>
+        <input type="email" id="edit-user-email" placeholder="email@example.com">
       </div>
       <div class="form-group">
         <label>Роль</label>
@@ -1926,7 +1933,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-user')">Болих</button>
-      <button class="btn btn-primary" onclick="updateUserRole()">Хадгалах</button>
+      <button class="btn btn-primary" onclick="saveUserEdit()">Хадгалах</button>
     </div>
   </div>
 </div>
@@ -2288,7 +2295,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгж',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгжийн бүртгэл',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
@@ -4691,7 +4698,7 @@ async function renderUsersPage() {
       <td>${activeTag}</td>
       <td>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="openEditUser('${u.id}')">Роль</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditUser('${u.id}')">Засах</button>
           <button class="btn btn-sm" style="background:var(--${u.active?'danger-bg':'success-bg'});color:var(--${u.active?'danger':'success'})"
             onclick="toggleUserActive('${u.id}',${!u.active})">${u.active?'Зогсоох':'Идэвхжүүлэх'}</button>
         </div>
@@ -4705,7 +4712,54 @@ function openAddUser() {
   document.getElementById('new-user-email').value = '';
   document.getElementById('new-user-password').value = '';
   document.getElementById('new-user-role').value = 'vw';
+  hideResidentSuggestions();
   openModal('modal-add-user');
+}
+
+function onNewUserRoleChange() {
+  // Роль солигдоход нэрийн талбарыг цэвэрлэж, харгалзах горимд шилжинэ
+  hideResidentSuggestions();
+}
+
+function hideResidentSuggestions() {
+  const box = document.getElementById('new-user-resident-suggestions');
+  if(box) { box.style.display = 'none'; box.innerHTML = ''; }
+}
+
+// "Сууц өмчлөгч/Түрээслэгч" ролийг сонгосон үед нэрээр Сууц өмчлөгчийн бүртгэлээс шүүж санал болгоно
+function onNewUserNameInput() {
+  const role = document.getElementById('new-user-role').value;
+  const box = document.getElementById('new-user-resident-suggestions');
+  if(role !== 'ot') { hideResidentSuggestions(); return; }
+  const q = document.getElementById('new-user-name').value.trim().toLowerCase();
+  if(!q) { hideResidentSuggestions(); return; }
+  const matches = residents.filter(r=>{
+    if(!r) return false;
+    const full = ((r.firstname||'')+' '+(r.lastname||'')+' '+(r.owner||'')).toLowerCase();
+    return full.includes(q);
+  }).slice(0, 8);
+  if(!matches.length) { hideResidentSuggestions(); return; }
+  box.innerHTML = matches.map(r=>{
+    const name = ((r.firstname||r.owner||'')+' '+(r.lastname||'')).trim();
+    const email = (r.emails||[r.email||''])[0]||'';
+    const aptTxt = `${r.building}-р байр ${aptLabel(r.building,r.floor,r.door)}`;
+    return `<div class="resident-suggestion-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border-light)" onmousedown="selectResidentForNewUser(${r.id})">
+      <div style="font-size:13px;font-weight:600">${name||'—'}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${aptTxt}${email?' · '+email:''}</div>
+    </div>`;
+  }).join('');
+  box.style.display = 'block';
+}
+
+function selectResidentForNewUser(residentId) {
+  const r = residents.find(x=>x&&x.id===residentId);
+  if(!r) return;
+  const name = ((r.firstname||r.owner||'')+' '+(r.lastname||'')).trim();
+  const email = (r.emails||[r.email||''])[0]||'';
+  document.getElementById('new-user-name').value = name;
+  document.getElementById('new-user-email').value = email;
+  if(!email) toast('Энэ сууц өмчлөгчид бүртгэлтэй и-мэйл алга — гараар оруулна уу','error');
+  hideResidentSuggestions();
 }
 
 async function createUser() {
@@ -4726,17 +4780,22 @@ function openEditUser(userId) {
   const u = usersList.find(x=>x.id===userId);
   if(!u) return;
   document.getElementById('edit-user-id').value = userId;
-  document.getElementById('edit-user-name').value = u.full_name||u.id;
+  document.getElementById('edit-user-name').value = u.full_name||'';
+  document.getElementById('edit-user-email').value = u.email||'';
   document.getElementById('edit-user-role').value = u.role;
   openModal('modal-edit-user');
 }
 
-async function updateUserRole() {
+async function saveUserEdit() {
   const userId = document.getElementById('edit-user-id').value;
+  const full_name = document.getElementById('edit-user-name').value.trim();
+  const email = document.getElementById('edit-user-email').value.trim();
   const role = document.getElementById('edit-user-role').value;
-  const data = await callUserMgt({action:'update_role', userId, role});
+  if(!full_name){toast('Нэрийг оруулна уу','error');return;}
+  if(!email){toast('И-мэйлийг оруулна уу','error');return;}
+  const data = await callUserMgt({action:'update_profile', userId, full_name, email, role});
   if(!data) return;
-  toast('Роль шинэчлэгдлээ ✓','success');
+  toast('Хэрэглэгчийн мэдээлэл шинэчлэгдлээ ✓','success');
   closeModal('modal-edit-user');
   renderUsersPage();
 }
