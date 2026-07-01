@@ -1968,11 +1968,6 @@ async function db_saveResident(r) {
   }
 }
 
-async function db_deleteResident(id) {
-  const {error} = await sb.from('residents').delete().eq('id',id);
-  if(error) console.error('resident delete error:',error);
-}
-
 // --- BUSINESSES ---
 async function db_loadBusinesses() {
   const {data,error} = await sb.from('businesses').select('*').order('id');
@@ -2097,6 +2092,13 @@ async function db_init() {
     if(residents.length === 0) residents = demoResidents;
     if(businesses.length === 0) businesses = demoBusinesses;
     if(transactions.length === 0) transactions = demoTransactions;
+
+    // nextId-г бодит өгөгдлийн хамгийн их ID-с давуулж тохируулах — DB-ийн бодит ID-тай мөргөлдөхөөс сэргийлнэ
+    const allIds = [
+      ...residents.map(r=>r.id), ...businesses.map(b=>b.id),
+      ...transactions.map(t=>t.id), ...notifications.map(n=>n.id)
+    ].filter(id => typeof id === 'number' && !isNaN(id));
+    if(allIds.length) nextId = Math.max(nextId, ...allIds) + 1;
 
     toast('Өгөгдөл ачаалагдлаа ✓ ('+residents.length+' өмчлөгч)','success');
   } catch(e) {
@@ -2260,6 +2262,11 @@ function calcFee(sqm) {
 // NAV
 // ============================================================
 function showPage(name) {
+  // Эрхийн шалгалт — эрхгүй хуудсыг нээхээс сэргийлнэ (зөвхөн nav-г нуухаас гадна)
+  if(typeof canAccessPage === 'function' && !canAccessPage(name)) {
+    toast('Танд энэ хуудсанд хандах эрх байхгүй байна', 'error');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item').forEach(n=>n.classList.remove('active'));
@@ -2286,6 +2293,13 @@ function showPage(name) {
 // ============================================================
 // DASHBOARD
 // ============================================================
+// Тухайн сард төлбөр төлөөгүй өмчлөгчдийг олох (дашбоард болон мэдэгдэлд дахин ашиглана)
+function getOverdueResidents(month = CUR_MONTH, year = CUR_YEAR) {
+  const monthTx = transactions.filter(t=>t&&t.month===month&&t.year===year);
+  const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>String(t.apt)))];
+  return residents.filter(r=>r&&!paidApts.includes(String(r.apt)));
+}
+
 function refreshDashboard() {
   const thisMonth = CUR_MONTH, thisYear = CUR_YEAR;
   const monthTx = transactions.filter(t=>t&&t.month===thisMonth&&t.year===thisYear);
@@ -2293,7 +2307,7 @@ function refreshDashboard() {
   const paidApts = [...new Set(monthTx.filter(t=>t.type==='income').map(t=>String(t.apt)))];
   const totalApts = residents.length;
   // Overdue: residents who haven't paid this month
-  const overdueRes = residents.filter(r=>r&&!paidApts.map(String).includes(String(r.apt)));
+  const overdueRes = getOverdueResidents(thisMonth, thisYear);
   const overdueAmt = overdueRes.reduce((s,r)=>s+calcFee(residentSqm(r)),0);
   document.getElementById('stat-income').textContent = fmt(income);
   document.getElementById('stat-income-pct').textContent = `${paidApts.length} / ${totalApts} тоот төлсөн`;
@@ -2819,7 +2833,6 @@ async function saveResident() {
   await db_saveResident(data);
   closeModal('modal-resident');
   renderResidents();
-  saveToLocal();
 }
 
 async function deleteResident(id) {
@@ -3054,7 +3067,6 @@ async function saveBizPayment() {
   await db_saveTransaction(data);
   closeModal('modal-biz-payment');
   toast(b.name+' '+month+'-р сарын төлбөр бүртгэгдлээ ✓','success');
-  saveToLocal();
 }
 
 function editBusiness(id) {
@@ -3110,7 +3122,6 @@ async function saveBusiness() {
   await db_saveBusiness(data);
   closeModal('modal-business');
   renderBusinesses();
-  saveToLocal();
 }
 
 async function deleteBusiness(id) {
@@ -3123,7 +3134,6 @@ async function deleteBusiness(id) {
   }
   businesses = businesses.filter(b=>b.id!==id);
   renderBusinesses();
-  saveToLocal();
   toast('Устгагдлаа','success');
 }
 
@@ -3311,7 +3321,6 @@ async function registerMonthlyFund() {
   if(error){toast('Алдаа: '+error.message,'error');return;}
   transactions.push({id:nextId++, dbId:saved.id, ...data});
   renderAccumulation();
-  saveToLocal();
   toast(`${month}-р сарын хуримтлал ${(amt/1000000).toFixed(1)}М₮ бүртгэгдлээ ✓`,'success');
 }
 
@@ -3559,7 +3568,6 @@ async function savePayment() {
   if(document.getElementById('page-apartments')?.classList.contains('active')){
     renderAptGrid(selectedBuilding);
   }
-  saveToLocal();
   toast(`${fmtApt(r)} ${month}-р сарын төлбөр бүртгэгдлээ ✓`,'success');
 }
 
@@ -3614,7 +3622,6 @@ async function saveExpense(){
   transactions.push({id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type});
   await db_saveTransaction(transactions[transactions.length-1]);
   closeModal('modal-expense');
-  saveToLocal();
   if(type==='expense')renderExpenseTable();else renderIncomeTable();
   toast((type==='expense'?'Зарлага':'Орлого')+' нэмэгдлээ ✓','success');
 }
@@ -4451,6 +4458,18 @@ async function doLogin() {
 
   currentUser = data.user;
   await loadUserProfile();
+
+  if(currentProfile && currentProfile.active === false) {
+    await sb.auth.signOut();
+    currentUser = null;
+    currentProfile = null;
+    errEl.textContent = 'Таны эрх түр хугацаагаар идэвхгүй болгогдсон байна. Админтай холбогдоно уу.';
+    errEl.style.display = 'block';
+    btn.style.display = 'block';
+    loadEl.style.display = 'none';
+    return;
+  }
+
   await onLoginSuccess();
 }
 
@@ -4503,16 +4522,13 @@ async function onLoginSuccess() {
 // Роллоор nav удирдах
 function applyNavByRole(role) {
   const isAdmin = role === 'admin';
+  const NAV_ID_MAP = { admin: 'nav-admin-building', auth_levels: 'nav-auth-levels', users: 'nav-users' };
 
   // Admin-only pages
   ADMIN_ONLY_PAGES.forEach(page => {
-    const el = document.getElementById('nav-' + page.replace('_','-'));
+    const el = document.getElementById(NAV_ID_MAP[page] || ('nav-' + page.replace('_','-')));
     if(el) el.style.display = isAdmin ? 'flex' : 'none';
   });
-
-  // nav-admin (Байрны тохиргоо)
-  const navAdmin = document.getElementById('nav-admin-building');
-  if(navAdmin) navAdmin.style.display = isAdmin ? 'flex' : 'none';
 }
 
 // Хуудас хандах эрх шалгах
@@ -4523,15 +4539,18 @@ function canAccessPage(pageName) {
   return true;
 }
 
-// showPage override — эрх шалгаж дараа нээнэ
-const _origShowPage = window.showPage;
-
 // Session шалгах — хуудас дахин ачаалахад
 async function checkExistingSession() {
   const {data: {session}} = await sb.auth.getSession();
   if(session) {
     currentUser = session.user;
     await loadUserProfile();
+    if(currentProfile && currentProfile.active === false) {
+      await sb.auth.signOut();
+      currentUser = null;
+      currentProfile = null;
+      return;
+    }
     await onLoginSuccess();
   }
   // Session байхгүй бол login overlay харагдаж байна
@@ -5156,16 +5175,21 @@ function renderNotifications() {
     </div>`).join('') || '<div class="empty-state"><div style="margin-bottom:8px;color:var(--text-muted)">Мэдэгдэл байхгүй</div></div>';
 }
 
-function sendNotification() {
+async function sendNotification() {
   const title=document.getElementById('notif-title-input').value.trim();
   const content=document.getElementById('notif-content').value.trim();
   const type=document.getElementById('notif-type').value;
   const recipient=document.getElementById('notif-recipient').value;
   if(!title||!content){toast('Гарчиг болон агуулга оруулна уу','error');return;}
-  const recCount = recipient==='all'?residents.reduce((s,r)=>s+r.people,0):
-    recipient==='overdue'?5:12;
+  const recCount = recipient==='all' ? residents.reduce((s,r)=>s+r.people,0)
+    : recipient==='overdue' ? getOverdueResidents().length
+    : recipient==='business' ? businesses.length
+    : 0;
   const now=new Date();
-  notifications.push({id:nextId++,type,title,content,recipient,date:now.toISOString().slice(0,10),sent:recCount});
+  const n = {type,title,content,recipient,date:now.toISOString().slice(0,10),sent:recCount};
+  await db_saveNotification(n);
+  if(!n.id) n.id = nextId++; // DB хадгалалт амжилтгүй бол дор хаяж локал ID олгоно
+  notifications.push(n);
   document.getElementById('notif-title-input').value='';
   document.getElementById('notif-content').value='';
   renderNotifications();
@@ -5178,7 +5202,6 @@ function sendNotification() {
 // ============================================================
 // UTILS
 // ============================================================
-function methodIcon(m){return '';}
 function methodName(m){return{qpay:'QPay',bank:'Данс шилжүүлэг',cash:'Бэлэн мөнгө'}[m]||m;}
 
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -5231,43 +5254,6 @@ function updateSidebarCount() {
 
   const el2 = document.getElementById('sidebar-partner-count');
   if(el2) el2.textContent = 'Харилцагч байгууллага · 0';
-}
-
-
-// ============================================================
-// LOCAL STORAGE — Supabase холбох хүртэл өгөгдөл хадгалах
-// ============================================================
-const LS_KEY = 'hunnu2222_suh_v2_data';
-
-function saveToLocal() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      residents, businesses, transactions, notifications, feeSettings, rentSettings, nextId
-    }));
-  } catch(e) { console.warn('localStorage хадгалах алдаа:', e); }
-}
-
-function loadFromLocal() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const d = JSON.parse(raw);
-    if(d.residents) residents = d.residents;
-    if(d.businesses) businesses = d.businesses;
-    if(d.transactions) transactions = d.transactions;
-    if(d.notifications) notifications = d.notifications;
-    if(d.feeSettings) Object.assign(feeSettings, d.feeSettings);
-    if(d.rentSettings) Object.assign(rentSettings, d.rentSettings);
-    if(d.nextId) nextId = d.nextId;
-    return true;
-  } catch(e) { console.warn('localStorage унших алдаа:', e); return false; }
-}
-
-function clearLocalStorage() {
-  if(confirm('Бүх хадгалагдсан өгөгдлийг устгах уу?')) {
-    localStorage.removeItem(LS_KEY);
-    location.reload();
-  }
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
