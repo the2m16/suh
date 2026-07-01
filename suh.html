@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>suh1</title>
+<title>suh2</title>
 <style>
   :root {
     --bg-base: #0A1628;
@@ -5196,24 +5196,6 @@ function sendNotification() {
   toast(`Мэдэгдэл ${recCount} хүнд илгээгдлээ`,'success');
 }
 
-function addPollOption() {
-  const wrap = document.getElementById('poll-options-wrap');
-  const count = wrap.querySelectorAll('.poll-opt').length+1;
-  const div=document.createElement('div');div.className='form-group';
-  div.innerHTML=`<label>Хариулт ${count}</label><input type="text" class="poll-opt" placeholder="Хариулт...">`;
-  wrap.appendChild(div);
-}
-
-function createPoll() {
-  const q=document.getElementById('poll-question').value.trim();
-  const opts=[...document.querySelectorAll('.poll-opt')].map(i=>i.value.trim()).filter(Boolean);
-  if(!q||opts.length<2){toast('Асуулт болон 2-оос дээш хариулт оруулна уу','error');return;}
-  notifications.push({id:nextId++,type:'info',title:'Санал асуулга: '+q,content:`Хариулт: ${opts.join(', ')}`,recipient:'all',date:new Date().toISOString().slice(0,10),sent:residents.reduce((s,r)=>s+r.people,0)});
-  renderNotifications();
-  toast('Санал асуулга илгээгдлээ','success');
-  document.getElementById('poll-question').value='';
-  document.querySelectorAll('.poll-opt').forEach(i=>i.value='');
-}
 
 // ============================================================
 // EXPENSE MODAL
