@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>suh</title>
+<title>suh1</title>
 <style>
   :root {
     --bg-base: #0A1628;
@@ -405,7 +405,7 @@
       <span>Мэдэгдэл</span>
     </div>
     <div class="nav-item" onclick="showPage('polls')">
-      <span>Сонгууль, Судалгаа</span>
+      <span>Сонгууль, санал асуулга</span>
     </div>
     <div class="nav-section">Тохиргоо</div>
     <div class="nav-item" id="nav-admin-building" onclick="showPage('admin')">
@@ -1109,17 +1109,17 @@
     </div>
 
 
-    <!-- САНАЛ ХУРААЛТ -->
+    <!-- СОНГУУЛЬ, САНАЛ АСУУЛГА -->
     <div class="page" id="page-polls">
       <div id="polls-list-view">
         <div class="flex-between mb-16">
-          <div class="section-title" style="margin:0">Сонгууль, санал асуулгын жагсаалт</div>
+          <div class="section-title" style="margin:0">Сонгууль, санал асуулгын сан</div>
           <button class="btn btn-primary btn-sm" id="btn-create-poll" onclick="openCreatePoll()" style="display:none">+ Шинээр үүсгэх</button>
         </div>
         <div id="polls-cards-wrap" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
 
-      <!-- Санал хураалт үүсгэх Wizard -->
+      <!-- Сонгууль, санал асуулга үүсгэх Wizard -->
       <div id="poll-create-view" style="display:none">
         <div class="flex-between mb-16">
           <button class="btn btn-outline btn-sm" onclick="closePollCreate()">← Буцах</button>
@@ -1127,7 +1127,6 @@
 
         <div class="card poll-create-card" style="padding:20px;margin-bottom:16px">
           <div class="form-group">
-            <label>Санал хураалтын төрөл</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
               <button type="button" id="poll-type-btn-issue" onclick="setPollType('issue')"
                 style="padding:12px 14px;border:2px solid var(--accent);border-radius:8px;background:var(--accent-glow);cursor:pointer;text-align:left">
@@ -1149,7 +1148,7 @@
           </div>
           <div class="form-group">
             <label>Тайлбар (заавал биш)</label>
-            <textarea id="poll-description" rows="2" placeholder="Санал хураалт, Санал асуулгын зорилго, тайлбар"></textarea>
+            <textarea id="poll-description" rows="2" placeholder="Санал хураалт, санал асуулгын зорилго, тайлбар"></textarea>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
             <div class="form-group" style="margin-bottom:0">
