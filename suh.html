@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>suh1</title>
+<title>suh5</title>
 <style>
   :root {
     --bg-base: #0A1628;
@@ -1189,7 +1189,7 @@
               <div style="font-weight:600;font-size:14px;margin-bottom:14px">Удирдах зөвлөлийн гишүүдийн сонгууль</div>
               <input type="hidden" id="poll-election-title-uz" value="Удирдах зөвлөлийн гишүүдийн сонгууль">
               <div class="form-group">
-                <label>Хэдэн хүн сонгож болох вэ?</label>
+                <label>Өгөх саналын тоо:</label>
                 <input type="number" id="poll-election-max-uz" value="1" min="1" style="width:120px">
               </div>
               <div class="flex-between mb-16">
@@ -1205,7 +1205,7 @@
               <div style="font-weight:600;font-size:14px;margin-bottom:14px">Хяналтын зөвлөлийн гишүүдийн сонгууль</div>
               <input type="hidden" id="poll-election-title-hz" value="Хяналтын зөвлөлийн гишүүдийн сонгууль">
               <div class="form-group">
-                <label>Хэдэн хүн сонгож болох вэ?</label>
+                <label>Өгөх саналын тоо:</label>
                 <input type="number" id="poll-election-max-hz" value="1" min="1" style="width:120px">
               </div>
               <div class="flex-between mb-16">
@@ -1215,7 +1215,7 @@
               <div id="poll-candidates-list-hz"></div>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">"Аль нь ч биш" сонголт автоматаар нэмэгдэнэ. Нэр дэвшигчдийн тоо баганад тэнцүү байх албагүй.</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">"Аль нь ч биш" сонголт автоматаар нэмэгдэнэ.</div>
         </div>
 
         <input type="hidden" id="poll-editing-id" value="">
@@ -4645,7 +4645,7 @@ async function toggleUserActive(userId, active) {
 
 
 // ============================================================
-// САНАЛ ХУРААЛТ
+// СОНГУУЛЬ, САНАЛ АСУУЛГА
 // ============================================================
 
 let pollsList = [];
@@ -4729,7 +4729,7 @@ function openCreatePoll() {
   renderCandidatesList('hz');
 }
 
-// Засварлах горимд ноорог санал хураалтыг ачаалах
+// Засварлах горимд ноорог ачаалах
 async function openEditPoll(pollId) {
   const poll = pollsList.find(p=>p.id===pollId);
   if(!poll) return;
