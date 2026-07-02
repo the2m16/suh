@@ -682,6 +682,7 @@
                 <th style="width:110px;white-space:nowrap">ГЭРЭЭ №</th>
                 <th style="width:95px;white-space:nowrap">ГЭРЭЭ ЭХЛЭХ</th>
                 <th style="width:95px;white-space:nowrap">ГЭРЭЭ ДУУСАХ</th>
+                <th style="min-width:200px;white-space:nowrap">ТЭМДЭГЛЭЛ</th>
                 <th style="width:120px;white-space:nowrap;text-align:right">НИЙТ ЗАРЛАГА</th>
                 <th style="width:70px;white-space:nowrap">ҮЙЛДЭЛ</th>
               </tr>
@@ -1606,6 +1607,10 @@
           <input type="date" id="clientele-contract-end">
         </div>
       </div>
+      <div class="form-group">
+        <label>Тэмдэглэл</label>
+        <textarea id="clientele-note" placeholder="Нэмэлт мэдээлэл, холбоос гэх мэт..."></textarea>
+      </div>
       <input type="hidden" id="clientele-id">
     </div>
     <div class="modal-footer">
@@ -2171,7 +2176,8 @@ async function db_loadClientele() {
   clientele = data.map(c=>({
     id:c.id, dbId:c.id, legalName:c.legal_name||'', regNo:c.reg_no||'',
     ceo:c.ceo||'', mobile:c.mobile||'', phone:c.phone||'', email:c.email||'',
-    contractNo:c.contract_no||'', contractStart:c.contract_start||'', contractEnd:c.contract_end||''
+    contractNo:c.contract_no||'', contractStart:c.contract_start||'', contractEnd:c.contract_end||'',
+    note:c.note||''
   }));
 }
 
@@ -2179,7 +2185,8 @@ async function db_saveClientele(c) {
   const row = {
     legal_name:c.legalName, reg_no:c.regNo, ceo:c.ceo,
     mobile:c.mobile, phone:c.phone, email:c.email,
-    contract_no:c.contractNo, contract_start:c.contractStart||null, contract_end:c.contractEnd||null
+    contract_no:c.contractNo, contract_start:c.contractStart||null, contract_end:c.contractEnd||null,
+    note:c.note||null
   };
   if(c.id && c.dbId) {
     const {data, error} = await sb.from('clientele').update(row).eq('id',c.dbId).select();
@@ -3242,9 +3249,10 @@ function renderClientele(filter='') {
       ||(c.mobile||'').includes(q)
       ||(c.phone||'').includes(q)
       ||(c.email||'').toLowerCase().includes(q)
-      ||(c.contractNo||'').toLowerCase().includes(q);
+      ||(c.contractNo||'').toLowerCase().includes(q)
+      ||(c.note||'').toLowerCase().includes(q);
   }) : clientele;
-  if(!list.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text-muted)">Харилцагч олдсонгvй</td></tr>';return;}
+  if(!list.length){body.innerHTML='<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-muted)">Харилцагч олдсонгvй</td></tr>';return;}
   body.innerHTML = list.map(c => {
     const totalPaid = transactions.filter(t=>t&&t.clienteleId===c.id&&t.type==='expense').reduce((s,t)=>s+t.amount,0);
     return `
@@ -3258,6 +3266,7 @@ function renderClientele(filter='') {
       <td style="font-size:11.5px;color:var(--text-dim)">${c.contractNo||'—'}</td>
       <td style="font-size:11.5px;color:var(--text-muted)">${c.contractStart||'—'}</td>
       <td style="font-size:11.5px;color:var(--text-muted)">${c.contractEnd||'—'}</td>
+      <td style="font-size:11px;color:var(--text-dim);max-width:220px;white-space:normal">${c.note||'—'}</td>
       <td style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:${totalPaid?'var(--text)':'var(--text-muted)'}">${totalPaid?fmtMoney(totalPaid):'—'}</td>
       <td><div class="flex gap-8">
         ${canEditC?`<button class="btn btn-ghost btn-sm" onclick="editClientele(${c.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
@@ -3277,7 +3286,7 @@ function openAddClientele() {
   if(!canWrite('clientele')) { toast('Танд энэ vйлдлийг хийх эрх байхгvй байна','error'); return; }
   editingClienteleId = null;
   document.getElementById('modal-clientele-title').textContent = 'Харилцагч нэмэх';
-  ['clientele-legal-name','clientele-reg-no','clientele-ceo','clientele-mobile','clientele-phone','clientele-email','clientele-contract-no','clientele-contract-start','clientele-contract-end'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['clientele-legal-name','clientele-reg-no','clientele-ceo','clientele-mobile','clientele-phone','clientele-email','clientele-contract-no','clientele-contract-start','clientele-contract-end','clientele-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   openModal('modal-clientele');
 }
 
@@ -3295,6 +3304,7 @@ function editClientele(id) {
   document.getElementById('clientele-contract-no').value = c.contractNo||'';
   document.getElementById('clientele-contract-start').value = c.contractStart||'';
   document.getElementById('clientele-contract-end').value = c.contractEnd||'';
+  document.getElementById('clientele-note').value = c.note||'';
   openModal('modal-clientele');
 }
 
@@ -3313,7 +3323,8 @@ async function saveClientele() {
     email: document.getElementById('clientele-email').value.trim(),
     contractNo: document.getElementById('clientele-contract-no').value.trim(),
     contractStart: document.getElementById('clientele-contract-start').value,
-    contractEnd: document.getElementById('clientele-contract-end').value
+    contractEnd: document.getElementById('clientele-contract-end').value,
+    note: document.getElementById('clientele-note').value.trim()
   };
   const ok = await db_saveClientele(data);
   if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ vйлдэл хийх эрх байхгvй байж болзошгvй','error'); return; }
