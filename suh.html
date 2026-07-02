@@ -321,8 +321,22 @@
   .font-mono { font-variant-numeric: tabular-nums; }
   .resident-suggestion-item:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); }
   .resident-suggestion-item:last-child { border-bottom: none !important; }
+
+  /* ==== ХЭВЛЭХ (зөвхөн идэвхтэй хуудасны хvснэгтийг хэвлэнэ) ==== */
+  @media print {
+    body * { visibility: hidden; }
+    .page.active, .page.active * { visibility: visible; }
+    .page.active { position: absolute; left: 0; top: 0; width: 100%; }
+    .no-print, .no-print * { display: none !important; }
+    .btn { display: none !important; }
+    .page.active table { color: #000 !important; }
+    .page.active th, .page.active td { color: #000 !important; border-color: #ccc !important; }
+    .page.active .card { background: #fff !important; border: none !important; }
+    body { background: #fff !important; }
+  }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -387,6 +401,9 @@
     </div>
     <div class="nav-item" id="nav-page-business" onclick="showPage('business')">
       <span>Аж ахуйн нэгжийн бүртгэл</span>
+    </div>
+    <div class="nav-item" id="nav-page-clientele" onclick="showPage('clientele')">
+      <span>Харилцагчийн бүртгэл</span>
     </div>
     <div class="nav-item" id="nav-page-finance" onclick="showPage('finance')">
       <span>Санхүүгийн бүртгэл</span>
@@ -552,15 +569,14 @@
 
     <!-- RESIDENTS -->
     <div class="page" id="page-residents">
-      <div class="flex-between mb-16">
+      <div class="flex-between mb-16 no-print">
         <div class="search-wrap" style="width:220px">
           <span class="search-icon">🔍</span>
           <input type="text" id="resident-search" placeholder="Хайх..." oninput="filterResidents()">
         </div>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV экспорт">Экспорт</button>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('csv-import-input').click()" title="CSV импорт">Импорт</button>
-          <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(event)">
+          <button class="btn btn-outline btn-sm" onclick="printCurrentPage()" title="Хэвлэх">Хэвлэх</button>
+          <button class="btn btn-outline btn-sm" onclick="exportTableToXlsx('residents-main-table','Сууц_өмчлөгчид.xlsx')" title="Excel экспорт">Экспорт</button>
           <button class="btn btn-primary btn-sm" id="add-resident-btn" onclick="openAddResident()">+ Сууц өмчлөгч нэмэх</button>
         </div>
       </div>
@@ -600,13 +616,14 @@
 
     <!-- BUSINESS -->
     <div class="page" id="page-business">
-      <div class="flex-between mb-16">
+      <div class="flex-between mb-16 no-print">
         <div class="search-wrap" style="width:220px">
           <span class="search-icon">🔍</span>
           <input type="text" id="business-search" placeholder="Хайх..." oninput="filterBusinesses()">
         </div>
         <div class="flex gap-8">
-          <button class="btn btn-outline btn-sm" onclick="exportBusinessCSV()">Татах</button>
+          <button class="btn btn-outline btn-sm" onclick="printCurrentPage()" title="Хэвлэх">Хэвлэх</button>
+          <button class="btn btn-outline btn-sm" onclick="exportTableToXlsx('business-main-table','Аж_ахуйн_нэгж.xlsx')" title="Excel экспорт">Экспорт</button>
           <button class="btn btn-primary btn-sm" id="add-business-btn" onclick="openAddBusiness()">+ Аж ахуйн нэгж нэмэх</button>
         </div>
       </div>
@@ -635,6 +652,44 @@
           </table>
         </div>
         <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)" id="business-stat"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTELE -->
+    <div class="page" id="page-clientele">
+      <div class="flex-between mb-16 no-print">
+        <div class="search-wrap" style="width:220px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="clientele-search" placeholder="Хайх..." oninput="filterClientele()">
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="printCurrentPage()" title="Хэвлэх">Хэвлэх</button>
+          <button class="btn btn-outline btn-sm" onclick="exportTableToXlsx('clientele-main-table','Харилцагчид.xlsx')" title="Excel экспорт">Экспорт</button>
+          <button class="btn btn-primary btn-sm" id="add-clientele-btn" onclick="openAddClientele()">+ Харилцагч нэмэх</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table id="clientele-main-table" style="min-width:1200px">
+            <thead>
+              <tr style="background:rgba(11,26,46,0.8)">
+                <th style="min-width:200px;white-space:nowrap">ХУУЛИЙН ЭТГЭЭДИЙН НЭР</th>
+                <th style="width:100px;white-space:nowrap">ГЭРЧИЛГЭЭ №</th>
+                <th style="min-width:150px;white-space:nowrap">ГҮЙЦЭТГЭХ УДИРДЛАГА</th>
+                <th style="width:100px;white-space:nowrap">ГАР УТАС</th>
+                <th style="width:100px;white-space:nowrap">УТАС</th>
+                <th style="width:160px;white-space:nowrap">МЭЙЛ</th>
+                <th style="width:110px;white-space:nowrap">ГЭРЭЭ №</th>
+                <th style="width:95px;white-space:nowrap">ГЭРЭЭ ЭХЛЭХ</th>
+                <th style="width:95px;white-space:nowrap">ГЭРЭЭ ДУУСАХ</th>
+                <th style="width:120px;white-space:nowrap;text-align:right">НИЙТ ЗАРЛАГА</th>
+                <th style="width:70px;white-space:nowrap">ҮЙЛДЭЛ</th>
+              </tr>
+            </thead>
+            <tbody id="clientele-table-body"></tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)" id="clientele-stat"></div>
       </div>
     </div>
 
@@ -1499,6 +1554,67 @@
   </div>
 </div>
 
+<!-- Clientele Modal -->
+<div class="modal-overlay" id="modal-clientele">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-clientele-title">Харилцагч нэмэх</span>
+      <button class="modal-close" onclick="closeModal('modal-clientele')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:78vh;overflow-y:auto">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Хуулийн этгээдийн нэр</label>
+          <input type="text" id="clientele-legal-name" placeholder="ХХК, ХК, ТББ...">
+        </div>
+        <div class="form-group">
+          <label>Гэрчилгээ №</label>
+          <input type="text" id="clientele-reg-no" placeholder="1234567">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Гүйцэтгэх удирдлага</label>
+        <input type="text" id="clientele-ceo" placeholder="Овог Нэр">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Гар утас</label>
+          <input type="tel" id="clientele-mobile" placeholder="99001234">
+        </div>
+        <div class="form-group">
+          <label>Утас</label>
+          <input type="tel" id="clientele-phone" placeholder="70001234">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Мэйл</label>
+        <input type="email" id="clientele-email" placeholder="info@company.mn">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Гэрээ №</label>
+          <input type="text" id="clientele-contract-no" placeholder="СӨХ-2026-001">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Гэрээ эхлэх</label>
+          <input type="date" id="clientele-contract-start">
+        </div>
+        <div class="form-group">
+          <label>Гэрээ дуусах</label>
+          <input type="date" id="clientele-contract-end">
+        </div>
+      </div>
+      <input type="hidden" id="clientele-id">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-clientele')">Болих</button>
+      <button class="btn btn-primary" onclick="saveClientele()">Хадгалах</button>
+    </div>
+  </div>
+</div>
+
 <!-- Payment Modal -->
 <div class="modal-overlay" id="modal-payment">
   <div class="modal" style="width:540px">
@@ -1684,6 +1800,10 @@
       <div class="form-group">
         <label>Тайлбар</label>
         <input type="text" id="exp-desc" placeholder="Тайлбар...">
+      </div>
+      <div class="form-group" id="exp-clientele-group" style="display:none">
+        <label>Харилцагч (сонголт)</label>
+        <select id="exp-clientele"><option value="">— Сонгохгvй —</option></select>
       </div>
     </div>
     <div class="modal-footer">
@@ -2043,10 +2163,47 @@ async function db_saveBusiness(b) {
   }
 }
 
+// --- CLIENTELE (Харилцагчийн бvртгэл) ---
+async function db_loadClientele() {
+  const {data,error} = await sb.from('clientele').select('*').order('id');
+  if(error){console.error('clientele load error:', JSON.stringify(error), error.message);return;}
+  if(!data){console.error('clientele: data null');return;}
+  clientele = data.map(c=>({
+    id:c.id, dbId:c.id, legalName:c.legal_name||'', regNo:c.reg_no||'',
+    ceo:c.ceo||'', mobile:c.mobile||'', phone:c.phone||'', email:c.email||'',
+    contractNo:c.contract_no||'', contractStart:c.contract_start||'', contractEnd:c.contract_end||''
+  }));
+}
+
+async function db_saveClientele(c) {
+  const row = {
+    legal_name:c.legalName, reg_no:c.regNo, ceo:c.ceo,
+    mobile:c.mobile, phone:c.phone, email:c.email,
+    contract_no:c.contractNo, contract_start:c.contractStart||null, contract_end:c.contractEnd||null
+  };
+  if(c.id && c.dbId) {
+    const {data, error} = await sb.from('clientele').update(row).eq('id',c.dbId).select();
+    if(error) { console.error('clientele update error:',error.message); return false; }
+    if(!data || data.length === 0) { console.warn('clientele update: 0 мөр — эрхгvй байж болзошгvй'); return false; }
+    return true;
+  } else {
+    const {data,error} = await sb.from('clientele').insert(row).select().single();
+    if(error){console.error('clientele insert error:',error.message); return false;}
+    if(data) c.dbId = data.id;
+    return true;
+  }
+}
+
 async function db_deleteBusiness(id) {
   const {data, error} = await sb.from('businesses').delete().eq('id',id).select();
   if(error) { console.error('business delete error:',error); throw error; }
   if(!data || data.length === 0) { throw new Error('Устгах эрхгүй байна — таны рольд энэ үйлдэл хориотой'); }
+}
+
+async function db_deleteClientele(id) {
+  const {data, error} = await sb.from('clientele').delete().eq('id',id).select();
+  if(error) { console.error('clientele delete error:',error); throw error; }
+  if(!data || data.length === 0) { throw new Error('Устгах эрхгvй байна — таны рольд энэ vйлдэл хориотой'); }
 }
 
 // --- TRANSACTIONS ---
@@ -2058,7 +2215,7 @@ async function db_loadTransactions() {
     id:t.id, apt:t.apt, aptId:t.resident_id, desc:t.description||'',
     subcat:t.subcat||'', type:t.type, amount:+t.amount, method:t.method||'',
     ref:t.ref||'', month:t.month, year:t.year, date:t.date||'',
-    status:t.status||'completed', category:t.category||''
+    status:t.status||'completed', category:t.category||'', clienteleId:t.clientele_id||null
   }));
 }
 
@@ -2069,7 +2226,7 @@ async function db_saveTransaction(t) {
     description:t.description||t.desc||'',
     subcat:t.subcat, type:t.type, amount:t.amount, method:t.method,
     ref:t.ref, month:t.month, year:t.year, date:t.date,
-    status:t.status, category:t.category
+    status:t.status, category:t.category, clientele_id:t.clienteleId||null
   };
   const {data,error} = await sb.from('transactions').insert(row).select().single();
   if(error){console.error('transaction insert error:',error); return false;}
@@ -2126,6 +2283,7 @@ async function db_init() {
     await Promise.all([
       db_loadResidents(),
       db_loadBusinesses(),
+      db_loadClientele(),
       db_loadTransactions(),
       db_loadSettings(),
       db_loadNotifications()
@@ -2316,13 +2474,14 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгжийн бүртгэл',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
+  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгжийн бүртгэл',clientele:'Харилцагчийн бүртгэл',finance:'Санхүүгийн бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоотуудын зураглал',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Байрны тохиргоо',auth_levels:'Auth Level Settings',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
   document.getElementById('page-title').textContent = navMap[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   if(name==='dashboard') refreshDashboard();
   if(name==='residents') renderResidents();
   if(name==='business') renderBusinesses();
+  if(name==='clientele') renderClientele();
   if(name==='finance') { renderIncomeTable(); calcFeePreview(); }
   if(name==='payments') renderPaymentsTable('completed');
   if(name==='apartments') { renderBuildingTabs(); renderAptGrid(selectedBuilding); }
@@ -2522,131 +2681,6 @@ function renderResidents(filter='') {
 }
 
 function filterResidents(){renderResidents(document.getElementById('resident-search').value.toLowerCase());}
-
-// ============================================================
-// CSV EXPORT / IMPORT
-// ============================================================
-function exportCSV() {
-  // Supabase-ийн бүх багана — id хасаад
-  const headers=[
-    'building','floor','door','apt',
-    'firstname','lastname','reg','oeubd','own_date',
-    'phones','emails','people','child1','child2',
-    'parkings','storages','vehicles'
-  ];
-  const rows=residents.filter(Boolean).map(r=>[
-    r.building, r.floor, r.door, r.apt||'',
-    r.firstname||'', r.lastname||'',
-    r.reg||'', r.oeubd||'', r.ownDate||'',
-    JSON.stringify(r.phones||[]),
-    JSON.stringify(r.emails||[]),
-    r.people||1, r.child1||0, r.child2||0,
-    JSON.stringify(r.parkings||[]),
-    JSON.stringify(r.storages||[]),
-    JSON.stringify(r.vehicles||[])
-  ]);
-  function csvCell(v){return '"'+String(v==null?'':' '+v).trim().replace(/"/g,'""')+'"';}
-  const csv=[headers.map(h=>'"'+h+'"').join(','),...rows.map(r=>r.map(csvCell).join(','))].join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='residents_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
-  toast(residents.filter(Boolean).length+' өмчлөгчийн мэдээлэл экспортлогдлоо ✓','success');
-}
-function importCSV(event) {
-  const file=event.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    try {
-      const text = e.target.result.replace(/^\uFEFF/,'').replace(/\r/g,'');
-      const lines = text.split('\n').filter(Boolean);
-      if(lines.length<2){toast('CSV хоосон байна','error');return;}
-
-      // Header мөрийг уншиж багануудын индексийг тогтоох
-      function parseRow(line){
-        const cols=[]; let cur='', inQ=false;
-        for(let i=0;i<line.length;i++){
-          const c=line[i];
-          if(c==='"'&&!inQ){inQ=true;}
-          else if(c==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
-          else if(c==='"'&&inQ){inQ=false;}
-          else if(c===','&&!inQ){cols.push(cur);cur='';}
-          else{cur+=c;}
-        }
-        cols.push(cur);
-        return cols.map(c=>c.trim());
-      }
-
-      const headers = parseRow(lines[0]);
-      const idx = {};
-      headers.forEach((h,i)=>idx[h.replace(/^"|"$/g,'')]=i);
-
-      function col(row,name){const v=row[idx[name]];return v===undefined?'':v;}
-      function parseArr(v){
-        try{const a=JSON.parse(v);return Array.isArray(a)?a:[];}
-        catch{return v?v.split(';').filter(Boolean):[];}
-      }
-      function parseStorages(v){
-        try{const a=JSON.parse(v);return Array.isArray(a)?a:[];}
-        catch{return v?v.split(';').filter(Boolean).map(s=>{const[num,sqm]=s.split(':');return{num:num||'',sqm:sqm||''};}):[]; }
-      }
-
-      let added=0, skipped=0;
-      for(const line of lines.slice(1)){
-        const row=parseRow(line);
-        const building=+col(row,'building');
-        const floor=+col(row,'floor');
-        const door=+col(row,'door');
-        const firstname=(col(row,'firstname')||'').trim();
-        const lastname=(col(row,'lastname')||'').trim();
-        if(!building||!floor||!door||!firstname){skipped++;continue;}
-        const aptId=col(row,'apt')||makeAptId(building,floor,door);
-        if(residents.some(r=>r&&r.apt===aptId)){skipped++;continue;}
-
-        const phones=parseArr(col(row,'phones'));
-        const emails=parseArr(col(row,'emails'));
-        const parkings=parseArr(col(row,'parkings'));
-        const storages=parseStorages(col(row,'storages'));
-        const vehicles=parseArr(col(row,'vehicles'));
-
-        const data={
-          building,floor,door,apt:aptId,
-          firstname,lastname,
-          reg:col(row,'reg'),
-          oeubd:col(row,'oeubd'),
-          ownDate:col(row,'own_date'),
-          phones,emails,
-          phone:phones[0]||'',email:emails[0]||'',
-          people:+col(row,'people')||1,
-          child1:+col(row,'child1')||0,
-          child2:+col(row,'child2')||0,
-          parkings,storages,vehicles
-        };
-
-        // Supabase-д хадгалах
-        const {data:saved,error}=await sb.from('residents').insert({
-          building:data.building,floor:data.floor,door:data.door,apt:data.apt,
-          firstname:data.firstname,lastname:data.lastname,
-          reg:data.reg,oeubd:data.oeubd,own_date:data.ownDate,
-          phones:data.phones,emails:data.emails,
-          people:data.people,child1:data.child1,child2:data.child2,
-          parkings:data.parkings,storages:data.storages,vehicles:data.vehicles
-        }).select().single();
-
-        if(error){console.error('import insert error:',error.message);skipped++;continue;}
-        residents.push({id:nextId++,dbId:saved.id,...data});
-        added++;
-      }
-
-      renderResidents();updateSidebarCount();
-      toast(`${added} өмчлөгч импортлогдлоо${skipped?' ('+skipped+' алгасав)':''}  ✓`,'success');
-    } catch(err){
-      console.error('importCSV error:',err);
-      toast('Импортод алдаа гарлаа: '+err.message,'error');
-    }
-    event.target.value='';
-  };
-  reader.readAsText(file,'UTF-8');
-}
 
 // ============================================================
 // STORAGE / PARKING / MULTI-INPUT HELPERS
@@ -2952,6 +2986,8 @@ let businesses = [
   {id:210,name:'CU Convenience Store',regno:'3312045',type:'tenant',ceo:'Б.Баярсайхан',mobile:'77330101',phone:'',email:'',contract:'СӨХ-2026-002',start:'2026/01/01',end:'2028/01/01',note:'24 цагийн дэлгүүр'},
 ];
 
+let clientele = []; // Харилцагчийн бvртгэл — зөвхөн DB-ээс ачаална, demo fallback хэрэггvй
+
 // ============================================================
 // АЖ АХУЙН НЭГЖ
 // ============================================================
@@ -3191,13 +3227,119 @@ async function deleteBusiness(id) {
   toast('Устгагдлаа','success');
 }
 
-function exportBusinessCSV() {
-  const headers=['Нэр','Гэрчилгээ','Төрөл','ГУ овог нэр','Гар утас','Утас','И-мэйл','Гэрээний №','Эхлэх','Дуусах','Тэмдэглэл'];
-  const rows=businesses.map(b=>[b.name,b.regno,b.type==='owner'?'Сууц өмчлөгч':'Түрээслэгч',b.ceo,b.mobile,b.phone,b.email,b.contract,b.start,b.end,b.note]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='aaj_ahuiin_negj_'+todayStr().replace(/\//g,'-')+'.csv';a.click();
-  toast('Татагдлаа','success');
+// ============================================================
+// ХАРИЛЦАГЧИЙН БҮРТГЭЛ
+// ============================================================
+function renderClientele(filter='') {
+  const body = document.getElementById('clientele-table-body');
+  if(!body) return;
+  const canEditC = canWrite('clientele'), canDelC = canDelete('clientele');
+  const list = filter ? clientele.filter(c=>{
+    const q=filter;
+    return (c.legalName||'').toLowerCase().includes(q)
+      ||(c.regNo||'').includes(q)
+      ||(c.ceo||'').toLowerCase().includes(q)
+      ||(c.mobile||'').includes(q)
+      ||(c.phone||'').includes(q)
+      ||(c.email||'').toLowerCase().includes(q)
+      ||(c.contractNo||'').toLowerCase().includes(q);
+  }) : clientele;
+  if(!list.length){body.innerHTML='<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text-muted)">Харилцагч олдсонгvй</td></tr>';return;}
+  body.innerHTML = list.map(c => {
+    const totalPaid = transactions.filter(t=>t&&t.clienteleId===c.id&&t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    return `
+    <tr>
+      <td><strong style="font-size:12.5px;font-weight:600">${c.legalName}</strong></td>
+      <td style="color:var(--text-dim);font-size:12px;font-variant-numeric:tabular-nums">${c.regNo||'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:rgba(59,130,246,0.15);color:#60A5FA;flex-shrink:0">${(c.ceo||'?')[0]}</div><span style="font-size:12.5px;font-weight:600">${c.ceo||'—'}</span></div></td>
+      <td style="font-size:11.5px;color:var(--text-dim);font-variant-numeric:tabular-nums">${c.mobile||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-dim);font-variant-numeric:tabular-nums">${c.phone||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-dim)">${c.email||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-dim)">${c.contractNo||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-muted)">${c.contractStart||'—'}</td>
+      <td style="font-size:11.5px;color:var(--text-muted)">${c.contractEnd||'—'}</td>
+      <td style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;color:${totalPaid?'var(--text)':'var(--text-muted)'}">${totalPaid?fmtMoney(totalPaid):'—'}</td>
+      <td><div class="flex gap-8">
+        ${canEditC?`<button class="btn btn-ghost btn-sm" onclick="editClientele(${c.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--text-muted)" title="Засах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 1 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
+        ${canDelC?`<button class="btn btn-ghost btn-sm" onclick="deleteClientele(${c.id})" style="padding:4px;display:inline-flex;align-items:center;color:var(--danger)" title="Устгах"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>`:''}
+        ${!canEditC&&!canDelC?'<span style="color:var(--text-muted);font-size:11px">—</span>':''}
+      </div></td>
+    </tr>`;}).join('');
+  const stat = document.getElementById('clientele-stat');
+  if(stat) stat.textContent = `Нийт: ${list.length} харилцагч`;
+}
+
+function filterClientele(){const q=(document.getElementById('clientele-search')?.value||'').toLowerCase();renderClientele(q);}
+
+let editingClienteleId = null;
+
+function openAddClientele() {
+  if(!canWrite('clientele')) { toast('Танд энэ vйлдлийг хийх эрх байхгvй байна','error'); return; }
+  editingClienteleId = null;
+  document.getElementById('modal-clientele-title').textContent = 'Харилцагч нэмэх';
+  ['clientele-legal-name','clientele-reg-no','clientele-ceo','clientele-mobile','clientele-phone','clientele-email','clientele-contract-no','clientele-contract-start','clientele-contract-end'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  openModal('modal-clientele');
+}
+
+function editClientele(id) {
+  if(!canWrite('clientele')) { toast('Танд энэ vйлдлийг хийх эрх байхгvй байна','error'); return; }
+  const c = clientele.find(x=>x.id===id); if(!c) return;
+  editingClienteleId = id;
+  document.getElementById('modal-clientele-title').textContent = 'Харилцагч засах';
+  document.getElementById('clientele-legal-name').value = c.legalName||'';
+  document.getElementById('clientele-reg-no').value = c.regNo||'';
+  document.getElementById('clientele-ceo').value = c.ceo||'';
+  document.getElementById('clientele-mobile').value = c.mobile||'';
+  document.getElementById('clientele-phone').value = c.phone||'';
+  document.getElementById('clientele-email').value = c.email||'';
+  document.getElementById('clientele-contract-no').value = c.contractNo||'';
+  document.getElementById('clientele-contract-start').value = c.contractStart||'';
+  document.getElementById('clientele-contract-end').value = c.contractEnd||'';
+  openModal('modal-clientele');
+}
+
+async function saveClientele() {
+  const legalName = document.getElementById('clientele-legal-name').value.trim();
+  if(!legalName){toast('Хуулийн этгээдийн нэрийг оруулна уу','error');return;}
+  const _editing = editingClienteleId ? clientele.find(c=>c.id===editingClienteleId) : null;
+  const data = {
+    id: _editing?.id || null,
+    dbId: _editing?.dbId || null,
+    legalName,
+    regNo: document.getElementById('clientele-reg-no').value.trim(),
+    ceo: document.getElementById('clientele-ceo').value.trim(),
+    mobile: document.getElementById('clientele-mobile').value.trim(),
+    phone: document.getElementById('clientele-phone').value.trim(),
+    email: document.getElementById('clientele-email').value.trim(),
+    contractNo: document.getElementById('clientele-contract-no').value.trim(),
+    contractStart: document.getElementById('clientele-contract-start').value,
+    contractEnd: document.getElementById('clientele-contract-end').value
+  };
+  const ok = await db_saveClientele(data);
+  if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ vйлдэл хийх эрх байхгvй байж болзошгvй','error'); return; }
+  if(editingClienteleId) {
+    const idx = clientele.findIndex(c=>c.id===editingClienteleId);
+    if(idx>=0) clientele[idx] = {...clientele[idx], ...data};
+    toast('Мэдээлэл шинэчлэгдлээ','success');
+  } else {
+    clientele.push({id:nextId++, ...data});
+    toast(legalName+' нэмэгдлээ','success');
+  }
+  closeModal('modal-clientele');
+  renderClientele();
+}
+
+async function deleteClientele(id) {
+  if(!confirm('Устгах уу?')) return;
+  try {
+    await db_deleteClientele(id);
+  } catch(e) {
+    toast('Устгахад эрхгvй байна эсвэл алдаа гарлаа: ' + e.message, 'error');
+    return;
+  }
+  clientele = clientele.filter(c=>c.id!==id);
+  renderClientele();
+  toast('Устгагдлаа','success');
 }
 
 function calcRentPreview() {
@@ -3652,6 +3794,9 @@ function openAddExpense(){
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-desc').value='';
   document.getElementById('exp-date').value=todayStr();
+  populateClienteleSelect();
+  document.getElementById('exp-clientele-group').style.display='block';
+  document.getElementById('exp-clientele').value='';
   openModal('modal-expense');
 }
 
@@ -3662,8 +3807,17 @@ function openAddIncome(){
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-desc').value='';
   document.getElementById('exp-date').value=todayStr();
+  document.getElementById('exp-clientele-group').style.display='none';
   openModal('modal-expense');
 }
+
+function populateClienteleSelect() {
+  const sel = document.getElementById('exp-clientele');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Сонгохгvй —</option>' +
+    clientele.map(c=>`<option value="${c.id}">${c.legalName}</option>`).join('');
+}
+
 async function saveExpense(){
   const amount=+document.getElementById('exp-amount').value;
   const subcat=document.getElementById('exp-category').value;
@@ -3674,12 +3828,14 @@ async function saveExpense(){
   const parts=dateRaw.replace(/\//g,'-').split('-');
   const month=+parts[1]||1; const year=+parts[0]||2026;
   const dateOut=parts[0]+'/'+String(parts[1]||'01').padStart(2,'0')+'/'+String(parts[2]||'01').padStart(2,'0');
-  const newTx = {id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type};
+  const clienteleIdRaw = type==='expense' ? document.getElementById('exp-clientele')?.value : '';
+  const newTx = {id:nextId++,apt:null,desc,subcat,type,amount,method:'bank',ref:'',month,year,date:dateOut,status:'completed',category:type,clienteleId: clienteleIdRaw?+clienteleIdRaw:null};
   const ok = await db_saveTransaction(newTx);
   if(!ok) { toast('Хадгалахад алдаа гарлаа — таны рольд энэ үйлдэл хийх эрх байхгүй байж болзошгүй','error'); return; }
   transactions.push(newTx);
   closeModal('modal-expense');
   if(type==='expense')renderExpenseTable();else renderIncomeTable();
+  renderClientele();
   toast((type==='expense'?'Зарлага':'Орлого')+' нэмэгдлээ ✓','success');
 }
 
@@ -4318,7 +4474,7 @@ const AUTH_MODULES = [
   {key:'dashboard',     page:'dashboard',     label:'Хянах самбар',              actions:['view']},
   {key:'residents',     page:'residents',     label:'Сууц өмчлөгчийн бүртгэл',   actions:['view','edit','delete','print','export','copy']},
   {key:'businesses',    page:'business',      label:'Аж ахуйн нэгжийн бүртгэл',  actions:['view','edit','delete','print','export','copy']},
-  {key:'contacts',      page:null,            label:'Харилцагчийн бүртгэл',      actions:['view','edit','delete'], placeholder:true},
+  {key:'clientele',      page:'clientele',      label:'Харилцагчийн бүртгэл',      actions:['view','edit','delete']},
   {key:'transactions',  page:'finance',       label:'Санхүүгийн бүртгэл',        actions:['view','edit','delete','print','export','copy']},
   {key:'payments',      page:'payments',      label:'Төлбөр төлөлт',            actions:['view']},
   {key:'apartments',    page:'apartments',    label:'Тоотуудын зураглал',       actions:['view']},
@@ -4986,7 +5142,21 @@ async function deleteUser(userId) {
 // ============================================================
 
 
+// Ерөнхий (дахин ашиглагдах) Хэвлэх/Экспорт функцууд — идэвхтэй хуудсанд харагдаж буй (шvvгдсэн) хvснэгтийг л хэвлэнэ/экспортлоно
 function printReport() { window.print(); }
+function printCurrentPage() { window.print(); }
+
+function exportTableToXlsx(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if(!table) { toast('Хvснэгт олдсонгvй', 'error'); return; }
+  try {
+    const wb = XLSX.utils.table_to_book(table, {sheet: 'Sheet1', raw: true});
+    XLSX.writeFile(wb, filename);
+    toast('Экспорт хийгдлээ ✓', 'success');
+  } catch(e) {
+    toast('Экспортод алдаа гарлаа: '+e.message, 'error');
+  }
+}
 
 // ============================================================
 // COMMUNICATIONS
@@ -5081,7 +5251,7 @@ function updateSidebarCount() {
   if(et) et.textContent = 'Түрээслэгч байгууллага · ' + totalTenants.toLocaleString();
 
   const el2 = document.getElementById('sidebar-partner-count');
-  if(el2) el2.textContent = 'Харилцагч байгууллага · 0';
+  if(el2) el2.textContent = 'Харилцагч байгууллага · ' + clientele.length.toLocaleString();
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
