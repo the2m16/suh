@@ -4768,7 +4768,7 @@ function mvSparklineSVG(seriesArr, w, h, rows) {
   const chartH = h - axisH;
   let svg = `<line x1="4" y1="${chartH-2}" x2="${w-4}" y2="${chartH-2}" stroke="var(--border)" stroke-width="1"/>`;
   seriesArr.forEach(s=>{
-    const coords = mvComputeCoords(s.values, w, chartH, 4, 8);
+    const coords = mvComputeCoords(s.values, w, chartH, 4, 12);
     const d = mvSmoothPathFromCoords(coords);
     if(d) svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
     coords.forEach(c=>{
