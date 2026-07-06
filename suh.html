@@ -1518,13 +1518,14 @@
                 <th style="width:140px">Роль</th>
                 <th>Нэр</th>
                 <th>Мэйл</th>
+                <th style="width:90px">Онлайн</th>
                 <th style="width:110px">Хаяг</th>
                 <th style="width:90px">Төлөв</th>
                 <th style="width:100px">Үйлдэл</th>
               </tr>
             </thead>
             <tbody id="users-table-body">
-              <tr><td colspan="6" class="empty-state">Ачаалж байна...</td></tr>
+              <tr><td colspan="7" class="empty-state">Ачаалж байна...</td></tr>
             </tbody>
           </table>
         </div>
@@ -3640,10 +3641,24 @@ async function loadUserProfile() {
 // ============================================================
 let presenceChannel = null;
 
+// Тухайн хэрэглэгч (auth user id-аар) одоо онлайн эсэхийг шалгана — Хэрэглэгчийн
+// удирдлагын хүснэгтийн "Онлайн" баганад мөр бүрт ашиглагдана.
+function isUserOnline(userId) {
+  if(!presenceChannel) return false;
+  const state = presenceChannel.presenceState();
+  return !!(state[userId] && state[userId].length);
+}
+
 function startPresenceTracking() {
   if(presenceChannel || !currentUser) return; // аль хэдийн эхэлсэн бол дахин үүсгэхгүй
   presenceChannel = sb.channel('online-users', { config: { presence: { key: currentUser.id } } });
-  presenceChannel.on('presence', { event: 'sync' }, renderOnlineUsers);
+  presenceChannel.on('presence', { event: 'sync' }, () => {
+    renderOnlineUsers();
+    // "Хэрэглэгч удирдлага" хуудас нээлттэй бол мөр бүрийн "Онлайн" индикаторыг мөн live шинэчилнэ
+    if(document.getElementById('page-users')?.classList.contains('active')) {
+      renderUsersTable(document.getElementById('user-search')?.value || '');
+    }
+  });
   presenceChannel.subscribe(async (status) => {
     if(status === 'SUBSCRIBED') {
       await presenceChannel.track({
@@ -3831,7 +3846,7 @@ function renderUsersTable(filter='') {
   if(!body) return;
 
   if(!usersList.length) {
-    body.innerHTML = '<tr><td colspan="6" class="empty-state">Хэрэглэгч байхгүй</td></tr>';
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">Хэрэглэгч байхгүй</td></tr>';
     return;
   }
 
@@ -3845,11 +3860,15 @@ function renderUsersTable(filter='') {
       || addr.includes(q);
   }) : usersList;
 
-  if(!list.length){ body.innerHTML = '<tr><td colspan="6" class="empty-state">Хэрэглэгч олдсонгүй</td></tr>'; return; }
+  if(!list.length){ body.innerHTML = '<tr><td colspan="7" class="empty-state">Хэрэглэгч олдсонгүй</td></tr>'; return; }
 
   body.innerHTML = list.map(u => {
     const roleLabel = ROLE_LABELS[u.role] || u.role;
     const address = getUserAddress(u);
+    const online = isUserOnline(u.id);
+    const onlineTag = online
+      ? '<span style="display:inline-flex;align-items:center;gap:5px;color:var(--success);font-size:12px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block"></span>Онлайн</span>'
+      : '<span style="color:var(--text-muted);font-size:12px">—</span>';
     const activeTag = u.active
       ? '<span class="tag" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981">Идэвхтэй</span>'
       : '<span class="tag" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Идэвхгүй</span>';
@@ -3857,6 +3876,7 @@ function renderUsersTable(filter='') {
       <td><span class="tag">${roleLabel}</span></td>
       <td><strong>${u.full_name||'—'}</strong></td>
       <td style="color:var(--text-muted);font-size:12px">${u.email||u.id}</td>
+      <td>${onlineTag}</td>
       <td style="font-variant-numeric:tabular-nums">${address}</td>
       <td>${activeTag}</td>
       <td>
