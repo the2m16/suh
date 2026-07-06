@@ -1496,6 +1496,13 @@
 
     <!-- ХЭРЭГЛЭГЧ УДИРДЛАГА -->
     <div class="page" id="page-users">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block"></span>
+          Идэвхтэй хэрэглэгчид (live)
+        </div>
+        <div id="online-users-list"><div class="empty-state" style="padding:10px 0">Ачаалж байна...</div></div>
+      </div>
       <div class="flex-between mb-16">
         <div class="search-wrap" style="width:220px">
           <span class="search-icon">🔍</span>
@@ -2944,6 +2951,9 @@ let notifications = [
 // ============================================================
 // NAV
 // ============================================================
+// Хуудасны нэр -> Монгол гарчиг. showPage() болон Идэвхтэй хэрэглэгчдийн жагсаалт (renderOnlineUsers)
+// хоёулаа нэг эх сурвалжийг ашиглана — давхардуулахгүйн тулд эндэ нэг л газар тодорхойлов.
+const PAGE_LABELS = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгж бүртгэл',clientele:'Харилцагчийн бүртгэл',finance:'Гүйлгээний бүртгэл',assets:'Үндсэн хөрөнгө бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоот, зогсоол, агуулах',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Хаягжилт тохиргоо','tariff-settings':'Тариф тохиргоо','market-valuation':'Зах зээлийн үнэлгээ',auth_levels:'Хандалтын тохиргоо',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
 function showPage(name) {
   // Эрхийн шалгалт — эрхгүй хуудсыг нээхээс сэргийлнэ (зөвхөн nav-г нуухаас гадна)
   if(typeof canAccessPage === 'function' && !canAccessPage(name)) {
@@ -2956,8 +2966,7 @@ function showPage(name) {
   const pageEl = document.getElementById('page-'+name);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const navMap = {dashboard:'Хянах самбар',residents:'Сууц өмчлөгчийн бүртгэл',business:'Аж ахуйн нэгж бүртгэл',clientele:'Харилцагчийн бүртгэл',finance:'Гүйлгээний бүртгэл',assets:'Үндсэн хөрөнгө бүртгэл',payments:'Төлбөр төлөлт',apartments:'Тоот, зогсоол, агуулах',reports:'Тайлан гаргах',communications:'Мэдэгдэл',admin:'Хаягжилт тохиргоо','tariff-settings':'Тариф тохиргоо','market-valuation':'Зах зээлийн үнэлгээ',auth_levels:'Хандалтын тохиргоо',users:'Хэрэглэгч удирдлага',polls:'Сонгууль, санал асуулга'};
-  document.getElementById('page-title').textContent = navMap[name]||'';
+  document.getElementById('page-title').textContent = PAGE_LABELS[name]||'';
   document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'"))n.classList.add('active');});
   if(name==='dashboard') refreshDashboard();
@@ -2975,6 +2984,7 @@ function showPage(name) {
   if(name==='auth_levels') renderAuthLevelsPage();
   if(name==='users') renderUsersPage();
   if(name==='polls') renderPollsPage();
+  updatePresencePage(name);
 }
 // ============================================================
 // DASHBOARD
@@ -3601,6 +3611,7 @@ async function doLogin() {
 // Гарах
 async function doLogout() {
   if(!confirm('Системээс гарах уу?')) return;
+  if(presenceChannel) { await presenceChannel.untrack(); sb.removeChannel(presenceChannel); presenceChannel = null; }
   await sb.auth.signOut();
   currentUser = null;
   currentProfile = null;
@@ -3624,6 +3635,55 @@ async function loadUserProfile() {
   }
 }
 // Нэвтэрсний дараах үйлдэл
+// ============================================================
+// LIVE ИДЭВХТЭЙ ХЭРЭГЛЭГЧИД — Supabase Realtime Presence (DB хүснэгэл шаардахгүй)
+// ============================================================
+let presenceChannel = null;
+
+function startPresenceTracking() {
+  if(presenceChannel || !currentUser) return; // аль хэдийн эхэлсэн бол дахин үүсгэхгүй
+  presenceChannel = sb.channel('online-users', { config: { presence: { key: currentUser.id } } });
+  presenceChannel.on('presence', { event: 'sync' }, renderOnlineUsers);
+  presenceChannel.subscribe(async (status) => {
+    if(status === 'SUBSCRIBED') {
+      await presenceChannel.track({
+        full_name: currentProfile?.full_name || currentUser?.email || 'Нэргүй',
+        role: currentProfile?.role || 'vw',
+        page: 'dashboard'
+      });
+    }
+  });
+}
+
+// showPage() бүр дуудаж, тухайн хэрэглэгч аль хуудсан дээр байгааг бусдад мэдэгдэнэ
+function updatePresencePage(pageName) {
+  if(!presenceChannel) return;
+  presenceChannel.track({
+    full_name: currentProfile?.full_name || currentUser?.email || 'Нэргүй',
+    role: currentProfile?.role || 'vw',
+    page: pageName
+  });
+}
+
+// "Хэрэглэгч удирдлага" хуудсан дээрх идэвхтэй хэрэглэгчдийн жагсаалтыг live зурна
+function renderOnlineUsers() {
+  const el = document.getElementById('online-users-list');
+  if(!el || !presenceChannel) return;
+  const state = presenceChannel.presenceState();
+  const entries = Object.values(state).map(arr => arr[arr.length-1]).filter(Boolean);
+  if(!entries.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:10px 0">Одоогоор идэвхтэй хэрэглэгч алга</div>';
+    return;
+  }
+  el.innerHTML = entries.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0"></span>
+      <span style="font-weight:600;font-size:13px">${esc(p.full_name)}</span>
+      <span class="tag" style="font-size:11px">${esc(ROLE_LABELS[p.role]||p.role)}</span>
+      <span style="color:var(--text-muted);font-size:12px;margin-left:auto">${esc(PAGE_LABELS[p.page]||p.page||'—')}</span>
+    </div>`).join('');
+}
+
 async function onLoginSuccess() {
   // Login overlay нуух
   document.getElementById('login-overlay').style.display = 'none';
@@ -3642,6 +3702,7 @@ async function onLoginSuccess() {
 
   // Өгөгдөл ачаалах
   await db_init();
+  startPresenceTracking();
 }
 // Роллоор nav удирдах
 function applyNavByRole(role) {
@@ -3755,6 +3816,7 @@ function getUserAddress(u) {
   return String(r.apt);
 }
 async function renderUsersPage() {
+  renderOnlineUsers();
   const body = document.getElementById('users-table-body');
   if(!body) return;
   body.innerHTML = '<tr><td colspan="6" class="empty-state">Ачаалж байна...</td></tr>';
