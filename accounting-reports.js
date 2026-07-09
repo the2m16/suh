@@ -5,7 +5,7 @@
 // journal_lines/chart_of_accounts (Supabase)-аас дата татаж, ТЭДГЭЭРИЙГ
 // шинээр journal бичих ямар ч функцгүйгээр л тайлан болгон харуулна.
 // Гүйлгээ бичих цорын ганц зам хэвээрээ accounting-bridge.js
-// (sb.rpc('create_journal_entry',...)) байна.
+// (sb.rpc('create_journal_entry',..)) байна.
 //
 // Доорх тайлан тооцоолох логик (getTrialBalance, generateBalanceSheetFormA,
 // generateIncomeStatementFormA, generateCashFlowStatement, getLedger гэх мэт)
