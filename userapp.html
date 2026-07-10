@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>userapp</title>
+<style>
+  :root {
+    --glass-fill: rgba(255,255,255,0.14);
+    --glass-fill-dark: rgba(30,30,35,0.30);
+    --glass-border: rgba(255,255,255,0.35);
+    --glass-border-soft: rgba(255,255,255,0.18);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255,255,255,0.62);
+    --accent-orange: #FF9F45;
+    --accent-yellow: #FFC94A;
+    --accent-teal: #3FCFB4;
+    --accent-blue: #6FB6FF;
+    --tile-radius: 10px;
+    --nav-radius: 34px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(140% 90% at 50% 0%, rgba(120,150,210,0.9) 0%, rgba(150,140,190,0.55) 32%, transparent 62%),
+      linear-gradient(180deg, #6f8fbd 0%, #9b8fb0 22%, #cf9f80 48%, #e2a35c 66%, #c97f3f 84%, #8a5a35 100%);
+    color: var(--text-primary);
+    position: relative;
+  }
+
+  /* Нарны туяа мэт зөөлөн gradient давхарга — гэрэл зургийн "sun flare" дуурайлга */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at 78% 8%, rgba(255,225,180,0.55), transparent 38%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-shell {
+    position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    padding: 0 16px 110px;
+    min-height: 100vh;
+  }
+
+  /* ---------- Статус мөр (iOS дуурайлга) ---------- */
+  .status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 6px 4px; font-size: 15px; font-weight: 600;
+    color: var(--text-primary);
+  }
+  .status-icons { display: flex; align-items: center; gap: 5px; }
+  .status-icons svg { display: block; }
+
+  /* ---------- Толгой хэсэг ---------- */
+  .home-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 6px 6px 18px;
+  }
+  .home-header h1 {
+    margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.15);
+  }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border-soft);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer; transition: transform .15s ease, background .15s ease;
+  }
+  .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.22); }
+
+  /* ---------- Room section ---------- */
+  .room-section { margin-bottom: 10px; }
+  .room-title {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 700; text-transform: none;
+    color: rgba(255,255,255,0.85);
+    padding: 0 8px 10px;
+    letter-spacing: 0.01em;
+  }
+  .room-title .chev { opacity: 0.55; font-weight: 700; }
+
+  .room-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ---------- Ерөнхий Glass tile ---------- */
+  .tile {
+    position: relative;
+    border-radius: var(--tile-radius);
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border-soft);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -1px 12px rgba(255,255,255,0.03),
+      0 8px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .18s cubic-bezier(.2,.8,.3,1), background .18s ease;
+  }
+  .tile:active { transform: scale(0.965); }
+  .tile.dim { background: var(--glass-fill-dark); }
+
+  /* Том tile (2 мөр өндөр) */
+  .tile-big {
+    grid-row: span 2;
+    padding: 18px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 172px;
+  }
+  .tile-big .tile-icon-badge {
+    width: 46px; height: 46px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .tile-big .tile-metric {
+    font-size: 40px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .tile-big .tile-label { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .tile-big .tile-status { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-top: 1px; }
+
+  /* Жижиг tile stack баганад 2ш багтана */
+  .tile-stack { display: flex; flex-direction: column; gap: 10px; }
+  .tile-small {
+    padding: 13px 14px;
+    display: flex; align-items: center; gap: 11px;
+    min-height: 80px;
+  }
+  .tile-small .tile-icon-badge {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .tile-small .tile-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .tile-small .tile-label { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile-small .tile-status { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
+
+  /* Icon badge өнгөнүүд */
+  .badge-teal   { background: linear-gradient(160deg,#4be0c4,#26a68c); color: #06332b; }
+  .badge-yellow { background: linear-gradient(160deg,#ffd873,#ffb238); color: #4a3300; }
+  .badge-gray   { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.55); }
+  .badge-blue   { background: linear-gradient(160deg,#8fd0ff,#4f9ee8); color: #06233d; }
+  .badge-green  { background: linear-gradient(160deg,#7be089,#3fae57); color: #103d1a; }
+  .badge-fan    { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75); }
+
+  .metric-orange { color: var(--accent-orange); }
+  .metric-blue   { color: var(--accent-blue); }
+
+  /* ---------- Доод navigation — Glass pill, slide хийдэг индикатортой ---------- */
+  .tab-bar-wrap {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center;
+    padding: 0 16px calc(14px + env(safe-area-inset-bottom));
+    z-index: 20;
+    pointer-events: none;
+  }
+  .tab-bar {
+    pointer-events: auto;
+    position: relative;
+    display: flex;
+    width: 100%; max-width: 448px;
+    padding: 6px;
+    border-radius: var(--nav-radius);
+    background: rgba(40,35,45,0.42);
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(28px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .tab-indicator {
+    position: absolute; top: 6px; bottom: 6px; left: 6px;
+    width: calc((100% - 12px) / 3);
+    border-radius: calc(var(--nav-radius) - 6px);
+    background: rgba(255,255,255,0.16);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 10px rgba(0,0,0,0.15);
+    transition: transform .38s cubic-bezier(.22,1,.36,1);
+    z-index: 0;
+  }
+  .tab-btn {
+    position: relative; z-index: 1;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 4px 8px;
+    background: none; border: none;
+    color: rgba(255,255,255,0.55);
+    font-size: 10.5px; font-weight: 600;
+    cursor: pointer;
+    transition: color .25s ease;
+  }
+  .tab-btn svg { width: 23px; height: 23px; transition: transform .25s cubic-bezier(.2,.9,.3,1.3); }
+  .tab-btn.active { color: var(--accent-orange); }
+  .tab-btn.active svg { transform: translateY(-1px) scale(1.04); }
+  .tab-btn:active svg { transform: scale(0.88); }
+
+  @media (min-width: 540px) {
+    .app-shell { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Статус мөр -->
+  <div class="status-bar">
+
+ 
+  </div>
+
+  <!-- Толгой -->
+  <div class="home-header">
+    <h1>СӨХ</h1>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Автоматжуулалт">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Нэмэх">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Entry -->
+  <div class="room-section">
+    <div class="room-grid">
+      <div class="tile tile-big" onclick="handleGuestEntry(this)">
+        <div class="tile-icon-badge badge-teal" id="guest-entry-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">ЗОЧИН НЭВТРҮҮЛЭХ</div>
+          <div class="tile-status" id="guest-entry-status">Unlocked</div>
+        </div>
+      </div>
+      <div class="tile tile-big" onclick="handleRepairRequest(this)">
+        <div class="tile-icon-badge badge-teal" id="repair-request-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">ЗАСВАР ДУУДАХ</div>
+          <div class="tile-status" id="repair-request-status">Unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Living Room -->
+  <div class="room-section">
+    <div class="room-grid">
+      <div class="tile tile-big">
+        <div>
+          <div class="tile-metric metric-orange">68°</div>
+        </div>
+        <div>
+          <div class="tile-label">ТӨЛБӨР ТӨЛӨХ</div>
+          <div class="tile-status">Heating to 70°</div>
+        </div>
+      </div>
+      <div class="tile tile-big" onclick="handleVatReceipt(this)">
+        <div class="tile-icon-badge badge-teal" id="vat-receipt-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">НӨАТ БАРИМТ АВАХ</div>
+          <div class="tile-status" id="vat-receipt-status">Unlocked</div>
+        </div>
+      </div>
+      <div class="tile tile-small" style="grid-column:1 / -1" onclick="handleHoaActivity(this)">
+        <div class="tile-icon-badge badge-fan" id="hoa-activity-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-3 2-6 4.5-6S21 8.5 21 11s-2.5 3-4.5 1"/><path d="M12 12c-3 0-6-2-6-4.5S8.5 3 11 3s3 2.5 1 4.5"/><path d="M12 12c0 3-2 6-4.5 6S3 15.5 3 13s2.5-3 4.5-1"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div class="tile-text">
+          <div class="tile-label">СӨХ ҮЙЛ АЖИЛЛАГАА</div>
+          <div class="tile-status" id="hoa-activity-status">Off</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kitchen 1 -->
+  <div class="room-section">
+    <div class="room-grid">
+      <div class="tile tile-big">
+        <div>
+          <div class="tile-metric metric-blue">72°</div>
+        </div>
+        <div>
+          <div class="tile-label">ХОТХОНЫ м2 ҮНЭ</div>
+          <div class="tile-status">Cooling to 70°</div>
+        </div>
+      </div>
+      <div class="tile tile-big" onclick="handleStorageParking(this)">
+        <div class="tile-icon-badge badge-teal" id="storage-parking-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">АГУУЛАХ, ЗОГСООЛ</div>
+          <div class="tile-status" id="storage-parking-status">Unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kitchen 2 -->
+  <div class="room-section">
+    <div class="room-grid">
+      <div class="tile tile-big">
+        <div>
+          <div class="tile-metric metric-blue">72°</div>
+        </div>
+        <div>
+          <div class="tile-label">Thermostat</div>
+          <div class="tile-status">Cooling to 70°</div>
+        </div>
+      </div>
+      <div class="tile tile-big" onclick="handleFrontDoorKitchen2(this)">
+        <div class="tile-icon-badge badge-teal" id="frontdoor-k2-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">Front Door</div>
+          <div class="tile-status" id="frontdoor-k2-status">Unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kitchen 3 -->
+  <div class="room-section">
+    <div class="room-grid">
+      <div class="tile tile-big">
+        <div>
+          <div class="tile-metric metric-blue">72°</div>
+        </div>
+        <div>
+          <div class="tile-label">Thermostat</div>
+          <div class="tile-status">Cooling to 70°</div>
+        </div>
+      </div>
+      <div class="tile tile-big" onclick="handleFrontDoorKitchen3(this)">
+        <div class="tile-icon-badge badge-teal" id="frontdoor-k3-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        </div>
+        <div>
+          <div class="tile-label">Front Door</div>
+          <div class="tile-status" id="frontdoor-k3-status">Unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Доод Glass navigation -->
+<div class="tab-bar-wrap">
+  <nav class="tab-bar" id="tabBar">
+    <div class="tab-indicator" id="tabIndicator"></div>
+    <button class="tab-btn active" data-idx="0" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 2.5 11h2.3v9.3h6V15h2.4v5.3h6V11h2.3z"/></svg>
+      Home
+    </button>
+    <button class="tab-btn" data-idx="1" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+      Automation
+    </button>
+    <button class="tab-btn" data-idx="2" onclick="selectTab(this)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 14.6 9l7 .6-5.3 4.6 1.7 6.8L12 17.3 5.9 21l1.7-6.8L2.3 9.6l7-.6z"/></svg>
+      Discover
+    </button>
+  </nav>
+</div>
+
+<script>
+function selectTab(btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const idx = +btn.dataset.idx;
+  document.getElementById('tabIndicator').style.transform = `translateX(${idx * 100}%)`;
+}
+
+// ============================================================
+// ТОВЧ БҮР ӨӨРИЙН ТУСДАА, БИЕ ДААСАН ФУНКЦТЭЙ (ганц ерөнхий
+// dispatcher-ээр биш) — тус бүрийг тусад нь засаж, өөрчилж болно.
+// ============================================================
+
+function handleGuestEntry(el) {
+  const badge = document.getElementById('guest-entry-badge');
+  const status = document.getElementById('guest-entry-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleRepairRequest(el) {
+  const badge = document.getElementById('repair-request-badge');
+  const status = document.getElementById('repair-request-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleVatReceipt(el) {
+  const badge = document.getElementById('vat-receipt-badge');
+  const status = document.getElementById('vat-receipt-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleStorageParking(el) {
+  const badge = document.getElementById('storage-parking-badge');
+  const status = document.getElementById('storage-parking-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleFrontDoorKitchen2(el) {
+  const badge = document.getElementById('frontdoor-k2-badge');
+  const status = document.getElementById('frontdoor-k2-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleFrontDoorKitchen3(el) {
+  const badge = document.getElementById('frontdoor-k3-badge');
+  const status = document.getElementById('frontdoor-k3-status');
+  const locked = status.textContent === 'Locked';
+  status.textContent = locked ? 'Unlocked' : 'Locked';
+  badge.style.background = locked
+    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
+    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
+  badge.innerHTML = locked
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+}
+
+function handleHoaActivity(el) {
+  const badge = document.getElementById('hoa-activity-badge');
+  const status = document.getElementById('hoa-activity-status');
+  const isOff = /Off/i.test(status.textContent);
+  if (isOff) {
+    status.textContent = status.textContent.replace(/Off/i, 'On');
+    el.classList.remove('dim');
+    badge.classList.remove('badge-gray');
+    badge.classList.add('badge-yellow');
+  } else {
+    status.textContent = status.textContent.replace(/On\b/i, 'Off');
+    el.classList.add('dim');
+    badge.classList.remove('badge-yellow');
+    badge.classList.add('badge-gray');
+  }
+}
+</script>
+
+
+
+</body>
+</html>
