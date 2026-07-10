@@ -136,17 +136,12 @@
   .metric-orange { color: var(--accent-orange); }
   .metric-blue   { color: var(--accent-blue); }
 
-  /* ---------- EDIT MODE — jiggle + улаан хасах badge (iPhone маягийн) ---------- */
-  .tile-grid.edit-mode .tile { animation: jiggle 0.28s infinite; cursor: grab; }
-  .tile-grid.edit-mode .tile:nth-child(2n) { animation-delay: -0.14s; }
-  @keyframes jiggle {
-    0%, 100% { transform: rotate(-1deg); }
-    50% { transform: rotate(1deg); }
-  }
-  .tile-grid.edit-mode .tile.dragging { opacity: 0.4; animation: none; }
+  /* ---------- EDIT MODE — улаан хасах badge (iPhone маягийн), чичрэлт үгүй ---------- */
+  .tile-grid.edit-mode .tile { cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .tile-grid.edit-mode .tile.dragging { opacity: 0.55; z-index: 10; cursor: grabbing; box-shadow: 0 16px 32px rgba(0,0,0,0.35); }
 
   .delete-badge {
-    position: absolute; top: -7px; left: -7px;
+    position: absolute; top: -7px; right: -7px;
     width: 24px; height: 24px; border-radius: 50%;
     background: #eb4444;
     border: 2px solid rgba(255,255,255,0.9);
@@ -300,7 +295,7 @@
       News
     </button>
     <button class="tab-btn" data-idx="2" onclick="selectTab(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19a4 4 0 014-3h8a4 4 0 014 3"/><circle cx="12" cy="8" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </button>
   </nav>
@@ -347,7 +342,31 @@ let TILE_POOL = [
 ];
 
 let editMode = false;
-let dragSrcIdx = null;
+
+const STORAGE_KEY = 'suh_userapp_tiles_v1';
+
+// ============================================================
+// PERSISTENCE — localStorage-д ACTIVE_TILES/TILE_POOL-г хадгалж,
+// хуудас дахин нээгдэхэд хэрэглэгчийн сонголтыг сэргээнэ.
+// ============================================================
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ active: ACTIVE_TILES, pool: TILE_POOL }));
+  } catch (e) { console.warn('Хадгалахад алдаа:', e); }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data && Array.isArray(data.active) && Array.isArray(data.pool)) {
+      ACTIVE_TILES = data.active;
+      TILE_POOL = data.pool;
+      return true;
+    }
+  } catch (e) { console.warn('Ачаалахад алдаа:', e); }
+  return false;
+}
 
 // ============================================================
 // RENDER — ACTIVE_TILES массиваас бүх tile-г дахин угсарна
@@ -373,12 +392,10 @@ function renderTiles() {
         <div class="tile-icon-badge ${isOn ? 'badge-yellow' : 'badge-fan'}">${ICON_FAN}</div>
         <div class="tile-text"><div class="tile-label">${t.label}</div><div class="tile-status">${t.status}</div></div>`;
     }
-    return `<div class="tile ${sizeClass}" draggable="${editMode}"
-        data-idx="${idx}"
-        ondragstart="onDragStart(event, ${idx})" ondragover="onDragOver(event, ${idx})" ondrop="onDrop(event, ${idx})" ondragend="onDragEnd(event)"
+    return `<div class="tile ${sizeClass}"
+        data-idx="${idx}" data-tile-id="${t.id}"
         onclick="onTileClick(event, ${idx})"
-        ontouchstart="onTileTouchStart(${idx})" ontouchend="onTileTouchEnd()" ontouchmove="onTileTouchEnd()"
-        onmousedown="onTileMouseDown(${idx})" onmouseup="onTileMouseUp()" onmouseleave="onTileMouseUp()">
+        onpointerdown="onTilePointerDown(event, ${idx})">
       <span class="delete-badge" onclick="event.stopPropagation(); removeTile(${idx})">${ICON_DELETE_MINUS}</span>
       ${inner}
     </div>`;
@@ -390,33 +407,54 @@ function renderTiles() {
 // солих (lock/fan төрөлд). "metric" төрөл дарагдахгүй (өмнөх шигээ).
 // ============================================================
 function onTileClick(evt, idx) {
-  if (editMode) return; // edit mode-д ердийн click юу ч хийхгүй (зөвхөн delete-badge)
+  if (editMode) return;
   const t = ACTIVE_TILES[idx];
   if (t.type === 'lock') {
     t.status = (t.status === 'Locked') ? 'Unlocked' : 'Locked';
     renderTiles();
+    saveState();
   } else if (t.type === 'fan') {
     t.status = /On/i.test(t.status) ? 'Off' : 'On';
     renderTiles();
+    saveState();
   }
-  // 'metric' төрөл — өмнөх хувилбарт ч onclick байгаагүй тул юу ч хийхгүй
 }
 
 // ============================================================
-// LONG-PRESS → Edit mode (touch болон mouse хоёуланд)
+// LONG-PRESS → Edit mode. Pointer Events ашигласнаар touch, mouse
+// хоёуланд ЗӨВ ажиллана (native HTML5 draggable нь мобайл дээр
+// текст сонгогдоод, чирэгдэхгүй байх бодит алдаатай байсан).
 // ============================================================
 let pressTimer = null;
 const LONG_PRESS_MS = 550;
+let pointerStartPos = null;
 
-function onTileTouchStart(idx) { startPressTimer(); }
-function onTileTouchEnd() { clearPressTimer(); }
-function onTileMouseDown(idx) { startPressTimer(); }
-function onTileMouseUp() { clearPressTimer(); }
+function onTilePointerDown(evt, idx) {
+  if (evt.target.closest('.delete-badge')) return;
 
-function startPressTimer() {
+  if (editMode) {
+    startDrag(evt, idx);
+    return;
+  }
+
+  pointerStartPos = { x: evt.clientX, y: evt.clientY };
   clearPressTimer();
   pressTimer = setTimeout(() => { enterEditMode(); }, LONG_PRESS_MS);
+
+  const cancelOnMove = (e) => {
+    const dx = Math.abs(e.clientX - pointerStartPos.x);
+    const dy = Math.abs(e.clientY - pointerStartPos.y);
+    if (dx > 8 || dy > 8) clearPressTimer();
+  };
+  const cancelOnUp = () => {
+    clearPressTimer();
+    document.removeEventListener('pointermove', cancelOnMove);
+    document.removeEventListener('pointerup', cancelOnUp);
+  };
+  document.addEventListener('pointermove', cancelOnMove);
+  document.addEventListener('pointerup', cancelOnUp);
 }
+
 function clearPressTimer() {
   if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
 }
@@ -431,6 +469,7 @@ function exitEditMode() {
   editMode = false;
   document.getElementById('editDoneBar').classList.remove('show');
   renderTiles();
+  saveState();
 }
 
 // ============================================================
@@ -440,34 +479,120 @@ function removeTile(idx) {
   const [removed] = ACTIVE_TILES.splice(idx, 1);
   TILE_POOL.push(removed);
   renderTiles();
+  saveState();
 }
 
 // ============================================================
-// ЧИРЖ ЭРЭМБЭЛЭХ — native HTML5 drag-and-drop, зөвхөн edit mode-д идэвхтэй
+// ЧИРЖ ЭРЭМБЭЛЭХ — Pointer Events + FLIP animation (First-Last-
+// Invert-Play): чирж яваа tile pointer-ийг дагана, бусад tile
+// хуучин байрлалаасаа шинэ рүү SMOOTH шилжинэ (iPhone-той адил).
 // ============================================================
-function onDragStart(evt, idx) {
-  if (!editMode) { evt.preventDefault(); return; }
-  dragSrcIdx = idx;
-  evt.target.classList.add('dragging');
-  evt.dataTransfer.effectAllowed = 'move';
+let draggedIdx = null;
+let draggedEl = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+let dragNaturalRect = null;
+
+function captureRects(exceptEl) {
+  const rects = {};
+  document.querySelectorAll('.tile').forEach(el => {
+    if (el === exceptEl) return;
+    rects[el.dataset.tileId] = el.getBoundingClientRect();
+  });
+  return rects;
 }
-function onDragOver(evt, idx) {
-  if (!editMode) return;
+
+function playFlip(firstRects, exceptEl) {
+  document.querySelectorAll('.tile').forEach(el => {
+    if (el === exceptEl) return;
+    const first = firstRects[el.dataset.tileId];
+    if (!first) return;
+    const last = el.getBoundingClientRect();
+    const dx = first.left - last.left;
+    const dy = first.top - last.top;
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform 0.28s cubic-bezier(.2,.8,.3,1)';
+        el.style.transform = '';
+      });
+    }
+  });
+}
+
+function positionDraggedEl(clientX, clientY) {
+  // Байгалийн (grid дотор эзэлдэг ёстой) байрлалаасаа хэр хазайсныг
+  // transform-ээр илэрхийлнэ — position:fixed биш тул tile grid дотроо
+  // хэвээрээ үлдэж, зөвхөн ДҮРС нь хулганыг дагана.
+  const dx = (clientX - dragOffsetX) - dragNaturalRect.left;
+  const dy = (clientY - dragOffsetY) - dragNaturalRect.top;
+  draggedEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.05)`;
+}
+
+function startDrag(evt, idx) {
   evt.preventDefault();
+  draggedIdx = idx;
+  draggedEl = evt.currentTarget;
+  dragNaturalRect = draggedEl.getBoundingClientRect();
+  dragOffsetX = evt.clientX - dragNaturalRect.left;
+  dragOffsetY = evt.clientY - dragNaturalRect.top;
+
+  draggedEl.classList.add('dragging');
+  draggedEl.style.transition = 'none';
+  draggedEl.style.zIndex = '999';
+  draggedEl.style.pointerEvents = 'none';
+  positionDraggedEl(evt.clientX, evt.clientY);
+
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEndHandler);
+  document.addEventListener('pointercancel', onDragEndHandler);
 }
-function onDrop(evt, idx) {
-  if (!editMode || dragSrcIdx === null) return;
-  evt.preventDefault();
-  if (dragSrcIdx === idx) return;
-  const [moved] = ACTIVE_TILES.splice(dragSrcIdx, 1);
-  ACTIVE_TILES.splice(idx, 0, moved);
-  dragSrcIdx = null;
-  renderTiles();
+
+function onDragMove(evt) {
+  if (draggedIdx === null || !draggedEl) return;
+  positionDraggedEl(evt.clientX, evt.clientY);
+
+  const elBelow = document.elementFromPoint(evt.clientX, evt.clientY);
+  const tileBelow = elBelow ? elBelow.closest('.tile') : null;
+  if (tileBelow && tileBelow !== draggedEl) {
+    const overIdx = +tileBelow.dataset.idx;
+    if (overIdx !== draggedIdx) {
+      const firstRects = captureRects(draggedEl);
+      const [moved] = ACTIVE_TILES.splice(draggedIdx, 1);
+      ACTIVE_TILES.splice(overIdx, 0, moved);
+      draggedIdx = overIdx;
+      renderTiles();
+
+      draggedEl = document.querySelector(`[data-tile-id="${moved.id}"]`);
+      draggedEl.classList.add('dragging');
+      draggedEl.style.transition = 'none';
+      draggedEl.style.zIndex = '999';
+      draggedEl.style.pointerEvents = 'none';
+      dragNaturalRect = draggedEl.getBoundingClientRect(); // шинэ байгалийн байрлалыг дахин хэмжинэ
+      positionDraggedEl(evt.clientX, evt.clientY);
+
+      playFlip(firstRects, draggedEl);
+    }
+  }
 }
-function onDragEnd(evt) {
-  evt.target.classList.remove('dragging');
-  dragSrcIdx = null;
+
+function onDragEndHandler() {
+  if (draggedEl) {
+    const el = draggedEl;
+    el.style.transition = 'transform 0.22s cubic-bezier(.2,.8,.3,1)';
+    el.style.transform = '';
+    el.style.zIndex = '';
+    el.style.pointerEvents = '';
+    setTimeout(() => { el.classList.remove('dragging'); el.style.transition = ''; }, 230);
+  }
+  draggedIdx = null;
+  draggedEl = null;
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEndHandler);
+  document.removeEventListener('pointercancel', onDragEndHandler);
+  saveState();
 }
+
 
 // ============================================================
 // "+" НЭМЭХ MODAL — Pool-оос идэвхтэй жагсаалт руу нэмнэ
@@ -497,7 +622,9 @@ function addFromPool(idx) {
   ACTIVE_TILES.push(added);
   renderPoolList();
   renderTiles();
+  saveState();
 }
+
 
 // ============================================================
 // INBOX (Нэхэмжлэх/Мэдэгдэл/Зар) — placeholder, ирээдүйд холбоно
@@ -519,6 +646,7 @@ function selectTab(btn) {
 // ============================================================
 // ЭХЛҮҮЛЭХ
 // ============================================================
+loadState();
 renderTiles();
 </script>
 
