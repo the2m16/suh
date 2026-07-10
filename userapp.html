@@ -48,27 +48,18 @@
 
   .app-shell {
     position: relative; z-index: 1;
-    max-width: 480px; margin: 0 auto;
-    padding: 0 16px 110px;
+    max-width: 560px; margin: 0 auto;
+    padding: 0 10px 110px;
     min-height: 100vh;
   }
-
-  /* ---------- Статус мөр (iOS дуурайлга) ---------- */
-  .status-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 6px 4px; font-size: 15px; font-weight: 600;
-    color: var(--text-primary);
-  }
-  .status-icons { display: flex; align-items: center; gap: 5px; }
-  .status-icons svg { display: block; }
 
   /* ---------- Толгой хэсэг ---------- */
   .home-header {
     display: flex; align-items: flex-start; justify-content: space-between;
-    padding: 6px 6px 18px;
+    padding: 16px 6px 18px;
   }
   .home-header h1 {
-    margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em;
+    margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
     text-shadow: 0 1px 12px rgba(0,0,0,0.15);
   }
   .header-actions { display: flex; gap: 8px; }
@@ -135,7 +126,7 @@
     font-size: 40px; font-weight: 700; letter-spacing: -0.02em;
     line-height: 1;
   }
-  .tile-big .tile-label { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .tile-big .tile-label { font-size: 13px; font-weight: 700; margin-top: 2px; }
   .tile-big .tile-status { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-top: 1px; }
 
   /* Жижиг tile stack баганад 2ш багтана */
@@ -380,11 +371,11 @@
     </button>
     <button class="tab-btn" data-idx="1" onclick="selectTab(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
-      Automation
+      News
     </button>
     <button class="tab-btn" data-idx="2" onclick="selectTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 14.6 9l7 .6-5.3 4.6 1.7 6.8L12 17.3 5.9 21l1.7-6.8L2.3 9.6l7-.6z"/></svg>
-      Discover
+      Profile
     </button>
   </nav>
 </div>
