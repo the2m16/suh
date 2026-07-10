@@ -137,7 +137,8 @@
   .metric-blue   { color: var(--accent-blue); }
 
   /* ---------- EDIT MODE — улаан хасах badge (iPhone маягийн), чичрэлт үгүй ---------- */
-  .tile-grid.edit-mode .tile { cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .tile-grid.edit-mode .tile { cursor: grab; user-select: none; -webkit-user-select: none; }
+  .tile-grid.edit-mode .tile.dragging { touch-action: none; }
   .tile-grid.edit-mode .tile.dragging { opacity: 0.55; z-index: 10; cursor: grabbing; box-shadow: 0 16px 32px rgba(0,0,0,0.35); }
 
   .delete-badge {
@@ -429,11 +430,42 @@ let pressTimer = null;
 const LONG_PRESS_MS = 550;
 let pointerStartPos = null;
 
+const DRAG_COMMIT_MS = 130;   // энэ хугацаанд бараг хөдөлгөөнгүй байвал л ЧИРЭХ гэж vзнэ
+const DRAG_COMMIT_PX = 6;     // энэ зайнаас илүү хурдан шудрахад СКРОЛЛ гэж үзээд цуцална
+
 function onTilePointerDown(evt, idx) {
   if (evt.target.closest('.delete-badge')) return;
 
   if (editMode) {
-    startDrag(evt, idx);
+    // Edit mode-д ЧИРЭХ vs СКРОЛЛ ялгах: түр хугацаанд бараг хөдөлгөөнгүй
+    // байвал л drag эхэлнэ — хурдан шудрах (swipe) бол native скролл
+    // хэвээрээ үргэлжилнэ (touch-action:none-г drag баталгаажсны дараа л тавина).
+    const startX = evt.clientX, startY = evt.clientY;
+    const targetEl = evt.currentTarget;
+    let committed = false;
+
+    const commitTimer = setTimeout(() => {
+      committed = true;
+      cleanup();
+      startDrag2(targetEl, idx, startX, startY);
+    }, DRAG_COMMIT_MS);
+
+    const onMove = (e) => {
+      if (committed) return;
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      if (dx > DRAG_COMMIT_PX || dy > DRAG_COMMIT_PX) {
+        clearTimeout(commitTimer);
+        cleanup();
+      }
+    };
+    const onUp = () => { clearTimeout(commitTimer); cleanup(); };
+    function cleanup() {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
     return;
   }
 
@@ -529,19 +561,18 @@ function positionDraggedEl(clientX, clientY) {
   draggedEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.05)`;
 }
 
-function startDrag(evt, idx) {
-  evt.preventDefault();
+function startDrag2(targetEl, idx, clientX, clientY) {
   draggedIdx = idx;
-  draggedEl = evt.currentTarget;
+  draggedEl = targetEl;
   dragNaturalRect = draggedEl.getBoundingClientRect();
-  dragOffsetX = evt.clientX - dragNaturalRect.left;
-  dragOffsetY = evt.clientY - dragNaturalRect.top;
+  dragOffsetX = clientX - dragNaturalRect.left;
+  dragOffsetY = clientY - dragNaturalRect.top;
 
-  draggedEl.classList.add('dragging');
+  draggedEl.classList.add('dragging'); // .dragging нь touch-action:none-г ЭНД л, чирэх баталгаажсны дараа л идэвхжүүлнэ
   draggedEl.style.transition = 'none';
   draggedEl.style.zIndex = '999';
   draggedEl.style.pointerEvents = 'none';
-  positionDraggedEl(evt.clientX, evt.clientY);
+  positionDraggedEl(clientX, clientY);
 
   document.addEventListener('pointermove', onDragMove);
   document.addEventListener('pointerup', onDragEndHandler);
