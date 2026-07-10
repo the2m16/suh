@@ -37,7 +37,6 @@
     position: relative;
   }
 
-  /* Нарны туяа мэт зөөлөн gradient давхарга — гэрэл зургийн "sun flare" дуурайлга */
   body::before {
     content: "";
     position: fixed; inset: 0;
@@ -53,7 +52,6 @@
     min-height: 100vh;
   }
 
-  /* ---------- Толгой хэсэг ---------- */
   .home-header {
     display: flex; align-items: flex-start; justify-content: space-between;
     padding: 32px 6px 18px;
@@ -74,24 +72,14 @@
   }
   .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.22); }
 
-  /* ---------- Room section ---------- */
-  .room-section { margin-bottom: 10px; }
-  .room-title {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 13px; font-weight: 700; text-transform: none;
-    color: rgba(255,255,255,0.85);
-    padding: 0 8px 10px;
-    letter-spacing: 0.01em;
-  }
-  .room-title .chev { opacity: 0.55; font-weight: 700; }
-
-  .room-grid {
+  /* ---------- Tile grid (дата-төвтэй, JS-ээр угсарна) ---------- */
+  .tile-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row dense;
     gap: 10px;
   }
 
-  /* ---------- Ерөнхий Glass tile ---------- */
   .tile {
     position: relative;
     border-radius: var(--tile-radius);
@@ -103,14 +91,13 @@
       inset 0 1px 0 rgba(255,255,255,0.25),
       inset 0 -1px 12px rgba(255,255,255,0.03),
       0 8px 24px rgba(0,0,0,0.12);
-    overflow: hidden;
+    overflow: visible;
     cursor: pointer;
     transition: transform .18s cubic-bezier(.2,.8,.3,1), background .18s ease;
   }
   .tile:active { transform: scale(0.965); }
   .tile.dim { background: var(--glass-fill-dark); }
 
-  /* Том tile (2 мөр өндөр) */
   .tile-big {
     grid-row: span 2;
     padding: 18px;
@@ -122,19 +109,15 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 20px;
   }
-  .tile-big .tile-metric {
-    font-size: 40px; font-weight: 700; letter-spacing: -0.02em;
-    line-height: 1;
-  }
+  .tile-big .tile-metric { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
   .tile-big .tile-label { font-size: 13px; font-weight: 700; margin-top: 2px; }
   .tile-big .tile-status { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-top: 1px; }
 
-  /* Жижиг tile stack баганад 2ш багтана */
-  .tile-stack { display: flex; flex-direction: column; gap: 10px; }
   .tile-small {
     padding: 13px 14px;
     display: flex; align-items: center; gap: 11px;
     min-height: 86px;
+    grid-column: span 2;
   }
   .tile-small .tile-icon-badge {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
@@ -145,18 +128,81 @@
   .tile-small .tile-label { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tile-small .tile-status { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
 
-  /* Icon badge өнгөнүүд */
   .badge-teal   { background: linear-gradient(160deg,#4be0c4,#26a68c); color: #06332b; }
   .badge-yellow { background: linear-gradient(160deg,#ffd873,#ffb238); color: #4a3300; }
   .badge-gray   { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.55); }
-  .badge-blue   { background: linear-gradient(160deg,#8fd0ff,#4f9ee8); color: #06233d; }
-  .badge-green  { background: linear-gradient(160deg,#7be089,#3fae57); color: #103d1a; }
   .badge-fan    { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.75); }
 
   .metric-orange { color: var(--accent-orange); }
   .metric-blue   { color: var(--accent-blue); }
 
-  /* ---------- Доод navigation — Glass pill, slide хийдэг индикатортой ---------- */
+  /* ---------- EDIT MODE — jiggle + улаан хасах badge (iPhone маягийн) ---------- */
+  .tile-grid.edit-mode .tile { animation: jiggle 0.28s infinite; cursor: grab; }
+  .tile-grid.edit-mode .tile:nth-child(2n) { animation-delay: -0.14s; }
+  @keyframes jiggle {
+    0%, 100% { transform: rotate(-1deg); }
+    50% { transform: rotate(1deg); }
+  }
+  .tile-grid.edit-mode .tile.dragging { opacity: 0.4; animation: none; }
+
+  .delete-badge {
+    position: absolute; top: -7px; left: -7px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #eb4444;
+    border: 2px solid rgba(255,255,255,0.9);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    cursor: pointer;
+  }
+  .tile-grid.edit-mode .delete-badge { display: flex; }
+  .delete-badge svg { width: 12px; height: 12px; }
+
+  .edit-done-bar {
+    display: none;
+    justify-content: center;
+    margin: 4px 0 14px;
+  }
+  .edit-done-bar.show { display: flex; }
+  .edit-done-btn {
+    padding: 9px 26px; border-radius: 20px;
+    background: var(--accent-orange); color: #2b1400;
+    font-weight: 700; font-size: 14px; border: none; cursor: pointer;
+  }
+
+  /* ---------- "+" Нэмэх modal (Pool сонголт) ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,10,15,0.55);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 50;
+  }
+  .modal-overlay.open { display: flex; }
+  .add-modal {
+    width: 100%; max-width: 560px;
+    background: rgba(35,32,42,0.86);
+    backdrop-filter: blur(30px) saturate(1.4);
+    -webkit-backdrop-filter: blur(30px) saturate(1.4);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-top-left-radius: 26px; border-top-right-radius: 26px;
+    padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+    max-height: 72vh; overflow-y: auto;
+  }
+  .add-modal h3 { margin: 0 0 14px; font-size: 16px; }
+  .pool-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 6px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .pool-item .tile-icon-badge { width: 34px; height: 34px; border-radius: 50%; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .pool-item .pool-label { flex: 1; font-size: 14px; font-weight: 600; }
+  .pool-add-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-teal); border: none; color: #06332b;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .pool-empty { text-align: center; color: var(--text-secondary); padding: 20px 0; font-size: 13px; }
+
+  /* ---------- Доод navigation ---------- */
   .tab-bar-wrap {
     position: fixed; left: 0; right: 0; bottom: 0;
     display: flex; justify-content: center;
@@ -211,154 +257,34 @@
 
 <div class="app-shell">
 
-  <!-- Статус мөр -->
-  <div class="status-bar">
-
- 
-  </div>
-
   <!-- Толгой -->
   <div class="home-header">
     <h1>СӨХ</h1>
     <div class="header-actions">
-      <button class="icon-btn" aria-label="Нэхэмжлэх, мэдэгдэл, зарын inbox">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+      <button class="icon-btn" aria-label="Нэхэмжлэх, мэдэгдэл, зарын inbox" onclick="openInbox()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
       </button>
-      <button class="icon-btn" aria-label="Light and Dark mode">
+      <button class="icon-btn" aria-label="Товч нэмэх" onclick="openAddModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- Entry -->
-  <div class="room-section">
-    <div class="room-grid">
-      <div class="tile tile-big" onclick="handleGuestEntry(this)">
-        <div class="tile-icon-badge badge-teal" id="guest-entry-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">ЗОЧИН НЭВТРҮҮЛЭХ</div>
-          <div class="tile-status" id="guest-entry-status">Unlocked</div>
-        </div>
-      </div>
-      <div class="tile tile-big" onclick="handleRepairRequest(this)">
-        <div class="tile-icon-badge badge-teal" id="repair-request-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">ЗАСВАР ДУУДАХ</div>
-          <div class="tile-status" id="repair-request-status">Unlocked</div>
-        </div>
-      </div>
-    </div>
+  <div class="edit-done-bar" id="editDoneBar">
+    <button class="edit-done-btn" onclick="exitEditMode()">Дуусгах</button>
   </div>
 
-  <!-- Living Room -->
-  <div class="room-section">
-    <div class="room-grid">
-      <div class="tile tile-big">
-        <div>
-          <div class="tile-metric metric-orange">68°</div>
-        </div>
-        <div>
-          <div class="tile-label">ТӨЛБӨР ТӨЛӨХ</div>
-          <div class="tile-status">Heating to 70°</div>
-        </div>
-      </div>
-      <div class="tile tile-big" onclick="handleVatReceipt(this)">
-        <div class="tile-icon-badge badge-teal" id="vat-receipt-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">НӨАТ БАРИМТ АВАХ</div>
-          <div class="tile-status" id="vat-receipt-status">Unlocked</div>
-        </div>
-      </div>
-      <div class="tile tile-small" style="grid-column:1 / -1" onclick="handleHoaActivity(this)">
-        <div class="tile-icon-badge badge-fan" id="hoa-activity-badge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-3 2-6 4.5-6S21 8.5 21 11s-2.5 3-4.5 1"/><path d="M12 12c-3 0-6-2-6-4.5S8.5 3 11 3s3 2.5 1 4.5"/><path d="M12 12c0 3-2 6-4.5 6S3 15.5 3 13s2.5-3 4.5-1"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
-        </div>
-        <div class="tile-text">
-          <div class="tile-label">СӨХ ҮЙЛ АЖИЛЛАГАА</div>
-          <div class="tile-status" id="hoa-activity-status">Off</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Дата-төвтэй, JS-ээр угсардаг tile grid -->
+  <div class="tile-grid" id="tileGrid"></div>
 
-  <!-- Kitchen 1 -->
-  <div class="room-section">
-    <div class="room-grid">
-      <div class="tile tile-big">
-        <div>
-          <div class="tile-metric metric-blue">72°</div>
-        </div>
-        <div>
-          <div class="tile-label">ХОТХОНЫ м2 ҮНЭ</div>
-          <div class="tile-status">Cooling to 70°</div>
-        </div>
-      </div>
-      <div class="tile tile-big" onclick="handleStorageParking(this)">
-        <div class="tile-icon-badge badge-teal" id="storage-parking-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">АГУУЛАХ, ЗОГСООЛ</div>
-          <div class="tile-status" id="storage-parking-status">Unlocked</div>
-        </div>
-      </div>
-    </div>
-  </div>
+</div>
 
-  <!-- Kitchen 2 -->
-  <div class="room-section">
-    <div class="room-grid">
-      <div class="tile tile-big">
-        <div>
-          <div class="tile-metric metric-blue">72°</div>
-        </div>
-        <div>
-          <div class="tile-label">САНАЛ, ХҮСЭЛТ</div>
-          <div class="tile-status">Cooling to 70°</div>
-        </div>
-      </div>
-      <div class="tile tile-big" onclick="handleFrontDoorKitchen2(this)">
-        <div class="tile-icon-badge badge-teal" id="frontdoor-k2-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">УТАСНЫ ДУГААРУУД</div>
-          <div class="tile-status" id="frontdoor-k2-status">Unlocked</div>
-        </div>
-      </div>
-    </div>
+<!-- "+" Нэмэх modal -->
+<div class="modal-overlay" id="addModalOverlay" onclick="if(event.target===this) closeAddModal()">
+  <div class="add-modal">
+    <h3>Товч нэмэх</h3>
+    <div id="poolList"></div>
   </div>
-
-  <!-- Kitchen 3 -->
-  <div class="room-section">
-    <div class="room-grid">
-      <div class="tile tile-big">
-        <div>
-          <div class="tile-metric metric-blue">72°</div>
-        </div>
-        <div>
-          <div class="tile-label">УДИРДАХ ЗӨВЛӨЛ</div>
-          <div class="tile-status">Cooling to 70°</div>
-        </div>
-      </div>
-      <div class="tile tile-big" onclick="handleFrontDoorKitchen3(this)">
-        <div class="tile-icon-badge badge-teal" id="frontdoor-k3-badge">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        </div>
-        <div>
-          <div class="tile-label">ХЯНАЛТЫН ЗӨВЛӨЛ</div>
-          <div class="tile-status" id="frontdoor-k3-status">Unlocked</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- Доод Glass navigation -->
@@ -374,13 +300,215 @@
       News
     </button>
     <button class="tab-btn" data-idx="2" onclick="selectTab(this)">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5 14.6 9l7 .6-5.3 4.6 1.7 6.8L12 17.3 5.9 21l1.7-6.8L2.3 9.6l7-.6z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </button>
   </nav>
 </div>
 
 <script>
+// ============================================================
+// ИКОН ТУСЛАХ ТЕМПЛЭЙТҮҮД
+// ============================================================
+const ICON_LOCK_CLOSED = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+const ICON_LOCK_OPEN   = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+const ICON_FAN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-3 2-6 4.5-6S21 8.5 21 11s-2.5 3-4.5 1"/><path d="M12 12c-3 0-6-2-6-4.5S8.5 3 11 3s3 2.5 1 4.5"/><path d="M12 12c0 3-2 6-4.5 6S3 15.5 3 13s2.5-3 4.5-1"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>';
+const ICON_DELETE_MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+
+// ============================================================
+// ӨГӨГДӨЛ — идэвхтэй (харагдаж буй) товчнууд.
+// Танай засварласан 11 товчийг ЯГ ӨМНӨХ нэр/статусаар нь хадгалав.
+// ============================================================
+let ACTIVE_TILES = [
+  { id:'guest-entry',      size:'big', label:'ЗОЧИН НЭВТРҮҮЛЭХ',  status:'Unlocked', type:'lock' },
+  { id:'repair-request',   size:'big', label:'ЗАСВАР ДУУДАХ',     status:'Unlocked', type:'lock' },
+  { id:'pay-bill',         size:'big', label:'ТӨЛБӨР ТӨЛӨХ',      status:'Heating to 70°', type:'metric', metric:'68°', metricClass:'metric-orange' },
+  { id:'vat-receipt',      size:'big', label:'НӨАТ БАРИМТ АВАХ',  status:'Unlocked', type:'lock' },
+  { id:'hoa-activity',     size:'small', label:'СӨХ ҮЙЛ АЖИЛЛАГАА', status:'Off', type:'fan' },
+  { id:'market-price',     size:'big', label:'ХОТХОНЫ м2 ҮНЭ',    status:'Cooling to 70°', type:'metric', metric:'72°', metricClass:'metric-blue' },
+  { id:'storage-parking',  size:'big', label:'АГУУЛАХ, ЗОГСООЛ',  status:'Unlocked', type:'lock' },
+  { id:'feedback',         size:'big', label:'САНАЛ, ХҮСЭЛТ',     status:'Cooling to 70°', type:'metric', metric:'72°', metricClass:'metric-blue' },
+  { id:'phone-numbers',    size:'big', label:'УТАСНЫ ДУГААРУУД',  status:'Unlocked', type:'lock' },
+  { id:'board',            size:'big', label:'УДИРДАХ ЗӨВЛӨЛ',    status:'Cooling to 70°', type:'metric', metric:'72°', metricClass:'metric-blue' },
+  { id:'supervisory-board',size:'big', label:'ХЯНАЛТЫН ЗӨВЛӨЛ',   status:'Unlocked', type:'lock' },
+];
+
+// Нөөц (Pool) — "+" товчоор нэмж болох, одоогоор дэлгэцэнд ороогүй товчнууд.
+// 3 нэртэй (Лифт дуудах, Камер харах, Орчны цаг уур) + 5 нэмэлт.
+let TILE_POOL = [
+  { id:'elevator-call',    size:'big', label:'ЛИФТ ДУУДАХ',       status:'Бэлэн',      type:'lock' },
+  { id:'camera-view',      size:'big', label:'КАМЕР ХАРАХ',       status:'Идэвхтэй',   type:'lock' },
+  { id:'ambient-weather',  size:'big', label:'ОРЧНЫ ЦАГ УУР',     status:'20°C',       type:'metric', metric:'20°', metricClass:'metric-blue' },
+  { id:'waste-schedule',   size:'big', label:'ХОГ ХАЯГДАЛ',       status:'Идэвхтэй',   type:'lock' },
+  { id:'cleaning-service', size:'big', label:'ЦЭВЭРЛЭГЭЭ',        status:'Идэвхтэй',   type:'lock' },
+  { id:'wifi-network',     size:'big', label:'ДОТООД СҮЛЖЭЭ',     status:'Идэвхтэй',   type:'lock' },
+  { id:'playground',       size:'big', label:'ТОГЛООМЫН ТАЛБАЙ',  status:'Нээлттэй',   type:'lock' },
+  { id:'gym',              size:'big', label:'СПОРТ ЗААЛ',        status:'Нээлттэй',   type:'lock' },
+];
+
+let editMode = false;
+let dragSrcIdx = null;
+
+// ============================================================
+// RENDER — ACTIVE_TILES массиваас бүх tile-г дахин угсарна
+// ============================================================
+function renderTiles() {
+  const grid = document.getElementById('tileGrid');
+  grid.className = 'tile-grid' + (editMode ? ' edit-mode' : '');
+  grid.innerHTML = ACTIVE_TILES.map((t, idx) => {
+    const sizeClass = t.size === 'big' ? 'tile-big' : 'tile-small';
+    let inner;
+    if (t.type === 'metric') {
+      inner = `
+        <div><div class="tile-metric ${t.metricClass}">${t.metric}</div></div>
+        <div><div class="tile-label">${t.label}</div><div class="tile-status">${t.status}</div></div>`;
+    } else if (t.type === 'lock') {
+      const isLocked = t.status === 'Locked';
+      inner = `
+        <div class="tile-icon-badge ${isLocked ? 'badge-gray' : 'badge-teal'}">${isLocked ? ICON_LOCK_CLOSED : ICON_LOCK_OPEN}</div>
+        <div><div class="tile-label">${t.label}</div><div class="tile-status">${t.status}</div></div>`;
+    } else if (t.type === 'fan') {
+      const isOn = /On/i.test(t.status);
+      inner = `
+        <div class="tile-icon-badge ${isOn ? 'badge-yellow' : 'badge-fan'}">${ICON_FAN}</div>
+        <div class="tile-text"><div class="tile-label">${t.label}</div><div class="tile-status">${t.status}</div></div>`;
+    }
+    return `<div class="tile ${sizeClass}" draggable="${editMode}"
+        data-idx="${idx}"
+        ondragstart="onDragStart(event, ${idx})" ondragover="onDragOver(event, ${idx})" ondrop="onDrop(event, ${idx})" ondragend="onDragEnd(event)"
+        onclick="onTileClick(event, ${idx})"
+        ontouchstart="onTileTouchStart(${idx})" ontouchend="onTileTouchEnd()" ontouchmove="onTileTouchEnd()"
+        onmousedown="onTileMouseDown(${idx})" onmouseup="onTileMouseUp()" onmouseleave="onTileMouseUp()">
+      <span class="delete-badge" onclick="event.stopPropagation(); removeTile(${idx})">${ICON_DELETE_MINUS}</span>
+      ${inner}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ТОВЧ ДАРАХ — Edit mode үед л Устгах; үгүй бол ӨӨРИЙНХӨӨ badge-г
+// солих (lock/fan төрөлд). "metric" төрөл дарагдахгүй (өмнөх шигээ).
+// ============================================================
+function onTileClick(evt, idx) {
+  if (editMode) return; // edit mode-д ердийн click юу ч хийхгүй (зөвхөн delete-badge)
+  const t = ACTIVE_TILES[idx];
+  if (t.type === 'lock') {
+    t.status = (t.status === 'Locked') ? 'Unlocked' : 'Locked';
+    renderTiles();
+  } else if (t.type === 'fan') {
+    t.status = /On/i.test(t.status) ? 'Off' : 'On';
+    renderTiles();
+  }
+  // 'metric' төрөл — өмнөх хувилбарт ч onclick байгаагүй тул юу ч хийхгүй
+}
+
+// ============================================================
+// LONG-PRESS → Edit mode (touch болон mouse хоёуланд)
+// ============================================================
+let pressTimer = null;
+const LONG_PRESS_MS = 550;
+
+function onTileTouchStart(idx) { startPressTimer(); }
+function onTileTouchEnd() { clearPressTimer(); }
+function onTileMouseDown(idx) { startPressTimer(); }
+function onTileMouseUp() { clearPressTimer(); }
+
+function startPressTimer() {
+  clearPressTimer();
+  pressTimer = setTimeout(() => { enterEditMode(); }, LONG_PRESS_MS);
+}
+function clearPressTimer() {
+  if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+}
+
+function enterEditMode() {
+  if (editMode) return;
+  editMode = true;
+  document.getElementById('editDoneBar').classList.add('show');
+  renderTiles();
+}
+function exitEditMode() {
+  editMode = false;
+  document.getElementById('editDoneBar').classList.remove('show');
+  renderTiles();
+}
+
+// ============================================================
+// УСТГАХ (улаан badge) — ACTIVE-аас POOL руу шилжүүлнэ (буцаах боломжтой)
+// ============================================================
+function removeTile(idx) {
+  const [removed] = ACTIVE_TILES.splice(idx, 1);
+  TILE_POOL.push(removed);
+  renderTiles();
+}
+
+// ============================================================
+// ЧИРЖ ЭРЭМБЭЛЭХ — native HTML5 drag-and-drop, зөвхөн edit mode-д идэвхтэй
+// ============================================================
+function onDragStart(evt, idx) {
+  if (!editMode) { evt.preventDefault(); return; }
+  dragSrcIdx = idx;
+  evt.target.classList.add('dragging');
+  evt.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(evt, idx) {
+  if (!editMode) return;
+  evt.preventDefault();
+}
+function onDrop(evt, idx) {
+  if (!editMode || dragSrcIdx === null) return;
+  evt.preventDefault();
+  if (dragSrcIdx === idx) return;
+  const [moved] = ACTIVE_TILES.splice(dragSrcIdx, 1);
+  ACTIVE_TILES.splice(idx, 0, moved);
+  dragSrcIdx = null;
+  renderTiles();
+}
+function onDragEnd(evt) {
+  evt.target.classList.remove('dragging');
+  dragSrcIdx = null;
+}
+
+// ============================================================
+// "+" НЭМЭХ MODAL — Pool-оос идэвхтэй жагсаалт руу нэмнэ
+// ============================================================
+function openAddModal() {
+  renderPoolList();
+  document.getElementById('addModalOverlay').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('addModalOverlay').classList.remove('open');
+}
+function renderPoolList() {
+  const el = document.getElementById('poolList');
+  if (!TILE_POOL.length) { el.innerHTML = '<div class="pool-empty">Нэмэх боломжтой товч алга</div>'; return; }
+  el.innerHTML = TILE_POOL.map((t, idx) => {
+    const icon = t.type === 'fan' ? ICON_FAN : (t.type === 'lock' ? ICON_LOCK_OPEN : '');
+    const badgeClass = t.type === 'fan' ? 'badge-fan' : (t.type === 'lock' ? 'badge-teal' : 'badge-gray');
+    return `<div class="pool-item">
+      <div class="tile-icon-badge ${badgeClass}">${icon || '＋'}</div>
+      <div class="pool-label">${t.label}</div>
+      <button class="pool-add-btn" onclick="addFromPool(${idx})">+</button>
+    </div>`;
+  }).join('');
+}
+function addFromPool(idx) {
+  const [added] = TILE_POOL.splice(idx, 1);
+  ACTIVE_TILES.push(added);
+  renderPoolList();
+  renderTiles();
+}
+
+// ============================================================
+// INBOX (Нэхэмжлэх/Мэдэгдэл/Зар) — placeholder, ирээдүйд холбоно
+// ============================================================
+function openInbox() {
+  console.log('Inbox нээгдлээ — ирээдүйд нэхэмжлэх/мэдэгдэл/зар харуулна');
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
 function selectTab(btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -389,107 +517,10 @@ function selectTab(btn) {
 }
 
 // ============================================================
-// ТОВЧ БҮР ӨӨРИЙН ТУСДАА, БИЕ ДААСАН ФУНКЦТЭЙ (ганц ерөнхий
-// dispatcher-ээр биш) — тус бүрийг тусад нь засаж, өөрчилж болно.
+// ЭХЛҮҮЛЭХ
 // ============================================================
-
-function handleGuestEntry(el) {
-  const badge = document.getElementById('guest-entry-badge');
-  const status = document.getElementById('guest-entry-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleRepairRequest(el) {
-  const badge = document.getElementById('repair-request-badge');
-  const status = document.getElementById('repair-request-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleVatReceipt(el) {
-  const badge = document.getElementById('vat-receipt-badge');
-  const status = document.getElementById('vat-receipt-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleStorageParking(el) {
-  const badge = document.getElementById('storage-parking-badge');
-  const status = document.getElementById('storage-parking-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleFrontDoorKitchen2(el) {
-  const badge = document.getElementById('frontdoor-k2-badge');
-  const status = document.getElementById('frontdoor-k2-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleFrontDoorKitchen3(el) {
-  const badge = document.getElementById('frontdoor-k3-badge');
-  const status = document.getElementById('frontdoor-k3-status');
-  const locked = status.textContent === 'Locked';
-  status.textContent = locked ? 'Unlocked' : 'Locked';
-  badge.style.background = locked
-    ? 'linear-gradient(160deg,#4be0c4,#26a68c)'
-    : 'linear-gradient(160deg,#ff8a80,#e5483a)';
-  badge.innerHTML = locked
-    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
-    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-}
-
-function handleHoaActivity(el) {
-  const badge = document.getElementById('hoa-activity-badge');
-  const status = document.getElementById('hoa-activity-status');
-  const isOff = /Off/i.test(status.textContent);
-  if (isOff) {
-    status.textContent = status.textContent.replace(/Off/i, 'On');
-    el.classList.remove('dim');
-    badge.classList.remove('badge-gray');
-    badge.classList.add('badge-yellow');
-  } else {
-    status.textContent = status.textContent.replace(/On\b/i, 'Off');
-    el.classList.add('dim');
-    badge.classList.remove('badge-yellow');
-    badge.classList.add('badge-gray');
-  }
-}
+renderTiles();
 </script>
-
-
 
 </body>
 </html>
